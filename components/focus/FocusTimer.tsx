@@ -88,8 +88,6 @@ function flashTitle(finishedMode: TimerMode) {
 
 export function FocusTimer() {
   const activeTimer = usePlanner((s) => s.activeTimer);
-  const tasks = usePlanner((s) => s.tasks);
-  const tracks = usePlanner((s) => s.tracks);
   const settings = usePlanner((s) => s.focusSettings);
   const startTimer = usePlanner((s) => s.startTimer);
   const pauseTimer = usePlanner((s) => s.pauseTimer);
@@ -129,7 +127,6 @@ export function FocusTimer() {
   }, [remaining, activeTimer, muted, completeSession]);
 
   const selectedTaskId = activeTimer ? activeTimer.taskId : taskId;
-  const selectedTask = tasks.find((t) => t.id === selectedTaskId) ?? null;
   const mode: TimerMode = activeTimer?.mode ?? "work";
 
   const start = () => {
@@ -139,47 +136,32 @@ export function FocusTimer() {
 
   return (
     <div className="border hairline bg-cream-raised">
-      {/* Top bar: task + customize */}
-      <div className="flex flex-wrap items-center gap-2 border-b hairline px-4 py-3">
-        <span className="label text-coffee shrink-0">Working on</span>
-        {activeTimer ? (
-          <span className="flex min-w-0 flex-1 items-center gap-2 text-sm text-espresso">
-            {selectedTask ? (
-              <>
-                <span
-                  className="h-2 w-2 shrink-0"
-                  style={{
-                    backgroundColor:
-                      tracks.find((t) => t.id === selectedTask.trackId)?.accent ??
-                      "var(--coffee)",
-                  }}
-                  aria-hidden
-                />
-                <span className="truncate">{selectedTask.text}</span>
-              </>
-            ) : (
-              <span className="text-coffee">No specific task</span>
-            )}
-          </span>
-        ) : (
-          <TaskPicker value={taskId} onChange={setTaskId} />
-        )}
-        <button
-          onClick={() => setSettingsOpen((v) => !v)}
-          aria-expanded={settingsOpen}
-          className="flex shrink-0 items-center gap-1.5 rounded-md border border-coffee/30 px-2.5 py-1.5 text-xs font-medium text-coffee transition-colors hover:border-coffee/60 hover:text-espresso"
-        >
-          <span aria-hidden>⚙</span>
-          <span>
-            {settings.workMin}m focus · {settings.breakMin}m break
-          </span>
-          <span
-            className={`transition-transform ${settingsOpen ? "rotate-180" : ""}`}
-            aria-hidden
+      {/* Top bar: label + customize on one row, full-width task picker below */}
+      <div className="space-y-2 border-b hairline px-4 py-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="label text-coffee">Working on</span>
+          <button
+            onClick={() => setSettingsOpen((v) => !v)}
+            aria-expanded={settingsOpen}
+            className="flex shrink-0 items-center gap-1.5 rounded-md border border-coffee/30 px-2.5 py-1.5 text-xs font-medium text-coffee transition-colors hover:border-coffee/60 hover:text-espresso"
           >
-            ▾
-          </span>
-        </button>
+            <span aria-hidden>⚙</span>
+            <span>
+              {settings.workMin}m focus · {settings.breakMin}m break
+            </span>
+            <span
+              className={`transition-transform ${settingsOpen ? "rotate-180" : ""}`}
+              aria-hidden
+            >
+              ▾
+            </span>
+          </button>
+        </div>
+        <TaskPicker
+          value={selectedTaskId}
+          onChange={setTaskId}
+          disabled={!!activeTimer}
+        />
       </div>
 
       {settingsOpen && (

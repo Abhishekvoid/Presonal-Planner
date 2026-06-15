@@ -14,9 +14,11 @@ const pad2 = (n: number) => String(n).padStart(2, "0");
 export function TaskPicker({
   value,
   onChange,
+  disabled = false,
 }: {
   value: string | null;
   onChange: (id: string | null) => void;
+  disabled?: boolean;
 }) {
   const state = usePlanner();
   const days = orderedDays(state);
@@ -71,9 +73,10 @@ export function TaskPicker({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
+        disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex w-full items-center gap-2 rounded-md border border-coffee/30 bg-cream-base px-3 py-1.5 text-left text-sm text-espresso transition-colors hover:border-coffee/60 focus:border-olive focus:outline-none"
+        className="flex w-full items-center gap-2 rounded-md border border-coffee/30 bg-cream-base px-3 py-2 text-left text-sm text-espresso transition-colors hover:border-coffee/60 focus:border-olive focus:outline-none disabled:opacity-70 disabled:hover:border-coffee/30"
       >
         {selected ? (
           <span
@@ -85,12 +88,14 @@ export function TaskPicker({
         <span className={`truncate ${selected ? "text-espresso" : "text-coffee"}`}>
           {selected ? selected.text : "No specific task"}
         </span>
-        <span
-          className={`ml-auto shrink-0 text-coffee transition-transform ${open ? "rotate-180" : ""}`}
-          aria-hidden
-        >
-          ▾
-        </span>
+        {!disabled && (
+          <span
+            className={`ml-auto shrink-0 text-coffee transition-transform ${open ? "rotate-180" : ""}`}
+            aria-hidden
+          >
+            ▾
+          </span>
+        )}
       </button>
 
       {open && (
