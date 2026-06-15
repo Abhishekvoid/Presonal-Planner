@@ -5,6 +5,7 @@ import { usePlanner } from "@/lib/store";
 import { TimerMode } from "@/lib/types";
 import { formatClock, remainingSec } from "@/lib/focus";
 import { Button } from "@/components/primitives";
+import { TaskPicker } from "./TaskPicker";
 
 /** Short WebAudio beep — no asset file, gated behind the Start gesture. */
 function beep(ref: React.MutableRefObject<AudioContext | null>) {
@@ -28,6 +29,55 @@ function beep(ref: React.MutableRefObject<AudioContext | null>) {
   }
 }
 
+function DurationRow({
+  label,
+  value,
+  presets,
+  min,
+  max,
+  onPick,
+}: {
+  label: string;
+  value: number;
+  presets: number[];
+  min: number;
+  max: number;
+  onPick: (n: number) => void;
+}) {
+  const clamp = (n: number) => Math.min(max, Math.max(min, n || min));
+  return (
+    <div>
+      <div className="label text-coffee mb-1.5">{label}</div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {presets.map((p) => (
+          <button
+            key={p}
+            onClick={() => onPick(p)}
+            className={`rounded-md px-2.5 py-1 text-sm transition-colors ${
+              value === p
+                ? "bg-espresso text-cream-raised"
+                : "border border-coffee/30 text-coffee hover:border-coffee/60 hover:text-espresso"
+            }`}
+          >
+            {p}m
+          </button>
+        ))}
+        <span className="mx-0.5 text-xs text-coffee/50">or</span>
+        <input
+          type="number"
+          min={min}
+          max={max}
+          value={value}
+          onChange={(e) => onPick(clamp(Number(e.target.value)))}
+          aria-label={`${label} custom minutes`}
+          className="w-16 rounded-md border border-coffee/30 bg-cream-raised px-2 py-1 text-sm text-espresso focus:border-olive focus:outline-none"
+        />
+        <span className="text-xs text-coffee">min</span>
+      </div>
+    </div>
+  );
+}
+
 function flashTitle(finishedMode: TimerMode) {
   const prev = document.title;
   document.title = finishedMode === "work" ? "● Break time" : "● Back to work";
@@ -39,6 +89,7 @@ function flashTitle(finishedMode: TimerMode) {
 export function FocusTimer() {
   const activeTimer = usePlanner((s) => s.activeTimer);
   const tasks = usePlanner((s) => s.tasks);
+  const tracks = usePlanner((s) => s.tracks);
   const settings = usePlanner((s) => s.focusSettings);
   const startTimer = usePlanner((s) => s.startTimer);
   const pauseTimer = usePlanner((s) => s.pauseTimer);
@@ -77,7 +128,6 @@ export function FocusTimer() {
     completeSession();
   }, [remaining, activeTimer, muted, completeSession]);
 
-  const incompleteTasks = tasks.filter((t) => !t.done);
   const selectedTaskId = activeTimer ? activeTimer.taskId : taskId;
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) ?? null;
   const mode: TimerMode = activeTimer?.mode ?? "work";
@@ -89,73 +139,74 @@ export function FocusTimer() {
 
   return (
     <div className="border hairline bg-cream-raised">
-      {/* Top bar: task + settings */}
-      <div className="flex items-center gap-3 border-b hairline px-4 py-2.5">
+      {/* Top bar: task + customize */}
+      <div className="flex flex-wrap items-center gap-2 border-b hairline px-4 py-3">
         <span className="label text-coffee shrink-0">Working on</span>
         {activeTimer ? (
-          <span className="truncate text-sm text-espresso">
-            {selectedTask ? selectedTask.text : "No specific task"}
+          <span className="flex min-w-0 flex-1 items-center gap-2 text-sm text-espresso">
+            {selectedTask ? (
+              <>
+                <span
+                  className="h-2 w-2 shrink-0"
+                  style={{
+                    backgroundColor:
+                      tracks.find((t) => t.id === selectedTask.trackId)?.accent ??
+                      "var(--coffee)",
+                  }}
+                  aria-hidden
+                />
+                <span className="truncate">{selectedTask.text}</span>
+              </>
+            ) : (
+              <span className="text-coffee">No specific task</span>
+            )}
           </span>
         ) : (
-          <select
-            value={taskId ?? ""}
-            onChange={(e) => setTaskId(e.target.value || null)}
-            className="min-w-0 flex-1 bg-cream-base border hairline px-2 py-1 text-sm text-espresso focus:border-olive focus:outline-none"
-          >
-            <option value="">No specific task</option>
-            {incompleteTasks.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.text.length > 60 ? `${t.text.slice(0, 60)}…` : t.text}
-              </option>
-            ))}
-          </select>
+          <TaskPicker value={taskId} onChange={setTaskId} />
         )}
         <button
           onClick={() => setSettingsOpen((v) => !v)}
-          aria-label="Timer settings"
-          className="ml-auto label text-coffee hover:text-espresso transition-colors shrink-0"
+          aria-expanded={settingsOpen}
+          className="flex shrink-0 items-center gap-1.5 rounded-md border border-coffee/30 px-2.5 py-1.5 text-xs font-medium text-coffee transition-colors hover:border-coffee/60 hover:text-espresso"
         >
-          ⚙ {settings.workMin}m
+          <span aria-hidden>⚙</span>
+          <span>
+            {settings.workMin}m focus · {settings.breakMin}m break
+          </span>
+          <span
+            className={`transition-transform ${settingsOpen ? "rotate-180" : ""}`}
+            aria-hidden
+          >
+            ▾
+          </span>
         </button>
       </div>
 
       {settingsOpen && (
-        <div className="flex flex-wrap items-center gap-4 border-b hairline bg-cream-base px-4 py-3">
+        <div className="space-y-4 border-b hairline bg-cream-base px-4 py-4">
+          <DurationRow
+            label="Focus length"
+            value={settings.workMin}
+            presets={[15, 25, 45, 50]}
+            min={1}
+            max={120}
+            onPick={(n) => updateFocusSettings({ workMin: n })}
+          />
+          <DurationRow
+            label="Break length"
+            value={settings.breakMin}
+            presets={[5, 10, 15]}
+            min={1}
+            max={60}
+            onPick={(n) => updateFocusSettings({ breakMin: n })}
+          />
           <label className="flex items-center gap-2 text-sm text-coffee">
-            Work
-            <input
-              type="number"
-              min={1}
-              max={120}
-              value={settings.workMin}
-              onChange={(e) =>
-                updateFocusSettings({ workMin: Math.max(1, Number(e.target.value) || 1) })
-              }
-              className="w-16 bg-cream-raised border hairline px-2 py-1 text-espresso focus:border-olive focus:outline-none"
-            />
-            min
-          </label>
-          <label className="flex items-center gap-2 text-sm text-coffee">
-            Break
-            <input
-              type="number"
-              min={1}
-              max={60}
-              value={settings.breakMin}
-              onChange={(e) =>
-                updateFocusSettings({ breakMin: Math.max(1, Number(e.target.value) || 1) })
-              }
-              className="w-16 bg-cream-raised border hairline px-2 py-1 text-espresso focus:border-olive focus:outline-none"
-            />
-            min
-          </label>
-          <label className="ml-auto flex items-center gap-2 text-sm text-coffee">
             <input
               type="checkbox"
               checked={muted}
               onChange={(e) => setMuted(e.target.checked)}
             />
-            Mute chime
+            Mute the end-of-block chime
           </label>
         </div>
       )}
