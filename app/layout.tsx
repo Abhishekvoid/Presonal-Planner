@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, Inter } from "next/font/google";
 import "./globals.css";
+import { SoundDeck } from "@/components/ambient/SoundDeck";
 
 // Archivo is a variable font; we load the width axis and drive it to
 // full expanded width in CSS (.font-display) for the "Archivo Expanded" look.
@@ -29,7 +30,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`}>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        {children}
+        <SoundDeck />
+      </body>
     </html>
   );
 }
