@@ -90,6 +90,7 @@ export function FocusTimer() {
   const activeTimer = usePlanner((s) => s.activeTimer);
   const settings = usePlanner((s) => s.focusSettings);
   const startTimer = usePlanner((s) => s.startTimer);
+  const assignTimerTask = usePlanner((s) => s.assignTimerTask);
   const pauseTimer = usePlanner((s) => s.pauseTimer);
   const resumeTimer = usePlanner((s) => s.resumeTimer);
   const resetTimer = usePlanner((s) => s.resetTimer);
@@ -159,8 +160,10 @@ export function FocusTimer() {
         </div>
         <TaskPicker
           value={selectedTaskId}
-          onChange={setTaskId}
-          disabled={!!activeTimer}
+          onChange={(id) => {
+            setTaskId(id);
+            if (activeTimer) assignTimerTask(id);
+          }}
         />
       </div>
 

@@ -43,6 +43,7 @@ interface PlannerStore extends PlannerState {
 
   // focus — timer
   startTimer: (taskId: string | null, mode?: TimerMode) => void;
+  assignTimerTask: (taskId: string | null) => void;
   pauseTimer: () => void;
   resumeTimer: () => void;
   resetTimer: () => void;
@@ -163,6 +164,9 @@ export const usePlanner = create<PlannerStore>()(
           };
           return { activeTimer: timer };
         }),
+
+      assignTimerTask: (taskId) =>
+        set((s) => (s.activeTimer ? { activeTimer: { ...s.activeTimer, taskId } } : {})),
 
       pauseTimer: () =>
         set((s) => {
