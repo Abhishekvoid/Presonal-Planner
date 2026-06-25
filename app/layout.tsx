@@ -3,6 +3,7 @@ import { Archivo, Inter } from "next/font/google";
 import "./globals.css";
 import { SoundDeck } from "@/components/ambient/SoundDeck";
 import { AmbientBackground } from "@/components/webgl/AmbientBackground";
+import { InkCursor } from "@/components/cursor/InkCursor";
 import { themeBootstrapScript } from "@/lib/theme";
 
 // Archivo is a variable font; we load the width axis and drive it to
@@ -43,6 +44,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <AmbientBackground />
         {children}
+        <InkCursor />
         <SoundDeck />
       </body>
     </html>
