@@ -105,9 +105,11 @@ export function CompanyDetail({
           )}
         </MetaRow>
         <MetaRow label="Channel">
-          <span className="inline-flex items-center gap-2">
-            <ChannelTag channel={company.channel} />
-            {company.contactLink && <Link href={company.contactLink}>profile</Link>}
+          <span className="inline-flex flex-wrap items-center gap-2">
+            <ChannelTag channel={company.channel} link={company.contactLink} />
+            {company.contactLink && (
+              <span className="text-coffee break-all">{company.contactLink}</span>
+            )}
           </span>
         </MetaRow>
         <MetaRow label="Reached out">{shortDate(company.reachedOutAt)}</MetaRow>

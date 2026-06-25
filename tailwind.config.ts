@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./app/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -8,26 +9,31 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // Colors resolve from themeable CSS vars (see app/globals.css). The
+      // `rgb(var(--x) / <alpha-value>)` form preserves Tailwind opacity
+      // utilities like `bg-cream-base/85`.
       colors: {
         cream: {
-          base: "#EFE7D6",
-          raised: "#F6F0E2",
-          deep: "#E6DCC6",
+          base: "rgb(var(--cream-base-rgb) / <alpha-value>)",
+          raised: "rgb(var(--cream-raised-rgb) / <alpha-value>)",
+          deep: "rgb(var(--cream-deep-rgb) / <alpha-value>)",
         },
-        espresso: "#2A211B",
+        espresso: "rgb(var(--espresso-rgb) / <alpha-value>)",
         coffee: {
-          DEFAULT: "#6F5844",
-          soft: "#8C7560",
+          DEFAULT: "rgb(var(--coffee-rgb) / <alpha-value>)",
+          soft: "rgb(var(--coffee-soft-rgb) / <alpha-value>)",
         },
         olive: {
-          DEFAULT: "#6E7048",
-          deep: "#53552F",
-          soft: "#878A5A",
+          DEFAULT: "rgb(var(--olive-rgb) / <alpha-value>)",
+          deep: "rgb(var(--olive-deep-rgb) / <alpha-value>)",
+          soft: "rgb(var(--olive-soft-rgb) / <alpha-value>)",
         },
         clay: {
-          DEFAULT: "#B0734A",
-          deep: "#8A5733",
+          DEFAULT: "rgb(var(--clay-rgb) / <alpha-value>)",
+          deep: "rgb(var(--clay-deep-rgb) / <alpha-value>)",
         },
+        // Modal/sheet scrim — stays dark in both themes for legibility.
+        scrim: "rgb(var(--scrim-rgb) / <alpha-value>)",
       },
       fontFamily: {
         display: ["var(--font-display)", "system-ui", "sans-serif"],
@@ -38,7 +44,7 @@ const config: Config = {
         tightest: "-0.04em",
       },
       borderColor: {
-        hair: "rgba(111, 88, 68, 0.22)",
+        hair: "var(--hair)",
       },
       keyframes: {
         sweep: {

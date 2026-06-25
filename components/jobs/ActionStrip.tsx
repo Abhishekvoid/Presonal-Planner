@@ -42,7 +42,7 @@ export function ActionStrip({
 
   return (
     <div className="mb-6 border hairline bg-cream-raised">
-      <div className="grid grid-cols-3 divide-x divide-[rgba(111,88,68,0.18)]">
+      <div className="grid grid-cols-3 divide-x divide-coffee/20">
         {BUCKET_META.map((m) => {
           const count = buckets[m.key].length;
           const isOpen = open === m.key;
@@ -67,7 +67,7 @@ export function ActionStrip({
       </div>
 
       {open && active.length > 0 && (
-        <ul className="divide-y divide-[rgba(111,88,68,0.18)] border-t hairline">
+        <ul className="divide-y divide-coffee/20 border-t hairline">
           {active.map((c) => (
             <li key={c.id}>
               <button

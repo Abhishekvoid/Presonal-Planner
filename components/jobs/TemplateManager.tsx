@@ -46,7 +46,7 @@ export function TemplateManager() {
           No templates yet. Create one and reuse it across every cold DM.
         </p>
       ) : (
-        <ul className="divide-y divide-[rgba(111,88,68,0.18)] border hairline bg-cream-base">
+        <ul className="divide-y divide-coffee/20 border hairline bg-cream-base">
           {templates.map((t) => (
             <li key={t.id} className="flex items-start gap-3 px-3 py-2.5">
               <div className="min-w-0 flex-1">

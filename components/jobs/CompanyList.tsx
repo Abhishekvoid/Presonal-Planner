@@ -108,7 +108,7 @@ export function CompanyList({
           No companies match these filters.
         </p>
       ) : (
-        <div className="border hairline divide-y divide-[rgba(111,88,68,0.18)] bg-cream-raised">
+        <div className="border hairline divide-y divide-coffee/20 bg-cream-raised">
           {rows.map((c) => (
             <Row key={c.id} company={c} onOpen={onOpen} onStage={setStage} />
           ))}
@@ -153,7 +153,7 @@ function Row({
         {company.contactName && (
           <span className="text-xs text-coffee">{company.contactName}</span>
         )}
-        <ChannelTag channel={company.channel} />
+        <ChannelTag channel={company.channel} link={company.contactLink} />
       </span>
 
       {company.followUpAt && (

@@ -194,11 +194,12 @@ export function CompanyForm({
               ))}
             </select>
           </Field>
-          <Field label="Profile link">
+          <Field label={f.channel === "email" ? "Email address" : "Profile link"}>
             <input
               className={inputClass}
+              type={f.channel === "email" ? "email" : "text"}
               value={f.contactLink}
-              placeholder="https://"
+              placeholder={f.channel === "email" ? "name@company.com" : "https://"}
               onChange={(e) => set("contactLink", e.target.value)}
             />
           </Field>

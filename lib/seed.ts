@@ -10,10 +10,10 @@ import {
 
 /** Track definitions — accents stay inside the warm cream/coffee/olive palette. */
 const TRACKS: { key: SectionKey; name: string; tag: string; accent: string }[] = [
-  { key: "dsa", name: "DSA", tag: "DSA", accent: "#6E7048" },
-  { key: "django", name: "Django / backend", tag: "BACKEND", accent: "#6F5844" },
-  { key: "sys", name: "System design", tag: "SYSTEM", accent: "#2A211B" },
-  { key: "interview", name: "Interview", tag: "INTERVIEW", accent: "#B0734A" },
+  { key: "dsa", name: "DSA", tag: "DSA", accent: "var(--olive)" },
+  { key: "django", name: "Django / backend", tag: "BACKEND", accent: "var(--coffee)" },
+  { key: "sys", name: "System design", tag: "SYSTEM", accent: "var(--espresso)" },
+  { key: "interview", name: "Interview", tag: "INTERVIEW", accent: "var(--clay)" },
 ];
 
 type SectionKey = "dsa" | "django" | "sys" | "interview";

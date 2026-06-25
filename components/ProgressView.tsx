@@ -9,12 +9,15 @@ import {
   overallProgress,
   trackProgress,
 } from "@/lib/selectors";
+import { useCountUp } from "@/lib/useCountUp";
 
 export function ProgressView() {
   const state = usePlanner();
   const tracks = useMemo(() => orderedTracks(state), [state]);
   const days = useMemo(() => orderedDays(state), [state]);
   const overall = overallProgress(state);
+  const pctCount = useCountUp(overall.pct);
+  const doneCount = useCountUp(overall.done);
 
   return (
     <div>
@@ -23,15 +26,15 @@ export function ProgressView() {
         <div className="col-span-12 sm:col-span-5">
           <div className="label text-coffee mb-1">Overall completion</div>
           <div className="flex items-baseline gap-2">
-            <span className="font-display text-[6rem] leading-[0.8] font-extrabold tracking-tightest text-espresso">
-              {overall.pct}
+            <span className="font-display text-[6rem] leading-[0.8] font-extrabold tracking-tightest tabular-nums text-espresso">
+              {pctCount}
             </span>
             <span className="font-display text-3xl font-bold text-olive">%</span>
           </div>
         </div>
         <div className="col-span-12 sm:col-span-7 sm:pb-2">
-          <p className="font-display text-xl font-semibold tracking-tightest text-coffee">
-            {overall.done} of {overall.total} tasks done
+          <p className="font-display text-xl font-semibold tracking-tightest tabular-nums text-coffee">
+            {doneCount} of {overall.total} tasks done
           </p>
           <p className="mt-1 text-sm text-coffee/80">
             Across {days.length} days and {tracks.length} tracks.

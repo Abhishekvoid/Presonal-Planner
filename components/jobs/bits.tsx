@@ -7,9 +7,9 @@ import { Channel, Priority, Stage } from "@/lib/jobs/types";
    cool coffee for the cold end, olive as things warm up, espresso at the
    decision point, muted clay for closed. */
 export const STAGE_COLOR: Record<Stage, string> = {
-  lead: "#8C7560", // coffee-soft
+  lead: "var(--coffee-soft)",
   to_contact: "var(--coffee)",
-  contacted: "#878A5A", // olive-soft
+  contacted: "var(--olive-soft)",
   replied: "var(--olive)",
   interviewing: "var(--olive-deep)",
   offer: "var(--espresso)",
@@ -29,7 +29,7 @@ export function StageDot({ stage }: { stage: Stage }) {
 const PRIORITY_COLOR: Record<Priority, string> = {
   hot: "var(--clay)",
   warm: "var(--olive)",
-  cold: "#8C7560", // coffee-soft
+  cold: "var(--coffee-soft)",
 };
 
 export function PriorityDot({ p, withLabel }: { p: Priority; withLabel?: boolean }) {
@@ -49,18 +49,42 @@ export function PriorityDot({ p, withLabel }: { p: Priority; withLabel?: boolean
   );
 }
 
-export function ChannelTag({ channel }: { channel: Channel }) {
-  const label: Record<Channel, string> = {
-    linkedin: "LinkedIn",
-    email: "Email",
-    x: "X",
-    referral: "Referral",
-    other: "Other",
-  };
+const CHANNEL_TAG_LABEL: Record<Channel, string> = {
+  linkedin: "LinkedIn",
+  email: "Email",
+  x: "X",
+  referral: "Referral",
+  other: "Other",
+};
+
+/** Build a usable href from a stored contact handle, given its channel.
+   Email → mailto:, anything else → an https URL. Returns null when empty. */
+export function contactHref(channel: Channel, link?: string): string | null {
+  const v = (link ?? "").trim();
+  if (!v) return null;
+  if (channel === "email") return v.startsWith("mailto:") ? v : `mailto:${v}`;
+  return /^https?:\/\//i.test(v) ? v : `https://${v}`;
+}
+
+export function ChannelTag({ channel, link }: { channel: Channel; link?: string }) {
+  const base = "label !text-[9px] !tracking-[0.1em] border hairline px-1.5 py-[1px]";
+  const href = contactHref(channel, link);
+  if (href) {
+    return (
+      <a
+        href={href}
+        target={channel === "email" ? undefined : "_blank"}
+        rel="noreferrer"
+        title={link}
+        onClick={(e) => e.stopPropagation()}
+        className={`${base} text-olive-deep hover:bg-olive/10 hover:border-olive/50 transition-colors`}
+      >
+        {CHANNEL_TAG_LABEL[channel]} ↗
+      </a>
+    );
+  }
   return (
-    <span className="label !text-[9px] !tracking-[0.1em] border hairline px-1.5 py-[1px] text-coffee">
-      {label[channel]}
-    </span>
+    <span className={`${base} text-coffee`}>{CHANNEL_TAG_LABEL[channel]}</span>
   );
 }
 

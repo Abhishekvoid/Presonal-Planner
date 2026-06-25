@@ -137,7 +137,15 @@ export function GoalsView() {
   );
 }
 
-const PRESET_ACCENTS = ["#6E7048", "#6F5844", "#2A211B", "#B0734A", "#53552F", "#878A5A"];
+// Theme-aware accents (resolve via CSS vars so tracks adapt to light/dark).
+const PRESET_ACCENTS = [
+  "var(--olive)",
+  "var(--coffee)",
+  "var(--espresso)",
+  "var(--clay)",
+  "var(--olive-deep)",
+  "var(--olive-soft)",
+];
 
 function TrackForm({ track, onDone }: { track?: Track; onDone: () => void }) {
   const addTrack = usePlanner((s) => s.addTrack);

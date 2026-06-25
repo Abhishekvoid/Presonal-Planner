@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { usePlanner } from "@/lib/store";
 import { TimerMode } from "@/lib/types";
 import { formatClock, remainingSec } from "@/lib/focus";
 import { Button } from "@/components/primitives";
 import { TaskPicker } from "./TaskPicker";
+
+// WebGL halo loads client-only; the timer stays fully usable without it.
+const FocusHalo = dynamic(() => import("@/components/webgl/FocusHalo"), { ssr: false });
 
 /** Short WebAudio beep — no asset file, gated behind the Start gesture. */
 function beep(ref: React.MutableRefObject<AudioContext | null>) {
@@ -130,6 +134,12 @@ export function FocusTimer() {
   const selectedTaskId = activeTimer ? activeTimer.taskId : taskId;
   const mode: TimerMode = activeTimer?.mode ?? "work";
 
+  // Session progress (0..1) drives the halo's density/tightening.
+  const totalSec = (mode === "work" ? settings.workMin : settings.breakMin) * 60;
+  const progress = activeTimer
+    ? Math.max(0, Math.min(1, 1 - remaining / totalSec))
+    : 0;
+
   const start = () => {
     completedAnchor.current = null;
     startTimer(taskId, "work");
@@ -197,11 +207,19 @@ export function FocusTimer() {
       )}
 
       {/* Clock */}
-      <div className="px-4 py-10 text-center">
-        <div className="font-display text-[5rem] leading-none font-extrabold tracking-tightest tabular-nums text-espresso">
+      <div className="relative px-4 py-10 text-center">
+        <FocusHalo
+          className="absolute left-1/2 top-[44%] h-[340px] w-[340px] -translate-x-1/2 -translate-y-1/2"
+          progress={progress}
+          running={running}
+          paused={paused}
+          active={!!activeTimer}
+          mode={mode}
+        />
+        <div className="relative font-display text-[5rem] leading-none font-extrabold tracking-tightest tabular-nums text-espresso">
           {formatClock(remaining)}
         </div>
-        <div className="mt-4 flex items-center justify-center gap-2">
+        <div className="relative mt-4 flex items-center justify-center gap-2">
           <span
             className={`h-2 w-2 rounded-full ${running ? "animate-pulse" : ""}`}
             style={{ backgroundColor: mode === "work" ? "var(--olive)" : "var(--clay)" }}

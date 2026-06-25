@@ -1,7 +1,9 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { usePlanner } from "@/lib/store";
+import { EASE_OUT_EXPO, springSoft } from "@/lib/motion";
 import {
   dayProgress,
   orderedDays,
@@ -113,10 +115,14 @@ export function TodayView() {
           if (!tasks.length) return null;
           const done = tasks.filter((t) => t.done).length;
           return (
-            <section
+            <motion.section
               key={track.id}
-              className="reveal mb-3 break-inside-avoid bg-cream-raised border hairline"
-              style={delay(3 + i)}
+              variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}
+              initial="hidden"
+              animate="show"
+              transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: (3 + i) * 0.06 }}
+              whileHover={{ y: -3, transition: springSoft }}
+              className="mb-3 break-inside-avoid bg-cream-raised border hairline"
             >
               <div className="flex items-center justify-between px-4 py-3 border-b hairline">
                 <span className="flex items-center gap-2.5">
@@ -143,7 +149,7 @@ export function TodayView() {
                   />
                 ))}
               </div>
-            </section>
+            </motion.section>
           );
         })}
       </div>
@@ -240,9 +246,12 @@ function DayRail({
         const active = d.id === activeId;
         const complete = p.total > 0 && p.done === p.total;
         return (
-          <button
+          <motion.button
             key={d.id}
             onClick={() => onPick(d.id)}
+            whileTap={{ scale: 0.92 }}
+            whileHover={active ? undefined : { y: -2 }}
+            transition={springSoft}
             className={`group relative shrink-0 px-3 py-2 transition-colors duration-200 ${
               active
                 ? "bg-espresso text-cream-raised"
@@ -259,7 +268,7 @@ function DayRail({
                 backgroundColor: complete ? "var(--olive)" : active ? "var(--clay)" : "var(--olive)",
               }}
             />
-          </button>
+          </motion.button>
         );
       })}
     </div>

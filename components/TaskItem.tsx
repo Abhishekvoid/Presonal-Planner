@@ -1,9 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 import { Task } from "@/lib/types";
 import { usePlanner } from "@/lib/store";
 import { DifficultyChip } from "./primitives";
+import { EASE_OUT_EXPO, spring } from "@/lib/motion";
 
 export function TaskItem({
   task,
@@ -16,24 +18,48 @@ export function TaskItem({
 }) {
   const toggle = usePlanner((s) => s.toggleTask);
   const remove = usePlanner((s) => s.deleteTask);
+  // bumped only on false→true so the celebration plays on completion, not undo
+  const [burst, setBurst] = useState(0);
+
+  const onToggle = () => {
+    if (!task.done) setBurst((b) => b + 1);
+    toggle(task.id);
+  };
 
   return (
     <div className="group flex items-start gap-3 py-2.5 border-b hairline last:border-b-0">
-      <button
-        onClick={() => toggle(task.id)}
+      <motion.button
+        onClick={onToggle}
         role="checkbox"
         aria-checked={task.done}
         aria-label={task.done ? "Mark incomplete" : "Mark complete"}
+        whileTap={{ scale: 0.82 }}
+        animate={{ scale: 1 }}
+        transition={spring}
         className={`relative mt-[2px] h-[18px] w-[18px] shrink-0 border transition-colors duration-200 ${
           task.done ? "border-olive bg-olive" : "border-coffee/50 bg-cream-base hover:border-espresso"
         }`}
       >
+        {/* one-shot celebration ring on completion */}
+        <AnimatePresence>
+          {burst > 0 && (
+            <motion.span
+              key={burst}
+              aria-hidden
+              className="pointer-events-none absolute -inset-[3px] border border-olive"
+              initial={{ scale: 0.5, opacity: 0.75 }}
+              animate={{ scale: 2.6, opacity: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            />
+          )}
+        </AnimatePresence>
         {task.done && (
           <motion.svg
             viewBox="0 0 18 18"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ pathLength: 0, opacity: 0, scale: 0.7 }}
+            animate={{ pathLength: 1, opacity: 1, scale: 1 }}
+            transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
             className="absolute inset-0"
           >
             <motion.path
@@ -46,10 +72,10 @@ export function TaskItem({
             />
           </motion.svg>
         )}
-      </button>
+      </motion.button>
 
       <button
-        onClick={() => toggle(task.id)}
+        onClick={onToggle}
         className="min-w-0 flex-1 text-left"
         aria-hidden
         tabIndex={-1}

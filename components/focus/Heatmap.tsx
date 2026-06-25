@@ -14,9 +14,9 @@ const WEEKS = 13;
 
 const CELL_COLOR: Record<number, string> = {
   0: "var(--cream-deep)",
-  1: "rgba(110,112,72,0.30)",
-  2: "rgba(110,112,72,0.55)",
-  3: "rgba(110,112,72,0.80)",
+  1: "rgb(var(--olive-rgb) / 0.30)",
+  2: "rgb(var(--olive-rgb) / 0.55)",
+  3: "rgb(var(--olive-rgb) / 0.80)",
   4: "var(--olive-deep)",
 };
 

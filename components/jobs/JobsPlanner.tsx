@@ -14,6 +14,7 @@ import { CompanyForm } from "./CompanyForm";
 import { CompanyDetail } from "./CompanyDetail";
 import { TemplateManager } from "./TemplateManager";
 import { JobsBackupPanel } from "./JobsBackupPanel";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function JobsPlanner() {
   const hasHydrated = useJobs((s) => s.hasHydrated);
@@ -160,6 +161,7 @@ function JobsHeader({
           >
             Backup
           </button>
+          <ThemeToggle />
         </div>
       </div>
     </header>

@@ -28,7 +28,7 @@ export function CompanyCard({
   return (
     <div
       className={`group border ${
-        overdue ? "border-clay/45 bg-clay/[0.06]" : "border-[rgba(111,88,68,0.22)] bg-cream-raised"
+        overdue ? "border-clay/45 bg-clay/[0.06]" : "border-hair bg-cream-raised"
       }`}
     >
       <button
@@ -67,7 +67,7 @@ export function CompanyCard({
         >
           ←
         </button>
-        <span className="w-px bg-[rgba(111,88,68,0.18)]" aria-hidden />
+        <span className="w-px bg-coffee/20" aria-hidden />
         <button
           onClick={() => next && setStage(company.id, next)}
           disabled={!next}

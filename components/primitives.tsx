@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ReactNode, useEffect, useRef } from "react";
 import { Difficulty } from "@/lib/types";
+import { spring } from "@/lib/motion";
 
 /* ---------- Button ---------- */
 
@@ -32,9 +33,17 @@ export function Button({
     danger: "border border-clay/50 text-clay-deep hover:bg-clay-deep hover:text-cream-raised hover:border-clay-deep",
   };
   return (
-    <button type={type} onClick={onClick} disabled={disabled} className={`${base} ${variants[variant]} ${className}`}>
+    <motion.button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`${base} ${variants[variant]} ${className}`}
+      whileHover={disabled ? undefined : { y: -1 }}
+      whileTap={disabled ? undefined : { scale: 0.96 }}
+      transition={spring}
+    >
       {children}
-    </button>
+    </motion.button>
   );
 }
 
@@ -141,7 +150,7 @@ export function Modal({
           transition={{ duration: 0.2 }}
         >
           <div
-            className="absolute inset-0 bg-espresso/40 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-scrim/50 backdrop-blur-[2px]"
             onClick={onClose}
             aria-hidden
           />
