@@ -58,8 +58,8 @@ export function SystemSection() {
                 <span className="font-display text-xs font-bold text-coffee">2/3</span>
               </div>
               <div className="px-4">
-                <DemoTaskItem text="Re-implement a vector: growth, move semantics" difficulty="hard" autoCheck />
-                <DemoTaskItem text="Draw the heap vs stack for one example" difficulty="med" autoCheck />
+                <DemoTaskItem text="Re-implement a vector: growth, move semantics" difficulty="hard" autoCheck delay={0.3} />
+                <DemoTaskItem text="Draw the heap vs stack for one example" difficulty="med" autoCheck delay={0.9} />
                 <DemoTaskItem text="Write three flashcards on ownership" difficulty="easy" />
               </div>
             </div>
@@ -118,9 +118,10 @@ function Act({
   );
 }
 
-/** A small consistency strip — cells fill in on scroll, echoing the heatmap. */
+/** A small consistency strip — three weeks of cells fill in on scroll, laid out
+ *  as a tidy 7-column grid so it reads as a calendar, echoing the heatmap. */
 function StreakStrip() {
-  // 1 = filled (kept), 0 = empty, deterministic so it reads as a real record
+  // 1 = kept, 0 = missed; deterministic so it reads as a real record
   const cells = [1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1];
   return (
     <div>
@@ -130,11 +131,11 @@ function StreakStrip() {
         </span>
         <span className="label text-coffee">day streak</span>
       </div>
-      <div className="mt-4 flex flex-wrap gap-1.5">
+      <div className="mt-4 grid w-fit grid-cols-7 gap-1.5">
         {cells.map((c, i) => (
           <motion.span
             key={i}
-            className={`h-4 w-4 ${c ? "bg-olive" : "bg-cream-deep"}`}
+            className={`h-4 w-4 ${c ? "bg-olive" : "border border-hair bg-cream-deep"}`}
             initial={{ opacity: 0, scale: 0.6 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-10%" }}

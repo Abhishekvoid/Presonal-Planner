@@ -16,10 +16,13 @@ export function DemoTaskItem({
   text,
   difficulty,
   autoCheck = false,
+  delay = 0,
 }: {
   text: string;
   difficulty?: Difficulty;
   autoCheck?: boolean;
+  /** seconds to wait after entering view before auto-checking (stagger) */
+  delay?: number;
 }) {
   const [done, setDone] = useState(false);
   const [burst, setBurst] = useState(0);
@@ -27,13 +30,15 @@ export function DemoTaskItem({
   const inView = useInView(ref, { once: true, margin: "-20%" });
 
   useEffect(() => {
-    if (autoCheck && inView) {
+    if (!autoCheck || !inView) return;
+    const id = window.setTimeout(() => {
       setDone((d) => {
         if (!d) setBurst((b) => b + 1);
         return true;
       });
-    }
-  }, [autoCheck, inView]);
+    }, delay * 1000);
+    return () => clearTimeout(id);
+  }, [autoCheck, inView, delay]);
 
   const toggle = () => {
     setDone((d) => {

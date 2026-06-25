@@ -74,11 +74,12 @@ export function HeroSection({ onOpen }: { onOpen: () => void }) {
 
       <motion.div
         aria-hidden
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-coffee"
+        className="absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5 text-coffee"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1, duration: 0.8 }}
       >
+        <span className="label">Scroll</span>
         <motion.span
           className="block text-sm"
           animate={{ y: [0, 6, 0] }}

@@ -9,9 +9,9 @@ import { prefersReducedMotion } from "@/lib/webgl";
 
 const LINES = [
   "Discipline is not a feeling. It is a record.",
-  "Days are pages. Tasks are ink.",
-  "Focus is the press that makes it permanent.",
-  "Keep the streak. Close the day.",
+  "Each day, a page. Each task, a line of ink.",
+  "Focus is the press that sets it for good.",
+  "Close the day. Keep the streak unbroken.",
 ];
 
 /**
@@ -37,7 +37,8 @@ export function ManifestoSection() {
     const st = ScrollTrigger.create({
       trigger: el,
       start: "top top",
-      end: `+=${LINES.length * 100}%`,
+      // ~0.8 screen of scroll per line — enough to read, not draggy
+      end: `+=${LINES.length * 80}%`,
       pin: true,
       scrub: true,
       onUpdate: (self) => {
