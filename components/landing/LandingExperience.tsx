@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Preloader } from "./Preloader";
 import { HeroSection } from "./HeroSection";
 import { ManifestoSection } from "./ManifestoSection";
+import { SystemSection } from "./SystemSection";
 import { useEntryTransition } from "@/components/transitions/EntryTransition";
 import { hasSeenIntro, markIntroSeen } from "@/lib/entry";
 import { useLenis } from "@/lib/useLenis";
@@ -52,8 +53,9 @@ export function LandingExperience({ onEnter }: { onEnter: () => void }) {
 
           <ManifestoSection />
 
-          {/* Placeholder sections — replaced by System / Enter in Tasks 3–4. */}
-          <PlaceholderSection label="The System" />
+          <SystemSection />
+
+          {/* Placeholder — replaced by Enter in Task 4. */}
           <PlaceholderSection label="Open the Almanac" />
         </main>
       )}
