@@ -11,6 +11,7 @@ import {
 } from "@/lib/selectors";
 import { useCountUp } from "@/lib/useCountUp";
 import { KineticNumber, PressIn } from "@/lib/kineticType";
+import { SectionDivider } from "./SectionDivider";
 
 export function ProgressView() {
   const state = usePlanner();
@@ -22,7 +23,7 @@ export function ProgressView() {
   return (
     <div>
       {/* Big overall number */}
-      <div className="grid grid-cols-12 items-end gap-4 border-b hairline pb-7">
+      <div className="grid grid-cols-12 items-end gap-4 pb-7">
         <div className="col-span-12 sm:col-span-5">
           <PressIn className="label text-coffee mb-1 block">Overall completion</PressIn>
           <div className="flex items-baseline gap-2">
@@ -42,6 +43,8 @@ export function ProgressView() {
           </p>
         </div>
       </div>
+
+      <SectionDivider />
 
       {/* Per-track */}
       <section className="mt-8">
@@ -77,6 +80,8 @@ export function ProgressView() {
           })}
         </div>
       </section>
+
+      <SectionDivider className="mt-10" />
 
       {/* Per-day */}
       <section className="mt-10">

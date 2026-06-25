@@ -91,6 +91,9 @@
     background-color: var(--cream-base);
     color: var(--espresso);
     transition: background-color 0.3s ease, color 0.3s ease;
+    /* clip (not hidden) so full-bleed dividers can't add a horizontal
+       scrollbar while position: sticky on the header keeps working */
+    overflow-x: clip;
   }
 
   /* faint paper grain — atmosphere, not decoration; opacity is themed */

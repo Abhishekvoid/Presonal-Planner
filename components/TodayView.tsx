@@ -16,6 +16,7 @@ import { TaskItem } from "./TaskItem";
 import { Button, Modal, ProgressBar } from "./primitives";
 import { DayForm, TaskForm } from "./forms";
 import { PressIn } from "@/lib/kineticType";
+import { SectionDivider } from "./SectionDivider";
 
 const delay = (i: number) => ({ animationDelay: `${i * 0.06}s` });
 
@@ -112,8 +113,10 @@ export function TodayView() {
         </div>
       </div>
 
+      <SectionDivider className="mt-6" />
+
       {/* Task sections — masonry so uneven counts pack tightly */}
-      <div className="mt-3 columns-1 gap-3 md:columns-2">
+      <div className="mt-6 columns-1 gap-3 md:columns-2">
         {tracks.map((track, i) => {
           const tasks = tasksForDayAndTrack(state, day.id, track.id);
           if (!tasks.length) return null;
@@ -158,9 +161,11 @@ export function TodayView() {
         })}
       </div>
 
+      <SectionDivider className="mt-6" />
+
       {/* Result */}
       <div
-        className="reveal mt-3 bg-espresso text-cream-raised p-6"
+        className="reveal mt-6 bg-espresso text-cream-raised p-6"
         style={delay(3 + tracks.length)}
       >
         <div className="label text-cream-raised/70 mb-2">Day ends when you can do this</div>

@@ -3,6 +3,7 @@
 import { FocusTimer } from "./focus/FocusTimer";
 import { Heatmap } from "./focus/Heatmap";
 import { ReflectionCard } from "./focus/ReflectionCard";
+import { SectionDivider } from "./SectionDivider";
 
 const delay = (i: number) => ({ animationDelay: `${i * 0.06}s` });
 
@@ -22,7 +23,9 @@ export function FocusView() {
         <FocusTimer />
       </div>
 
-      <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <SectionDivider className="mt-6" />
+
+      <div className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-2">
         <div className="reveal" style={delay(2)}>
           <Heatmap />
         </div>

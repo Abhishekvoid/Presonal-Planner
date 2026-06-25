@@ -8,6 +8,7 @@ import { Task, Track } from "@/lib/types";
 import { TaskItem } from "./TaskItem";
 import { Button, Field, inputClass, Modal, ProgressBar } from "./primitives";
 import { TaskForm } from "./forms";
+import { SectionDivider } from "./SectionDivider";
 
 export function GoalsView() {
   const state = usePlanner();
@@ -21,7 +22,7 @@ export function GoalsView() {
 
   return (
     <div>
-      <div className="flex items-end justify-between border-b hairline pb-5">
+      <div className="flex items-end justify-between pb-5">
         <div>
           <div className="label text-coffee mb-1">Tracks</div>
           <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tightest text-espresso">
@@ -32,6 +33,8 @@ export function GoalsView() {
           + New track
         </Button>
       </div>
+
+      <SectionDivider />
 
       <div className="mt-5 space-y-3">
         {tracks.map((track) => {
