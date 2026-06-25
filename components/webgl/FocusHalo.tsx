@@ -165,20 +165,27 @@ export function FocusHalo({
       renderer.render(scene, camera);
     };
 
+    const loop = () => {
+      uniforms.uTime.value = clock.getElapsedTime();
+      render();
+      raf = requestAnimationFrame(loop);
+    };
+    const onVis = () => {
+      if (document.hidden) cancelAnimationFrame(raf);
+      else if (!reduced) raf = requestAnimationFrame(loop);
+    };
+
     if (reduced) {
       uniforms.uTime.value = 6;
       render();
     } else {
-      const loop = () => {
-        uniforms.uTime.value = clock.getElapsedTime();
-        render();
-        raf = requestAnimationFrame(loop);
-      };
       raf = requestAnimationFrame(loop);
+      document.addEventListener("visibilitychange", onVis);
     }
 
     return () => {
       cancelAnimationFrame(raf);
+      document.removeEventListener("visibilitychange", onVis);
       ro.disconnect();
       geometry.dispose();
       material.dispose();

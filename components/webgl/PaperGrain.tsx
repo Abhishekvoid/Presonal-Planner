@@ -147,20 +147,27 @@ export function PaperGrain() {
       renderer.render(scene, camera);
     };
 
+    const loop = () => {
+      uniforms.uTime.value = clock.getElapsedTime();
+      renderOnce();
+      raf = requestAnimationFrame(loop);
+    };
+    const onVis = () => {
+      if (document.hidden) cancelAnimationFrame(raf);
+      else if (!reduced) raf = requestAnimationFrame(loop);
+    };
+
     if (reduced) {
       uniforms.uTime.value = 12.0; // a pleasant static frame
       renderOnce();
     } else {
-      const loop = () => {
-        uniforms.uTime.value = clock.getElapsedTime();
-        renderOnce();
-        raf = requestAnimationFrame(loop);
-      };
       raf = requestAnimationFrame(loop);
+      document.addEventListener("visibilitychange", onVis);
     }
 
     return () => {
       cancelAnimationFrame(raf);
+      document.removeEventListener("visibilitychange", onVis);
       ro.disconnect();
       window.removeEventListener("pointermove", onPointer);
       geometry.dispose();
