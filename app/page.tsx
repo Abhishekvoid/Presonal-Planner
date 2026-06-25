@@ -1,5 +1,5 @@
-import { Planner } from "@/components/Planner";
+import EntryGate from "@/components/landing/EntryGate";
 
 export default function Page() {
-  return <Planner />;
+  return <EntryGate />;
 }

@@ -10,6 +10,7 @@ import { ProgressView } from "./ProgressView";
 import { FocusView } from "./FocusView";
 import { BackupPanel } from "./BackupPanel";
 import { Modal } from "./primitives";
+import { ThemeToggle } from "./ThemeToggle";
 
 type View = "today" | "goals" | "progress" | "focus";
 
@@ -20,7 +21,7 @@ const NAV: { id: View; label: string }[] = [
   { id: "focus", label: "Focus" },
 ];
 
-export function Planner() {
+export function Planner({ replayIntro }: { replayIntro?: () => void } = {}) {
   const hasHydrated = usePlanner((s) => s.hasHydrated);
   const [mounted, setMounted] = useState(false);
   const [view, setView] = useState<View>("today");
@@ -32,7 +33,12 @@ export function Planner() {
   return (
     <MotionConfig reducedMotion="user">
     <div className="min-h-screen">
-      <Header view={view} setView={setView} onBackup={() => setBackupOpen(true)} />
+      <Header
+        view={view}
+        setView={setView}
+        onBackup={() => setBackupOpen(true)}
+        replayIntro={replayIntro}
+      />
 
       <main className="mx-auto w-full max-w-5xl px-5 pb-24 pt-8 sm:px-8">
         {!ready ? (
@@ -67,10 +73,12 @@ function Header({
   view,
   setView,
   onBackup,
+  replayIntro,
 }: {
   view: View;
   setView: (v: View) => void;
   onBackup: () => void;
+  replayIntro?: () => void;
 }) {
   return (
     <header className="sticky top-0 z-30 border-b hairline bg-cream-base/85 backdrop-blur-md">
@@ -119,6 +127,15 @@ function Header({
           >
             Backup
           </button>
+          {replayIntro && (
+            <button
+              onClick={replayIntro}
+              className="label text-coffee hover:text-espresso transition-colors"
+            >
+              Replay intro
+            </button>
+          )}
+          <ThemeToggle />
         </div>
       </div>
     </header>
