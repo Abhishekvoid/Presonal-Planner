@@ -6,6 +6,7 @@ import { Preloader } from "./Preloader";
 import { HeroSection } from "./HeroSection";
 import { ManifestoSection } from "./ManifestoSection";
 import { SystemSection } from "./SystemSection";
+import { CartographySection } from "./CartographySection";
 import { EnterSection } from "./EnterSection";
 import { useEntryTransition } from "@/components/transitions/EntryTransition";
 import { hasSeenIntro, markIntroSeen } from "@/lib/entry";
@@ -55,6 +56,8 @@ export function LandingExperience({ onEnter }: { onEnter: () => void }) {
           <ManifestoSection />
 
           <SystemSection />
+
+          <CartographySection />
 
           <EnterSection onOpen={handleOpen} />
         </main>
