@@ -6,6 +6,7 @@ import { Preloader } from "./Preloader";
 import { HeroSection } from "./HeroSection";
 import { ManifestoSection } from "./ManifestoSection";
 import { SystemSection } from "./SystemSection";
+import { EnterSection } from "./EnterSection";
 import { useEntryTransition } from "@/components/transitions/EntryTransition";
 import { hasSeenIntro, markIntroSeen } from "@/lib/entry";
 import { useLenis } from "@/lib/useLenis";
@@ -55,20 +56,11 @@ export function LandingExperience({ onEnter }: { onEnter: () => void }) {
 
           <SystemSection />
 
-          {/* Placeholder — replaced by Enter in Task 4. */}
-          <PlaceholderSection label="Open the Almanac" />
+          <EnterSection onOpen={handleOpen} />
         </main>
       )}
 
       {overlay}
     </>
-  );
-}
-
-function PlaceholderSection({ label }: { label: string }) {
-  return (
-    <section className="grid h-screen place-items-center px-6">
-      <span className="label text-coffee">{label}</span>
-    </section>
   );
 }
