@@ -4,6 +4,7 @@ import { AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Preloader } from "./Preloader";
 import { HeroSection } from "./HeroSection";
+import { ManifestoSection } from "./ManifestoSection";
 import { useEntryTransition } from "@/components/transitions/EntryTransition";
 import { hasSeenIntro, markIntroSeen } from "@/lib/entry";
 import { useLenis } from "@/lib/useLenis";
@@ -49,10 +50,9 @@ export function LandingExperience({ onEnter }: { onEnter: () => void }) {
         <main>
           <HeroSection onOpen={handleOpen} />
 
-          {/* Placeholder sections — replaced by Manifesto / System / Enter in
-              Tasks 2–4. They exist now so the page scrolls and Lenis/ScrollTrigger
-              have real height to work with. */}
-          <PlaceholderSection label="Manifesto" />
+          <ManifestoSection />
+
+          {/* Placeholder sections — replaced by System / Enter in Tasks 3–4. */}
           <PlaceholderSection label="The System" />
           <PlaceholderSection label="Open the Almanac" />
         </main>
