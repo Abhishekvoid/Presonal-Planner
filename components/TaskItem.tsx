@@ -6,6 +6,7 @@ import { Task } from "@/lib/types";
 import { usePlanner } from "@/lib/store";
 import { DifficultyChip } from "./primitives";
 import { EASE_OUT_EXPO, spring } from "@/lib/motion";
+import { playStamp } from "@/lib/sound";
 
 export function TaskItem({
   task,
@@ -22,7 +23,10 @@ export function TaskItem({
   const [burst, setBurst] = useState(0);
 
   const onToggle = () => {
-    if (!task.done) setBurst((b) => b + 1);
+    if (!task.done) {
+      setBurst((b) => b + 1);
+      playStamp(); // no-op unless interface cues are enabled
+    }
     toggle(task.id);
   };
 

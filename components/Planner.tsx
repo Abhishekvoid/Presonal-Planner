@@ -12,6 +12,7 @@ import { BackupPanel } from "./BackupPanel";
 import { Modal } from "./primitives";
 import { ThemeToggle } from "./ThemeToggle";
 import { ViewTransition } from "./transitions/ViewTransition";
+import { playTurn } from "@/lib/sound";
 
 type View = "today" | "goals" | "progress" | "focus";
 
@@ -39,6 +40,7 @@ export function Planner({ replayIntro }: { replayIntro?: () => void } = {}) {
     if (next === view) return;
     prevView.current = view;
     setView(next);
+    playTurn(); // no-op unless interface cues are enabled
     // Move focus into the freshly-revealed view for keyboard/SR users.
     requestAnimationFrame(() => mainRef.current?.focus());
   };

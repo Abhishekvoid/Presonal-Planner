@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAmbient } from "@/lib/ambientStore";
 import { SOUNDS } from "@/lib/ambient";
+import { useSfx } from "@/lib/sound";
 
 /** Two-reel cassette. Reels spin while playing (paused under reduced motion). */
 function Cassette({
@@ -43,6 +44,8 @@ export function SoundDeck() {
   const toggle = useAmbient((s) => s.toggle);
   const selectSound = useAmbient((s) => s.selectSound);
   const setVolume = useAmbient((s) => s.setVolume);
+
+  const { enabled: sfxOn, setEnabled: setSfxOn } = useSfx();
 
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -107,6 +110,26 @@ export function SoundDeck() {
                 className="w-full accent-olive"
               />
             </label>
+
+            {/* Interface cues — synth UI sounds, off by default */}
+            <div className="flex items-center justify-between border-t hairline pt-3">
+              <span className="label text-coffee">Interface cues</span>
+              <button
+                onClick={() => setSfxOn(!sfxOn)}
+                role="switch"
+                aria-checked={sfxOn}
+                aria-label="Toggle interface sound cues"
+                className={`relative h-5 w-9 rounded-full border transition-colors ${
+                  sfxOn ? "border-olive bg-olive" : "border-coffee/40 bg-cream-deep"
+                }`}
+              >
+                <span
+                  className={`absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full bg-cream-raised transition-all ${
+                    sfxOn ? "left-[18px]" : "left-[2px]"
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         </div>
       )}
