@@ -1,8 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion, MotionConfig } from "framer-motion";
+import { motion, MotionConfig } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePlanner } from "@/lib/store";
 import { TodayView } from "./TodayView";
 import { GoalsView } from "./GoalsView";
@@ -11,6 +11,7 @@ import { FocusView } from "./FocusView";
 import { BackupPanel } from "./BackupPanel";
 import { Modal } from "./primitives";
 import { ThemeToggle } from "./ThemeToggle";
+import { ViewTransition } from "./transitions/ViewTransition";
 
 type View = "today" | "goals" | "progress" | "focus";
 
@@ -21,43 +22,54 @@ const NAV: { id: View; label: string }[] = [
   { id: "focus", label: "Focus" },
 ];
 
+const ORDER: View[] = ["today", "goals", "progress", "focus"];
+
 export function Planner({ replayIntro }: { replayIntro?: () => void } = {}) {
   const hasHydrated = usePlanner((s) => s.hasHydrated);
   const [mounted, setMounted] = useState(false);
   const [view, setView] = useState<View>("today");
   const [backupOpen, setBackupOpen] = useState(false);
+  const prevView = useRef<View>("today");
+  const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => setMounted(true), []);
   const ready = mounted && hasHydrated;
+
+  const changeView = (next: View) => {
+    if (next === view) return;
+    prevView.current = view;
+    setView(next);
+    // Move focus into the freshly-revealed view for keyboard/SR users.
+    requestAnimationFrame(() => mainRef.current?.focus());
+  };
+
+  const direction: 1 | -1 =
+    ORDER.indexOf(view) >= ORDER.indexOf(prevView.current) ? 1 : -1;
 
   return (
     <MotionConfig reducedMotion="user">
     <div className="min-h-screen">
       <Header
         view={view}
-        setView={setView}
+        setView={changeView}
         onBackup={() => setBackupOpen(true)}
         replayIntro={replayIntro}
       />
 
-      <main className="mx-auto w-full max-w-5xl px-5 pb-24 pt-8 sm:px-8">
+      <main
+        ref={mainRef}
+        tabIndex={-1}
+        className="mx-auto w-full max-w-5xl px-5 pb-24 pt-8 sm:px-8 focus:outline-none"
+      >
         {!ready ? (
           <Skeleton />
         ) : (
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={view}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            >
-              {view === "today" && <TodayView />}
-              {view === "goals" && <GoalsView />}
-              {view === "progress" && <ProgressView />}
-              {view === "focus" && <FocusView />}
-            </motion.div>
-          </AnimatePresence>
+          <ViewTransition viewKey={view} direction={direction}>
+            {view === "today" && <TodayView />}
+            {view === "goals" && <GoalsView />}
+            {view === "progress" && <ProgressView />}
+            {view === "focus" && <FocusView />}
+          </ViewTransition>
         )}
       </main>
 

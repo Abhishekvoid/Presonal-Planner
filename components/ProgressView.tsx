@@ -10,13 +10,13 @@ import {
   trackProgress,
 } from "@/lib/selectors";
 import { useCountUp } from "@/lib/useCountUp";
+import { KineticNumber, PressIn } from "@/lib/kineticType";
 
 export function ProgressView() {
   const state = usePlanner();
   const tracks = useMemo(() => orderedTracks(state), [state]);
   const days = useMemo(() => orderedDays(state), [state]);
   const overall = overallProgress(state);
-  const pctCount = useCountUp(overall.pct);
   const doneCount = useCountUp(overall.done);
 
   return (
@@ -24,11 +24,12 @@ export function ProgressView() {
       {/* Big overall number */}
       <div className="grid grid-cols-12 items-end gap-4 border-b hairline pb-7">
         <div className="col-span-12 sm:col-span-5">
-          <div className="label text-coffee mb-1">Overall completion</div>
+          <PressIn className="label text-coffee mb-1 block">Overall completion</PressIn>
           <div className="flex items-baseline gap-2">
-            <span className="font-display text-[6rem] leading-[0.8] font-extrabold tracking-tightest tabular-nums text-espresso">
-              {pctCount}
-            </span>
+            <KineticNumber
+              value={overall.pct}
+              className="font-display text-[6rem] leading-[0.8] font-extrabold tracking-tightest tabular-nums text-espresso"
+            />
             <span className="font-display text-3xl font-bold text-olive">%</span>
           </div>
         </div>

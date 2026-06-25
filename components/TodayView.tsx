@@ -15,6 +15,7 @@ import { yesterdayKey } from "@/lib/focus";
 import { TaskItem } from "./TaskItem";
 import { Button, Modal, ProgressBar } from "./primitives";
 import { DayForm, TaskForm } from "./forms";
+import { PressIn } from "@/lib/kineticType";
 
 const delay = (i: number) => ({ animationDelay: `${i * 0.06}s` });
 
@@ -71,9 +72,12 @@ export function TodayView() {
           <div className="label text-olive-deep mt-2">{day.date}</div>
         </div>
         <div className="col-span-12 sm:col-span-9">
-          <h1 className="font-display text-2xl sm:text-[2rem] font-bold leading-[1.05] tracking-tightest text-espresso text-balance">
+          <PressIn
+            as="h1"
+            className="block font-display text-2xl sm:text-[2rem] font-bold leading-[1.05] tracking-tightest text-espresso text-balance"
+          >
             {day.title}
-          </h1>
+          </PressIn>
           <div className="mt-4 flex items-center gap-4">
             <div className="flex-1 max-w-xs">
               <ProgressBar pct={prog.pct} />
