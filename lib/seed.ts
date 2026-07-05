@@ -12,7 +12,7 @@ import {
 const TRACKS: { key: SectionKey; name: string; tag: string; accent: string }[] = [
   { key: "dsa", name: "DSA", tag: "DSA", accent: "var(--olive)" },
   { key: "django", name: "Django / backend", tag: "BACKEND", accent: "var(--coffee)" },
-  { key: "sys", name: "System design", tag: "SYSTEM", accent: "var(--espresso)" },
+  { key: "sys", name: "System design", tag: "SYSTEM", accent: "var(--slate)" },
   { key: "interview", name: "Interview", tag: "INTERVIEW", accent: "var(--clay)" },
 ];
 
@@ -451,6 +451,9 @@ export function buildSeed(): PlannerState {
     reflections: [],
     focusSettings: { ...DEFAULT_FOCUS_SETTINGS },
     activeTimer: null,
+    notes: [],
+    activeView: "today",
+    activeNoteId: null,
   };
 }
 

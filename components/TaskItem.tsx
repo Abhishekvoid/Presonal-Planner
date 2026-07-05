@@ -19,6 +19,13 @@ export function TaskItem({
 }) {
   const toggle = usePlanner((s) => s.toggleTask);
   const remove = usePlanner((s) => s.deleteTask);
+  const notes = usePlanner((s) => s.notes ?? []);
+  const setView = usePlanner((s) => s.setActiveView);
+  const setActiveNoteId = usePlanner((s) => s.setActiveNoteId);
+
+  // Find note linked to this specific task
+  const linkedNote = notes.find((n) => n.taskId === task.id);
+
   // bumped only on false→true so the celebration plays on completion, not undo
   const [burst, setBurst] = useState(0);
 
@@ -28,6 +35,22 @@ export function TaskItem({
       playStamp(); // no-op unless interface cues are enabled
     }
     toggle(task.id);
+  };
+
+  const handleOpenNote = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (linkedNote) {
+      setActiveNoteId(linkedNote.id);
+      setView("notes");
+    }
+  };
+
+  const handleCreateNote = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const addNote = usePlanner.getState().addNote;
+    const noteId = addNote(`Notes: ${task.text}`, "", "Tasks", task.id, task.dayId);
+    setActiveNoteId(noteId);
+    setView("notes");
   };
 
   return (
@@ -99,6 +122,15 @@ export function TaskItem({
             style={{ width: "100%" }}
           />
         </span>
+        {linkedNote && (
+          <button
+            onClick={handleOpenNote}
+            title={`Open linked note: ${linkedNote.title}`}
+            className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 border border-olive/35 bg-olive/[0.04] text-[9.5px] text-olive-deep font-mono font-bold rounded-sm select-none hover:bg-olive/10 transition-colors"
+          >
+            📄 note
+          </button>
+        )}
         {task.tip && (
           <span className="mt-0.5 block text-[12px] italic leading-snug text-coffee">
             {task.tip}
@@ -110,6 +142,15 @@ export function TaskItem({
         {task.difficulty && <DifficultyChip d={task.difficulty} />}
         {editable && (
           <div className="flex items-center gap-0.5 opacity-100 transition-opacity duration-150 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+            {!linkedNote && (
+              <button
+                onClick={handleCreateNote}
+                aria-label={`Create note for task: ${task.text}`}
+                className="px-1.5 py-1 text-xs text-olive-deep font-bold hover:underline"
+              >
+                + Note
+              </button>
+            )}
             {onEdit && (
               <button
                 onClick={() => onEdit(task)}

@@ -5,29 +5,44 @@ import dynamic from "next/dynamic";
 import { usePlanner } from "@/lib/store";
 import { TimerMode } from "@/lib/types";
 import { formatClock, remainingSec } from "@/lib/focus";
-import { Button } from "@/components/primitives";
+import { Button, Modal } from "@/components/primitives";
 import { TaskPicker } from "./TaskPicker";
 
 // WebGL halo loads client-only; the timer stays fully usable without it.
 const FocusHalo = dynamic(() => import("@/components/webgl/FocusHalo"), { ssr: false });
 
-/** Short WebAudio beep — no asset file, gated behind the Start gesture. */
-function beep(ref: React.MutableRefObject<AudioContext | null>) {
+/** Short WebAudio double-tone chime — no asset file, gated behind the Start gesture. */
+function playChime(ref: React.MutableRefObject<AudioContext | null>) {
   try {
     const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!ref.current) ref.current = new Ctx();
     const ctx = ref.current;
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.connect(g);
-    g.connect(ctx.destination);
-    o.type = "sine";
-    o.frequency.value = 660;
-    g.gain.setValueAtTime(0.0001, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
-    o.start();
-    o.stop(ctx.currentTime + 0.26);
+    
+    // First tone (G4)
+    const o1 = ctx.createOscillator();
+    const g1 = ctx.createGain();
+    o1.connect(g1);
+    g1.connect(ctx.destination);
+    o1.type = "sine";
+    o1.frequency.value = 392; // G4
+    g1.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g1.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.05);
+    g1.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+    o1.start();
+    o1.stop(ctx.currentTime + 0.4);
+
+    // Second tone (C5)
+    const o2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    o2.connect(g2);
+    g2.connect(ctx.destination);
+    o2.type = "sine";
+    o2.frequency.value = 523.25; // C5
+    g2.gain.setValueAtTime(0.0001, ctx.currentTime + 0.15);
+    g2.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.2);
+    g2.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
+    o2.start(ctx.currentTime + 0.15);
+    o2.stop(ctx.currentTime + 0.65);
   } catch {
     /* audio blocked — silent is fine */
   }
@@ -90,6 +105,16 @@ function flashTitle(finishedMode: TimerMode) {
   }, 4000);
 }
 
+function sendNotification(mode: TimerMode) {
+  if (typeof window !== "undefined" && "Notification" in window) {
+    if (Notification.permission === "granted") {
+      const title = mode === "work" ? "Focus session complete!" : "Break is over!";
+      const body = mode === "work" ? "Time to rest and take a break." : "Time to get back to work!";
+      new Notification(title, { body, silent: true });
+    }
+  }
+}
+
 export function FocusTimer() {
   const activeTimer = usePlanner((s) => s.activeTimer);
   const settings = usePlanner((s) => s.focusSettings);
@@ -107,12 +132,19 @@ export function FocusTimer() {
   const [muted, setMuted] = useState(false);
   const audioRef = useRef<AudioContext | null>(null);
   const completedAnchor = useRef<string | null>(null);
+  const [completionModal, setCompletionModal] = useState<{ mode: TimerMode } | null>(null);
 
   const running = !!activeTimer && !activeTimer.pausedAt;
   const paused = !!activeTimer?.pausedAt;
   const remaining = activeTimer
     ? remainingSec(activeTimer, Date.now())
     : settings.workMin * 60;
+
+  const requestPermission = () => {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  };
 
   // Re-render ~4x/sec while running; the displayed value is derived from the clock.
   useEffect(() => {
@@ -126,8 +158,10 @@ export function FocusTimer() {
     if (!activeTimer || activeTimer.pausedAt || remaining > 0) return;
     if (completedAnchor.current === activeTimer.startedAt) return;
     completedAnchor.current = activeTimer.startedAt;
-    if (!muted) beep(audioRef);
+    if (!muted) playChime(audioRef);
     flashTitle(activeTimer.mode);
+    sendNotification(activeTimer.mode);
+    setCompletionModal({ mode: activeTimer.mode });
     completeSession();
   }, [remaining, activeTimer, muted, completeSession]);
 
@@ -143,6 +177,7 @@ export function FocusTimer() {
   const start = () => {
     completedAnchor.current = null;
     startTimer(taskId, "work");
+    requestPermission();
   };
 
   return (
@@ -251,7 +286,13 @@ export function FocusTimer() {
         )}
         {paused && (
           <>
-            <Button variant="solid" onClick={resumeTimer}>
+            <Button
+              variant="solid"
+              onClick={() => {
+                resumeTimer();
+                requestPermission();
+              }}
+            >
               Resume
             </Button>
             <Button variant="ghost" onClick={resetTimer}>
@@ -260,6 +301,49 @@ export function FocusTimer() {
           </>
         )}
       </div>
+
+      {/* Timer Completion Modal */}
+      <Modal
+        open={!!completionModal}
+        onClose={() => setCompletionModal(null)}
+        title={completionModal?.mode === "work" ? "Focus block complete" : "Break complete"}
+      >
+        <div className="space-y-4">
+          <p className="text-sm leading-relaxed text-coffee">
+            {completionModal?.mode === "work"
+              ? "Excellent work. You've completed your focus session. Time to rest your eyes, stand up, and take a breather."
+              : "Your break is finished. Ready to focus again and build on your streak?"}
+          </p>
+          <div className="flex justify-end gap-2 border-t hairline pt-4">
+            <Button variant="ghost" onClick={() => setCompletionModal(null)}>
+              Dismiss
+            </Button>
+            {completionModal?.mode === "work" ? (
+              <Button
+                variant="solid"
+                onClick={() => {
+                  setCompletionModal(null);
+                  startTimer(taskId, "break");
+                  requestPermission();
+                }}
+              >
+                Start break
+              </Button>
+            ) : (
+              <Button
+                variant="solid"
+                onClick={() => {
+                  setCompletionModal(null);
+                  startTimer(taskId, "work");
+                  requestPermission();
+                }}
+              >
+                Start focus
+              </Button>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

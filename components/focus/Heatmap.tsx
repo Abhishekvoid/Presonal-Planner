@@ -75,10 +75,10 @@ export function Heatmap() {
         </div>
       </div>
 
-      <div className="no-scrollbar overflow-x-auto">
-        <div className="flex gap-[3px]">
+      <div className="no-scrollbar overflow-x-auto flex lg:justify-center py-1">
+        <div className="flex gap-[3px] shrink-0">
           {weeks.map((week, wi) => (
-            <div key={wi} className="flex flex-col gap-[3px]">
+            <div key={wi} className="flex flex-col gap-[3px] shrink-0">
               {week.map((d) => {
                 const v = valueFor(d, metric);
                 const isSelected = selected?.date === d.date;
@@ -88,7 +88,7 @@ export function Heatmap() {
                     onClick={() => setSelected(isSelected ? null : d)}
                     title={`${prettyDate(d.date)} · ${d.focusMinutes}m focus · ${d.tasksDone} task${d.tasksDone === 1 ? "" : "s"}`}
                     aria-label={`${prettyDate(d.date)}: ${d.focusMinutes} focus minutes, ${d.tasksDone} tasks`}
-                    className={`h-3 w-3 transition-colors ${
+                    className={`h-3 w-3 shrink-0 transition-colors ${
                       isSelected ? "ring-1 ring-espresso ring-offset-1 ring-offset-cream-raised" : ""
                     }`}
                     style={{ backgroundColor: CELL_COLOR[intensity(v, max)] }}
