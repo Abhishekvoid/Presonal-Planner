@@ -150,10 +150,22 @@ function Row({
       </button>
 
       <span className="hidden items-center gap-1.5 sm:flex">
-        {company.contactName && (
-          <span className="text-xs text-coffee">{company.contactName}</span>
+        {company.contacts && company.contacts.length > 0 ? (
+          <>
+            <span className="text-xs text-coffee truncate max-w-[120px]">
+              {company.contacts[0].name || "Unnamed"}
+              {company.contacts.length > 1 && ` +${company.contacts.length - 1}`}
+            </span>
+            <ChannelTag channel={company.contacts[0].channel} link={company.contacts[0].link} />
+          </>
+        ) : (
+          <>
+            {company.contactName && (
+              <span className="text-xs text-coffee truncate max-w-[120px]">{company.contactName}</span>
+            )}
+            <ChannelTag channel={company.channel} link={company.contactLink} />
+          </>
         )}
-        <ChannelTag channel={company.channel} link={company.contactLink} />
       </span>
 
       {company.followUpAt && (

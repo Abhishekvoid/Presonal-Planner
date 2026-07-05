@@ -46,6 +46,11 @@ export function CompanyCard({
         )}
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <ChannelTag channel={company.channel} />
+          {company.contacts && company.contacts.length > 1 && (
+            <span className="label !text-[9px] border border-coffee/20 px-1 py-[1px] text-coffee/90 bg-coffee/5 font-semibold">
+              👥 {company.contacts.length}
+            </span>
+          )}
           {company.followUpAt && (
             <span
               className={`label !text-[9px] !tracking-[0.08em] ${

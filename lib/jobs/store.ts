@@ -5,6 +5,7 @@ import { persist } from "zustand/middleware";
 import { buildJobsSeed } from "./seed";
 import {
   Company,
+  Contact,
   JOBS_SCHEMA_VERSION,
   JobsState,
   Stage,
@@ -29,6 +30,20 @@ const CONTACTED_OR_BEYOND: Stage[] = [
  * or partial localStorage blob never crashes a render.
  */
 export function normalizeCompany(raw: Partial<Company>): Company {
+  let contacts = Array.isArray(raw.contacts) ? raw.contacts : [];
+  if (contacts.length === 0 && (raw.contactName || raw.contactLink)) {
+    contacts = [
+      {
+        id: raw.id ? `ct-${raw.id}-0` : uid("ct"),
+        name: raw.contactName ?? "",
+        role: raw.contactRole ?? "",
+        channel: raw.channel ?? "linkedin",
+        link: raw.contactLink ?? "",
+        draft: raw.draft ?? "",
+      },
+    ];
+  }
+
   return {
     id: raw.id ?? uid("co"),
     name: raw.name ?? "",
@@ -40,6 +55,7 @@ export function normalizeCompany(raw: Partial<Company>): Company {
     channel: raw.channel ?? "linkedin",
     contactLink: raw.contactLink ?? "",
     draft: raw.draft ?? "",
+    contacts,
     reachedOutAt: raw.reachedOutAt,
     followUpAt: raw.followUpAt,
     priority: raw.priority ?? "warm",

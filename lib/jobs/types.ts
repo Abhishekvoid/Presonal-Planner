@@ -42,6 +42,15 @@ export const PRIORITY_LABEL: Record<Priority, string> = {
   cold: "Cold",
 };
 
+export interface Contact {
+  id: string;
+  name: string;
+  role: string;
+  channel: Channel;
+  link: string;
+  draft: string;
+}
+
 export interface Company {
   id: string;
 
@@ -51,12 +60,15 @@ export interface Company {
   stage: Stage;
   notes: string;
 
-  // Outreach
+  // Outreach (legacy single contact support)
   contactName: string;
   contactRole: string;
   channel: Channel;
   contactLink: string;
   draft: string;
+
+  // Multi-contact tracking
+  contacts: Contact[];
 
   // Tracking
   reachedOutAt?: string; // ISO date — first time the stage reaches "contacted"+
