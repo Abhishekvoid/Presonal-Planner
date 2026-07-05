@@ -15,6 +15,7 @@ import {
   Task,
   TimerMode,
   Track,
+  Note,
 } from "./types";
 import { focusedMinutes, localDateKey } from "./focus";
 
@@ -52,6 +53,15 @@ interface PlannerStore extends PlannerState {
 
   // focus — reflection
   upsertReflection: (date: string, patch: Partial<Omit<Reflection, "date">>) => void;
+
+  // notes
+  addNote: (title: string, content: string, folder?: string | null, taskId?: string | null, dayId?: string | null) => string;
+  updateNote: (id: string, patch: Partial<Omit<Note, "id">>) => void;
+  deleteNote: (id: string) => void;
+
+  // navigation
+  setActiveView: (view: string) => void;
+  setActiveNoteId: (id: string | null) => void;
 
   // data management
   exportState: () => PlannerState;
@@ -239,10 +249,43 @@ export const usePlanner = create<PlannerStore>()(
           };
         }),
 
+      addNote: (title, content, folder = null, taskId = null, dayId = null) => {
+        const id = uid("nt");
+        const newNote: Note = {
+          id,
+          title,
+          content,
+          folder: folder || null,
+          taskId: taskId || null,
+          dayId: dayId || null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        set((s) => ({
+          notes: [...(s.notes ?? []), newNote],
+        }));
+        return id;
+      },
+      updateNote: (id, patch) =>
+        set((s) => ({
+          notes: (s.notes ?? []).map((n) =>
+            n.id === id ? { ...n, ...patch, updatedAt: new Date().toISOString() } : n
+          ),
+        })),
+      deleteNote: (id) =>
+        set((s) => ({
+          notes: (s.notes ?? []).filter((n) => n.id !== id),
+        })),
+
+      activeView: "today",
+      activeNoteId: null,
+      setActiveView: (view) => set({ activeView: view }),
+      setActiveNoteId: (id) => set({ activeNoteId: id }),
+
       /* ---------- data management ---------- */
 
       exportState: () => {
-        const { tracks, days, tasks, sessions, reflections, focusSettings } = get();
+        const { tracks, days, tasks, sessions, reflections, focusSettings, notes, activeView, activeNoteId } = get();
         return {
           version: SCHEMA_VERSION,
           tracks,
@@ -252,6 +295,9 @@ export const usePlanner = create<PlannerStore>()(
           reflections,
           focusSettings,
           activeTimer: null,
+          notes: notes ?? [],
+          activeView: activeView ?? "today",
+          activeNoteId: activeNoteId ?? null,
         };
       },
 
@@ -265,6 +311,9 @@ export const usePlanner = create<PlannerStore>()(
           reflections: data.reflections ?? [],
           focusSettings: data.focusSettings ?? { ...DEFAULT_FOCUS_SETTINGS },
           activeTimer: null,
+          notes: data.notes ?? [],
+          activeView: data.activeView ?? "today",
+          activeNoteId: data.activeNoteId ?? null,
         })),
 
       resetToSeed: () => {
@@ -278,6 +327,9 @@ export const usePlanner = create<PlannerStore>()(
           reflections: fresh.reflections,
           focusSettings: fresh.focusSettings,
           activeTimer: null,
+          notes: [],
+          activeView: "today",
+          activeNoteId: null,
         });
       },
     }),
@@ -294,6 +346,9 @@ export const usePlanner = create<PlannerStore>()(
             reflections: p.reflections ?? [],
             focusSettings: p.focusSettings ?? { ...DEFAULT_FOCUS_SETTINGS },
             activeTimer: p.activeTimer ?? null,
+            notes: p.notes ?? [],
+            activeView: p.activeView ?? "today",
+            activeNoteId: p.activeNoteId ?? null,
           } as PlannerState;
         }
         return p as PlannerState;
@@ -307,6 +362,9 @@ export const usePlanner = create<PlannerStore>()(
         reflections: s.reflections,
         focusSettings: s.focusSettings,
         activeTimer: s.activeTimer,
+        notes: s.notes ?? [],
+        activeView: s.activeView ?? "today",
+        activeNoteId: s.activeNoteId ?? null,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
@@ -314,6 +372,18 @@ export const usePlanner = create<PlannerStore>()(
           state.sessions ??= [];
           state.reflections ??= [];
           state.focusSettings ??= { ...DEFAULT_FOCUS_SETTINGS };
+          state.notes ??= [];
+          state.activeView ??= "today";
+          state.activeNoteId ??= null;
+          
+          // Backfill track accents to apply high-contrast colors (e.g. system design to var(--slate))
+          state.tracks = (state.tracks ?? []).map((t) => {
+            if (t.id === "track-sys" && t.accent === "var(--espresso)") {
+              return { ...t, accent: "var(--slate)" };
+            }
+            return t;
+          });
+
           // Drop a timer that points at a deleted task — keep it valid.
           if (state.activeTimer?.taskId) {
             const exists = state.tasks.some((t) => t.id === state.activeTimer!.taskId);

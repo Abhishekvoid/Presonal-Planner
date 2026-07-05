@@ -31,6 +31,7 @@ export interface Day {
   goal: string;
   must: string;
   result: string;
+  notes?: string;
   order: number;
 }
 
@@ -78,6 +79,17 @@ export interface ActiveTimer {
 
 export const DEFAULT_FOCUS_SETTINGS: FocusSettings = { workMin: 25, breakMin: 5 };
 
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  folder: string | null;
+  taskId?: string | null;
+  dayId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PlannerState {
   version: number;
   tracks: Track[];
@@ -87,6 +99,9 @@ export interface PlannerState {
   reflections: Reflection[];
   focusSettings: FocusSettings;
   activeTimer: ActiveTimer | null;
+  notes: Note[];
+  activeView?: string;
+  activeNoteId?: string | null;
 }
 
 export const SCHEMA_VERSION = 2;

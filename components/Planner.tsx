@@ -8,27 +8,30 @@ import { TodayView } from "./TodayView";
 import { GoalsView } from "./GoalsView";
 import { ProgressView } from "./ProgressView";
 import { FocusView } from "./FocusView";
+import { NotesView } from "./NotesView";
 import { BackupPanel } from "./BackupPanel";
 import { Modal } from "./primitives";
 import { ThemeToggle } from "./ThemeToggle";
 import { ViewTransition } from "./transitions/ViewTransition";
 import { playTurn } from "@/lib/sound";
 
-type View = "today" | "goals" | "progress" | "focus";
+type View = "today" | "goals" | "progress" | "focus" | "notes";
 
 const NAV: { id: View; label: string }[] = [
   { id: "today", label: "Today" },
   { id: "goals", label: "Goals" },
   { id: "progress", label: "Progress" },
   { id: "focus", label: "Focus" },
+  { id: "notes", label: "Notes" },
 ];
 
-const ORDER: View[] = ["today", "goals", "progress", "focus"];
+const ORDER: View[] = ["today", "goals", "progress", "focus", "notes"];
 
 export function Planner({ replayIntro }: { replayIntro?: () => void } = {}) {
   const hasHydrated = usePlanner((s) => s.hasHydrated);
   const [mounted, setMounted] = useState(false);
-  const [view, setView] = useState<View>("today");
+  const view = usePlanner((s) => (s.activeView as View) ?? "today");
+  const setView = usePlanner((s) => s.setActiveView);
   const [backupOpen, setBackupOpen] = useState(false);
   const prevView = useRef<View>("today");
   const mainRef = useRef<HTMLElement>(null);
@@ -71,6 +74,7 @@ export function Planner({ replayIntro }: { replayIntro?: () => void } = {}) {
             {view === "goals" && <GoalsView />}
             {view === "progress" && <ProgressView />}
             {view === "focus" && <FocusView />}
+            {view === "notes" && <NotesView />}
           </ViewTransition>
         )}
       </main>
@@ -96,22 +100,22 @@ function Header({
 }) {
   return (
     <header className="sticky top-0 z-30 border-b hairline bg-cream-base/85 backdrop-blur-md">
-      <div className="mx-auto flex w-full max-w-5xl items-center gap-4 px-5 py-3.5 sm:px-8">
-        <div className="flex items-baseline gap-2">
-          <span className="h-3 w-3 bg-olive" aria-hidden />
-          <span className="font-display text-base font-extrabold tracking-tightest text-espresso">
+      <div className="mx-auto flex w-full max-w-5xl items-center gap-2 md:gap-4 px-3 sm:px-8 py-3.5">
+        <div className="flex items-baseline gap-1.5 sm:gap-2">
+          <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 bg-olive" aria-hidden />
+          <span className="font-display text-sm sm:text-base font-extrabold tracking-tightest text-espresso">
             PLANNER
           </span>
         </div>
 
-        <nav className="ml-2 flex items-center gap-1">
+        <nav className="ml-1 sm:ml-2 flex items-center gap-0.5 sm:gap-1">
           {NAV.map((n) => {
             const active = view === n.id;
             return (
               <button
                 key={n.id}
                 onClick={() => setView(n.id)}
-                className={`relative px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
                   active ? "text-espresso" : "text-coffee hover:text-espresso"
                 }`}
               >
@@ -119,7 +123,7 @@ function Header({
                 {active && (
                   <motion.span
                     layoutId="nav-underline"
-                    className="absolute inset-x-2 -bottom-[15px] h-[2px] bg-espresso"
+                    className="absolute inset-x-1.5 sm:inset-x-2 -bottom-[15px] h-[2px] bg-espresso"
                     transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                   />
                 )}
@@ -128,23 +132,23 @@ function Header({
           })}
         </nav>
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
           <Link
             href="/jobs"
-            className="label text-coffee hover:text-espresso transition-colors"
+            className="label text-coffee hover:text-espresso transition-colors text-[10px] sm:text-xs"
           >
-            Outreach →
+            Outreach<span className="hidden sm:inline"> →</span>
           </Link>
           <button
             onClick={onBackup}
-            className="label text-coffee hover:text-espresso transition-colors"
+            className="label text-coffee hover:text-espresso transition-colors hidden md:inline-block text-[10px] sm:text-xs"
           >
             Backup
           </button>
           {replayIntro && (
             <button
               onClick={replayIntro}
-              className="label text-coffee hover:text-espresso transition-colors"
+              className="label text-coffee hover:text-espresso transition-colors hidden md:inline-block text-[10px] sm:text-xs"
             >
               Replay intro
             </button>
