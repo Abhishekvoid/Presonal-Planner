@@ -6,6 +6,7 @@ import { AmbientBackground } from "@/components/webgl/AmbientBackground";
 import { InkCursor } from "@/components/cursor/InkCursor";
 import { AlmanacFrame } from "@/components/AlmanacFrame";
 import { themeBootstrapScript } from "@/lib/theme";
+import { DBSyncManager } from "@/components/DBSyncManager";
 
 // Archivo is a variable font; we load the width axis and drive it to
 // full expanded width in CSS (.font-display) for the "Archivo Expanded" look.
@@ -45,6 +46,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <AmbientBackground />
         {children}
+        <DBSyncManager />
         <AlmanacFrame />
         <InkCursor />
         <SoundDeck />

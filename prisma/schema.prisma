@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Track {
+  id     String @id
+  name   String
+  tag    String
+  accent String
+  order  Int
+}
+
+model Task {
+  id         String   @id
+  trackId    String
+  dayId      String?
+  text       String
+  difficulty String
+  tip        String?
+  done       Boolean
+  doneAt     String?
+  order      Int
+}
+
+model Day {
+  id     String  @id
+  index  Int
+  date   String
+  title  String
+  goal   String
+  must   String
+  result String
+  notes  String?
+  order  Int
+}
+
+model FocusSession {
+  id        String  @id
+  taskId    String?
+  date      String
+  startedAt String
+  endedAt   String
+  minutes   Int
+}
+
+model Reflection {
+  date      String @id
+  did       String
+  blockers  String
+  oneThing  String
+  updatedAt String
+}
+
+model Company {
+  id           String    @id
+  name         String
+  role         String
+  stage        String
+  notes        String
+  contactName  String
+  contactRole  String
+  channel      String
+  contactLink  String
+  draft        String
+  contacts     Contact[]
+  reachedOutAt String?
+  followUpAt   String?
+  priority     String
+  source       String
+  website      String?
+  jobUrl       String?
+  location     String?
+  salary       String?
+  tags         String[]
+  closedReason String?
+  createdAt    String
+  order        Int
+}
+
+model Contact {
+  id        String  @id
+  companyId String
+  name      String
+  role      String
+  channel   String
+  link      String
+  draft     String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model Template {
+  id    String @id
+  name  String
+  body  String
+  order Int
+}
+
+model AppConfig {
+  id            String  @id
+  focusSettings String  // JSON string representing FocusSettings
+  activeTimer   String? // JSON string representing ActiveTimer
+}
+
+model Note {
+  id        String   @id
+  title     String
+  content   String
+  folder    String?
+  taskId    String?
+  dayId     String?
+  createdAt String
+  updatedAt String
+}
