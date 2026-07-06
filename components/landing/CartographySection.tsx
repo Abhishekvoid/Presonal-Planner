@@ -35,7 +35,10 @@ export function CartographySection() {
           transition={{ duration: 0.7, ease: EASE_OUT_EXPO }}
         >
           <div className="label mb-3 text-coffee">Cartography of effort</div>
-          <h2 className="font-display text-[clamp(1.75rem,6vw,4rem)] font-extrabold leading-[1.0] tracking-tightest text-espresso">
+          <h2
+            className="font-display text-[clamp(1.75rem,6vw,4rem)] font-extrabold leading-[1.0] tracking-tightest text-espresso"
+            data-trail-node
+          >
             Every day you keep
             <br />
             draws the map.

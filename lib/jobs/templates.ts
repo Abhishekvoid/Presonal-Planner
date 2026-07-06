@@ -4,7 +4,7 @@ import { Company } from "./types";
 export const PLACEHOLDERS = ["{company}", "{name}", "{role}"] as const;
 
 /** Map each placeholder token to the company field it resolves from. */
-function valueFor(token: string, company: Pick<Company, "name" | "contactName" | "role">): string {
+function valueFor(token: string, company: Pick<Company, "name" | "contactName" | "role"> & Record<string, any>): string {
   switch (token) {
     case "{company}":
       return company.name ?? "";
@@ -25,7 +25,7 @@ function valueFor(token: string, company: Pick<Company, "name" | "contactName" |
  */
 export function fillTemplate(
   body: string,
-  company: Pick<Company, "name" | "contactName" | "role">,
+  company: Pick<Company, "name" | "contactName" | "role"> & Record<string, any>,
 ): string {
   return body.replace(/\{[a-zA-Z]+\}/g, (token) => valueFor(token, company));
 }

@@ -31,15 +31,15 @@ export function GoalsView() {
     if (tracks.length === 0) return null;
     let maxIncomplete = -1;
     let targetTrack: Track | null = null;
-    tracks.forEach((track) => {
+    for (const track of tracks) {
       const trackTasks = state.tasks.filter((t) => t.trackId === track.id);
       const incompleteCount = trackTasks.filter((t) => !t.done).length;
       if (incompleteCount > maxIncomplete) {
         maxIncomplete = incompleteCount;
         targetTrack = track;
       }
-    });
-    return targetTrack ? { track: targetTrack, count: maxIncomplete } : null;
+    }
+    return targetTrack ? { track: targetTrack as Track, count: maxIncomplete } : null;
   }, [tracks, state.tasks]);
 
   const backlogStats = useMemo(() => {

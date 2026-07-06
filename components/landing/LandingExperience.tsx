@@ -12,6 +12,10 @@ import { useEntryTransition } from "@/components/transitions/EntryTransition";
 import { hasSeenIntro, markIntroSeen } from "@/lib/entry";
 import { useLenis } from "@/lib/useLenis";
 
+import dynamic from "next/dynamic";
+
+const TextTrailCanvas = dynamic(() => import("../webgl/TextTrailCanvas"), { ssr: false });
+
 /**
  * Owns the first-visit choreography: Preloader (this session only) → a
  * scroll-driven narrative (Hero → Manifesto → System → Enter) → entry
@@ -50,17 +54,20 @@ export function LandingExperience({ onEnter }: { onEnter: () => void }) {
       </AnimatePresence>
 
       {ready && (
-        <main>
-          <HeroSection onOpen={handleOpen} />
+        <>
+          <TextTrailCanvas />
+          <main className="relative z-10">
+            <HeroSection onOpen={handleOpen} />
 
-          <ManifestoSection />
+            <ManifestoSection />
 
-          <SystemSection />
+            <SystemSection />
 
-          <CartographySection />
+            <CartographySection />
 
-          <EnterSection onOpen={handleOpen} />
-        </main>
+            <EnterSection onOpen={handleOpen} />
+          </main>
+        </>
       )}
 
       {overlay}

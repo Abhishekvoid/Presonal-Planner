@@ -369,7 +369,7 @@ function CalendarNotificationCard() {
   const state = usePlanner();
   const tracks = useMemo(() => orderedTracks(state), [state]);
   const days = useMemo(() => orderedDays(state), [state]);
-  const [notifState, setNotifState] = useState<PermissionState | "unsupported">("default");
+  const [notifState, setNotifState] = useState<NotificationPermission | "unsupported">("default");
 
   const [startDate, setStartDate] = useState(() => {
     if (typeof window !== "undefined") {
@@ -385,7 +385,7 @@ function CalendarNotificationCard() {
       if (!("Notification" in window)) {
         setNotifState("unsupported");
       } else {
-        setNotifState(Notification.permission as PermissionState);
+        setNotifState(Notification.permission as NotificationPermission);
       }
     }
   }, []);
@@ -398,7 +398,7 @@ function CalendarNotificationCard() {
   const enableNotifications = async () => {
     if (typeof window !== "undefined" && "Notification" in window) {
       const permission = await Notification.requestPermission();
-      setNotifState(permission as PermissionState);
+      setNotifState(permission as NotificationPermission);
       if (permission === "granted") {
         new Notification("Notifications Enabled!", {
           body: "You'll receive desktop alerts for focus timer milestones.",

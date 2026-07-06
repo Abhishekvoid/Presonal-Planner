@@ -124,6 +124,8 @@ export function FocusTimer() {
   const resumeTimer = usePlanner((s) => s.resumeTimer);
   const resetTimer = usePlanner((s) => s.resetTimer);
   const completeSession = usePlanner((s) => s.completeSession);
+  const startFlowTimer = usePlanner((s) => s.startFlowTimer);
+  const endFlowTimer = usePlanner((s) => s.endFlowTimer);
   const updateFocusSettings = usePlanner((s) => s.updateFocusSettings);
 
   const [, setTick] = useState(0);
@@ -136,9 +138,20 @@ export function FocusTimer() {
 
   const running = !!activeTimer && !activeTimer.pausedAt;
   const paused = !!activeTimer?.pausedAt;
+  const isFlow = activeTimer?.mode === "flow";
+
+  // For Pomodoro modes: time remaining. For Flow: elapsed time counting up.
   const remaining = activeTimer
     ? remainingSec(activeTimer, Date.now())
     : settings.workMin * 60;
+  const flowElapsed = activeTimer && isFlow
+    ? (() => {
+        const startMs = new Date(activeTimer.startedAt).getTime();
+        const pausedMs = activeTimer.pausedAccumMs +
+          (activeTimer.pausedAt ? Date.now() - new Date(activeTimer.pausedAt).getTime() : 0);
+        return Math.max(0, Math.floor((Date.now() - startMs - pausedMs) / 1000));
+      })()
+    : 0;
 
   const requestPermission = () => {
     if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
@@ -153,9 +166,10 @@ export function FocusTimer() {
     return () => clearInterval(id);
   }, [running]);
 
-  // Completion: fires once per block when the clock reaches zero.
+  // Completion: fires once per block when the clock reaches zero. Not fired for flow (no end).
   useEffect(() => {
     if (!activeTimer || activeTimer.pausedAt || remaining > 0) return;
+    if (isFlow) return; // flow never completes automatically
     if (completedAnchor.current === activeTimer.startedAt) return;
     completedAnchor.current = activeTimer.startedAt;
     if (!muted) playChime(audioRef);
@@ -163,7 +177,7 @@ export function FocusTimer() {
     sendNotification(activeTimer.mode);
     setCompletionModal({ mode: activeTimer.mode });
     completeSession();
-  }, [remaining, activeTimer, muted, completeSession]);
+  }, [remaining, activeTimer, isFlow, muted, completeSession]);
 
   const selectedTaskId = activeTimer ? activeTimer.taskId : taskId;
   const mode: TimerMode = activeTimer?.mode ?? "work";
@@ -252,29 +266,51 @@ export function FocusTimer() {
           mode={mode}
         />
         <div className="relative font-display text-[5rem] leading-none font-extrabold tracking-tightest tabular-nums text-espresso">
-          {formatClock(remaining)}
+          {isFlow ? formatClock(flowElapsed) : formatClock(remaining)}
         </div>
         <div className="relative mt-4 flex items-center justify-center gap-2">
           <span
             className={`h-2 w-2 rounded-full ${running ? "animate-pulse" : ""}`}
-            style={{ backgroundColor: mode === "work" ? "var(--olive)" : "var(--clay)" }}
+            style={{
+              backgroundColor:
+                isFlow ? "var(--flow)" :
+                mode === "work" ? "var(--olive)" : "var(--clay)"
+            }}
             aria-hidden
           />
-          <span className="label text-coffee">
-            {mode === "work" ? "Focus" : "Break"}
+          <span className="label" style={{ color: isFlow ? "var(--flow)" : undefined }}>
+            {isFlow ? "Flow" : mode === "work" ? "Focus" : "Break"}
             {paused && " · paused"}
           </span>
+          {isFlow && running && (
+            <span className="text-[10px] font-mono text-coffee-soft ml-1">
+              {Math.floor(flowElapsed / 60)}m deep
+            </span>
+          )}
         </div>
       </div>
 
       {/* Controls */}
       <div className="flex items-center justify-center gap-2 border-t hairline px-4 py-3">
         {!activeTimer && (
-          <Button variant="solid" onClick={start}>
-            Start focus
-          </Button>
+          <>
+            <Button variant="solid" onClick={start}>
+              Start focus
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                completedAnchor.current = null;
+                startFlowTimer(taskId);
+                requestPermission();
+              }}
+              className="border-[var(--flow)] text-[var(--flow)] hover:bg-[var(--flow)]/10"
+            >
+              ⚡ Flow
+            </Button>
+          </>
         )}
-        {running && (
+        {running && !isFlow && (
           <>
             <Button variant="outline" onClick={pauseTimer}>
               Pause
@@ -284,7 +320,23 @@ export function FocusTimer() {
             </Button>
           </>
         )}
-        {paused && (
+        {running && isFlow && (
+          <>
+            <Button variant="outline" onClick={pauseTimer}>
+              Pause
+            </Button>
+            <Button
+              variant="solid"
+              onClick={() => {
+                endFlowTimer();
+              }}
+              className="bg-[var(--flow)] hover:opacity-90 border-0 text-white"
+            >
+              End Flow
+            </Button>
+          </>
+        )}
+        {paused && !isFlow && (
           <>
             <Button
               variant="solid"
@@ -297,6 +349,25 @@ export function FocusTimer() {
             </Button>
             <Button variant="ghost" onClick={resetTimer}>
               Reset
+            </Button>
+          </>
+        )}
+        {paused && isFlow && (
+          <>
+            <Button
+              variant="solid"
+              onClick={() => {
+                resumeTimer();
+                requestPermission();
+              }}
+            >
+              Resume Flow
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => endFlowTimer()}
+            >
+              End & Save
             </Button>
           </>
         )}

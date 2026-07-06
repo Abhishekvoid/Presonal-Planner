@@ -238,11 +238,11 @@ function OutreachFunnel({ companies }: { companies: Company[] }) {
   const plannerState = usePlanner();
   const studyPct = overallProgress(plannerState).pct;
 
-  const wishlist = companies.filter(c => c.status === "wishlist").length;
-  const applied = companies.filter(c => c.status === "applied").length;
-  const contacted = companies.filter(c => c.status === "contacted").length;
-  const interviewing = companies.filter(c => c.status === "interviewing").length;
-  const offers = companies.filter(c => c.status === "offer").length;
+  const wishlist = companies.filter(c => c.stage === "lead").length;
+  const applied = companies.filter(c => c.stage === "to_contact").length;
+  const contacted = companies.filter(c => c.stage === "contacted" || c.stage === "replied").length;
+  const interviewing = companies.filter(c => c.stage === "interviewing").length;
+  const offers = companies.filter(c => c.stage === "offer").length;
 
   const totalApplied = wishlist + applied;
   const totalInFlight = contacted + interviewing;

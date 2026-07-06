@@ -11,7 +11,7 @@ import {
   orderedTracks,
   tasksForDayAndTrack,
 } from "@/lib/selectors";
-import { Day, Task } from "@/lib/types";
+import { Day, Task, Track } from "@/lib/types";
 import { yesterdayKey } from "@/lib/focus";
 import { TaskItem } from "./TaskItem";
 import { Button, Modal, ProgressBar } from "./primitives";
@@ -254,10 +254,10 @@ export function TodayView() {
   }, [state.activeTimer?.pausedAt]);
 
   const [cohort, setCohort] = useState([
-    { name: "Vikram S. (IIT-B)", action: "Coding DSA", minutes: 395, status: "active" },
-    { name: "Rohan K. (IIT-D)", action: "System Design", minutes: 312, status: "active" },
-    { name: "Pooja M. (BITS-P)", action: "On Break", minutes: 185, status: "break" },
-    { name: "Nikhil S. (IIIT-H)", action: "Query Profiling", minutes: 274, status: "active" },
+    { name: "Vikram S. (IIT-B)", action: "Coding DSA", minutes: 395, status: "active", isYou: false },
+    { name: "Rohan K. (IIT-D)", action: "System Design", minutes: 312, status: "active", isYou: false },
+    { name: "Pooja M. (BITS-P)", action: "On Break", minutes: 185, status: "break", isYou: false },
+    { name: "Nikhil S. (IIIT-H)", action: "Query Profiling", minutes: 274, status: "active", isYou: false },
   ]);
 
   useEffect(() => {

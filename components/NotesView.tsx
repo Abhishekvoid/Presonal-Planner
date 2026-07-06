@@ -695,7 +695,7 @@ export function NotesView() {
                   )}
                   {linkedDay && (
                     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 border border-coffee/35 bg-coffee/[0.04] text-[10px] text-espresso font-mono font-bold rounded-sm select-none">
-                      📅 Connected Day {linkedDay.n}: {linkedDay.title}
+                      📅 Connected Day {linkedDay.index}: {linkedDay.title}
                     </span>
                   )}
                 </div>

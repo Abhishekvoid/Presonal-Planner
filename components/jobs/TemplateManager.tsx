@@ -90,7 +90,7 @@ function TemplateEditor({
   onCancel,
 }: {
   template?: Template;
-  previewWith: Pick<Company, "name" | "contactName" | "role">;
+  previewWith: Pick<Company, "name" | "contactName" | "role"> & Record<string, any>;
   onSave: (name: string, body: string) => void;
   onCancel: () => void;
 }) {

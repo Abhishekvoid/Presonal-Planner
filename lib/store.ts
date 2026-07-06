@@ -17,7 +17,7 @@ import {
   Track,
   Note,
 } from "./types";
-import { focusedMinutes, localDateKey } from "./focus";
+import { focusedMinutes, elapsedSec, localDateKey } from "./focus";
 
 const uid = (prefix: string) =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -49,6 +49,8 @@ interface PlannerStore extends PlannerState {
   resumeTimer: () => void;
   resetTimer: () => void;
   completeSession: () => void;
+  startFlowTimer: (taskId: string | null) => void;
+  endFlowTimer: () => void;
   updateFocusSettings: (patch: Partial<FocusSettings>) => void;
 
   // focus — reflection
@@ -69,11 +71,14 @@ interface PlannerStore extends PlannerState {
   resetToSeed: () => void;
 }
 
-/** Log the current work block as a session (full or partial). Breaks never log. */
+/** Log the current work or flow block as a session. Breaks never log. */
 function logIfWork(s: PlannerStore): FocusSession[] {
   const t = s.activeTimer;
-  if (!t || t.mode !== "work") return s.sessions;
-  const minutes = focusedMinutes(t, Date.now());
+  if (!t || (t.mode !== "work" && t.mode !== "flow")) return s.sessions;
+  const elapsed = elapsedSec(t, Date.now());
+  const minutes = t.mode === "flow"
+    ? Math.round(elapsed / 60)
+    : Math.round(Math.min(t.plannedSec, elapsed) / 60);
   if (minutes <= 0) return s.sessions;
   const session: FocusSession = {
     id: uid("ses"),
@@ -227,6 +232,22 @@ export const usePlanner = create<PlannerStore>()(
 
       updateFocusSettings: (patch) =>
         set((s) => ({ focusSettings: { ...s.focusSettings, ...patch } })),
+
+      startFlowTimer: (taskId) =>
+        set(() => {
+          const timer: ActiveTimer = {
+            taskId,
+            mode: "flow",
+            startedAt: new Date().toISOString(),
+            plannedSec: 9_999_999, // effectively infinite — flow runs until manually ended
+            pausedAccumMs: 0,
+            pausedAt: null,
+          };
+          return { activeTimer: timer };
+        }),
+
+      endFlowTimer: () =>
+        set((s) => ({ sessions: logIfWork(s), activeTimer: null })),
 
       /* ---------- focus: reflection ---------- */
 

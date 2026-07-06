@@ -70,7 +70,7 @@ export function FocusHalo({
   running: boolean;
   paused: boolean;
   active: boolean;
-  mode: "work" | "break";
+  mode: "work" | "break" | "flow";
   className?: string;
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -223,8 +223,11 @@ export function FocusHalo({
     const u = uniformsRef.current;
     const m = materialRef.current as THREE.ShaderMaterial | null;
     if (!u || !m) return;
-    const varName = mode === "work" ? "--olive-rgb" : "--clay-rgb";
-    const [r, g, b] = readRGB(varName, [0.43, 0.44, 0.28]);
+    const varName =
+      mode === "work" ? "--olive-rgb" :
+      mode === "flow" ? "--flow-rgb" :
+      "--clay-rgb";
+    const [r, g, b] = readRGB(varName, mode === "flow" ? [0.35, 0.32, 0.65] : [0.43, 0.44, 0.28]);
     u.uColor.value.setRGB(r, g, b);
     m.blending = theme === "dark" ? THREE.AdditiveBlending : THREE.NormalBlending;
     m.needsUpdate = true;

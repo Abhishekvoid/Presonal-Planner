@@ -108,7 +108,10 @@ function Act({
     >
       <div className={reverse ? "sm:order-2" : ""}>
         <div className="label mb-3 text-olive-deep">Act {n}</div>
-        <h3 className="font-display text-2xl font-bold tracking-tightest text-espresso sm:text-3xl">
+        <h3
+          className="font-display text-2xl font-bold tracking-tightest text-espresso sm:text-3xl"
+          data-trail-node
+        >
           {title}
         </h3>
         <p className="mt-3 max-w-sm text-coffee">{blurb}</p>

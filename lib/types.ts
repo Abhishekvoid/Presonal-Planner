@@ -63,7 +63,7 @@ export interface FocusSettings {
   breakMin: number;
 }
 
-export type TimerMode = "work" | "break";
+export type TimerMode = "work" | "break" | "flow";
 
 /** Running timer — persisted so a Pomodoro survives a page reload. */
 export interface ActiveTimer {

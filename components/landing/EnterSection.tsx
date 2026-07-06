@@ -45,6 +45,7 @@ export function EnterSection({ onOpen }: { onOpen: () => void }) {
           className="mt-9 inline-flex items-center gap-2 rounded-md bg-espresso px-8 py-3.5 text-sm font-medium text-cream-raised transition-colors hover:bg-olive-deep"
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.97 }}
+          data-trail-node
         >
           Open the Almanac →
         </motion.button>

@@ -40,6 +40,7 @@ export function HeroSection({ onOpen }: { onOpen: () => void }) {
           initial={{ opacity: 0, fontVariationSettings: '"wdth" 100' }}
           animate={{ opacity: 1, fontVariationSettings: '"wdth" 125' }}
           transition={{ duration: 1.1, ease: EASE_OUT_EXPO, delay: 0.2 }}
+          data-trail-node
         >
           DISCIPLINE,
           <br />

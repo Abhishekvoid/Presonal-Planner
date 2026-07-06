@@ -57,6 +57,7 @@ export function ManifestoSection() {
             <p
               key={line}
               className="text-balance py-8 font-display text-2xl font-bold tracking-tightest text-espresso sm:text-4xl"
+              data-trail-node
             >
               {line}
             </p>
@@ -82,7 +83,10 @@ export function ManifestoSection() {
             exit={{ opacity: 0, y: 12, filter: "blur(6px)" }}
             transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
           >
-            <p className="max-w-4xl text-balance text-center font-display text-[clamp(1.75rem,6vw,4.5rem)] font-extrabold leading-[1.02] tracking-tightest text-espresso">
+            <p
+              className="max-w-4xl text-balance text-center font-display text-[clamp(1.75rem,6vw,4.5rem)] font-extrabold leading-[1.02] tracking-tightest text-espresso"
+              data-trail-node
+            >
               {LINES[active]}
             </p>
           </motion.div>
