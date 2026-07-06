@@ -323,7 +323,7 @@ export const usePlanner = create<PlannerStore>()(
       },
 
       importState: (data) =>
-        set(() => ({
+        set((state) => ({
           version: data.version ?? SCHEMA_VERSION,
           tracks: data.tracks ?? [],
           days: data.days ?? [],
@@ -331,7 +331,7 @@ export const usePlanner = create<PlannerStore>()(
           sessions: data.sessions ?? [],
           reflections: data.reflections ?? [],
           focusSettings: data.focusSettings ?? { ...DEFAULT_FOCUS_SETTINGS },
-          activeTimer: null,
+          activeTimer: state.activeTimer || null,
           notes: data.notes ?? [],
           activeView: data.activeView ?? "today",
           activeNoteId: data.activeNoteId ?? null,

@@ -3,6 +3,26 @@ import Pusher from "pusher";
 
 export const dynamic = "force-dynamic";
 
+// Global cache for Pusher server instances to avoid re-creation overhead
+const pusherCache = new Map<string, Pusher>();
+
+function getPusherInstance(appId: string, key: string, secret: string, cluster: string): Pusher {
+  const cacheKey = `${appId}:${key}:${secret}:${cluster}`;
+  if (!pusherCache.has(cacheKey)) {
+    pusherCache.set(
+      cacheKey,
+      new Pusher({
+        appId,
+        key,
+        secret,
+        cluster,
+        useTLS: true,
+      })
+    );
+  }
+  return pusherCache.get(cacheKey)!;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json();
@@ -27,15 +47,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const pusher = new Pusher({
-      appId,
-      key,
-      secret,
-      cluster,
-      useTLS: true,
-    });
+    const pusher = getPusherInstance(appId, key, secret, cluster);
 
-    await pusher.trigger(`room-${roomCode}`, event, { sender, data });
+    // Fire-and-forget: Trigger the event in the background and respond instantly to the client.
+    pusher.trigger(`room-${roomCode}`, event, { sender, data }).catch((err) => {
+      console.error("[Pusher] Background trigger failed:", err);
+    });
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

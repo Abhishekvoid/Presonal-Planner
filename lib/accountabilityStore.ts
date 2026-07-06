@@ -95,12 +95,13 @@ export const useAccountability = create<AccountabilityState>()(
             focusMinutes: 0,
             focusTarget: 240, // 4 hours target
           };
+          const nextOnline = partnerStatePatch.online !== undefined ? partnerStatePatch.online : true;
           return {
             partnerState: {
               ...current,
               ...partnerStatePatch,
               lastActive: Date.now(),
-              online: true,
+              online: nextOnline,
             },
           };
         }),

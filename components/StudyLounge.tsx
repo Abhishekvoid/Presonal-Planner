@@ -266,8 +266,8 @@ export function StudyLounge() {
           {/* Circular Target Progress */}
           <div className="flex items-center gap-4">
             <CircularProgress
-              value={isPartnerOnline ? partnerState.focusMinutes : 0}
-              max={isPartnerOnline ? partnerState.focusTarget : 240}
+              value={partnerState ? partnerState.focusMinutes : 0}
+              max={partnerState ? partnerState.focusTarget : 240}
               size={64}
             />
             <div>
@@ -275,7 +275,7 @@ export function StudyLounge() {
                 Study Target
               </span>
               <p className="text-xs text-espresso font-semibold mt-0.5">
-                {isPartnerOnline
+                {partnerState
                   ? `${partnerState.focusMinutes}m focused of ${partnerState.focusTarget}m target`
                   : `Daily focus metrics`}
               </p>
@@ -285,10 +285,10 @@ export function StudyLounge() {
           {/* Checklist */}
           <div className="flex-grow flex flex-col gap-1.5">
             <span className="text-[9px] font-bold text-coffee-soft uppercase tracking-wider font-mono">
-              Completed Tasks ({isPartnerOnline ? partnerState.completedTasks : 0}/
-              {isPartnerOnline ? partnerState.totalTasks : 0})
+              Completed Tasks ({partnerState ? partnerState.completedTasks : 0}/
+              {partnerState ? partnerState.totalTasks : 0})
             </span>
-            {isPartnerOnline &&
+            {partnerState &&
             partnerState.completedTaskList &&
             partnerState.completedTaskList.length > 0 ? (
               <ul className="flex flex-col gap-1.5 max-h-[85px] overflow-y-auto pr-1">

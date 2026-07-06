@@ -108,6 +108,8 @@ export function AccountabilitySync() {
         : undefined,
     };
 
+    console.log("Abhishek broadcasting payload:", payload);
+
     try {
       await fetch("/api/accountability/publish", {
         method: "POST",
@@ -144,6 +146,7 @@ export function AccountabilitySync() {
 
     // Listen for partner state changes
     channel.bind("partner-status", (payload: any) => {
+      console.log("Abhishek received partner-status:", payload);
       if (payload.sender !== yourName) {
         useAccountability.getState().updatePartnerState(payload.data);
       }
@@ -170,20 +173,30 @@ export function AccountabilitySync() {
       channel.unbind_all();
       client.unsubscribe(channelName);
       client.disconnect();
-      useAccountability.getState().clearPartnerState();
     };
   }, [roomCode, yourName, customPusherKey, customPusherCluster]);
 
-  // 2. Broadcast on local timer / checklist updates
+  // Clear partner state when roomCode changes (prevents showing previous partner data when switching rooms)
+  useEffect(() => {
+    useAccountability.getState().clearPartnerState();
+  }, [roomCode]);
+
+  // 2a. Broadcast immediately on local activeTimer updates (starts, pauses, resumes)
+  useEffect(() => {
+    if (!roomCode) return;
+    void broadcastState();
+  }, [activeTimer, roomCode]);
+
+  // 2b. Broadcast debounced updates on local checklist / stats updates (completed tasks, focus minutes)
   useEffect(() => {
     if (!roomCode) return;
 
     const timer = setTimeout(() => {
       void broadcastState();
-    }, 1500); // Debounce updates
+    }, 1500); // Debounce checklist/stats updates
 
     return () => clearTimeout(timer);
-  }, [activeTimer, localStats, roomCode]);
+  }, [localStats, roomCode]);
 
   // 3. Heartbeat loop (every 10s)
   useEffect(() => {
