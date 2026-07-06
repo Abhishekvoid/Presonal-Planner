@@ -25,9 +25,37 @@ export function DBSyncManager() {
           const jState = useJobs.getState().exportJobs();
           await pushStateToDB(pState, jState);
         } else {
-          // Hydrate client stores with Neon database values
+          // Hydrate client stores with Neon database values (merging note changes)
           console.log("[DBSyncManager] Hydrating client stores from Neon DB...");
-          usePlanner.getState().importState(data, "replace");
+          
+          const localState = usePlanner.getState();
+          const dbNotes = data.notes || [];
+          const localNotes = localState.notes || [];
+          
+          // Merge notes: compare updatedAt timestamps
+          const mergedNotes = [...dbNotes];
+          localNotes.forEach((localNote) => {
+            const dbNoteIndex = mergedNotes.findIndex((n) => n.id === localNote.id);
+            if (dbNoteIndex === -1) {
+              // Exists locally but not in DB -> keep local
+              mergedNotes.push(localNote);
+            } else {
+              const dbNote = mergedNotes[dbNoteIndex];
+              const localTime = new Date(localNote.updatedAt).getTime();
+              const dbTime = new Date(dbNote.updatedAt).getTime();
+              if (localTime > dbTime) {
+                // Local version is newer -> overwrite DB version in merge
+                mergedNotes[dbNoteIndex] = localNote;
+              }
+            }
+          });
+          
+          const mergedData = {
+            ...data,
+            notes: mergedNotes,
+          };
+          
+          usePlanner.getState().importState(mergedData, "replace");
           useJobs.getState().importJobs({
             version: data.companiesVersion || 1,
             companies: data.companies,
@@ -65,6 +93,7 @@ export function DBSyncManager() {
           companies: jobs.companies,
           templates: jobs.templates,
         }),
+        keepalive: true,
       });
       if (!res.ok) throw new Error("Sync upload failed");
       console.log("[DBSyncManager] Neon DB synced successfully.");
@@ -75,35 +104,61 @@ export function DBSyncManager() {
 
   // 2. React to modifications: Subscribe & Debounce
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: NodeJS.Timeout | null = null;
+    let pendingPush = false;
 
-    // Subscribe to store updates, skipping initial load changes
-    const unsubPlanner = usePlanner.subscribe(() => {
-      if (!isHydratedRef.current) return;
-      
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
+    const flushSync = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      if (pendingPush) {
+        pendingPush = false;
+        console.log("[DBSyncManager] Flushing state push to Neon DB immediately...");
         const pState = usePlanner.getState().exportState();
         const jState = useJobs.getState().exportJobs();
         pushStateToDB(pState, jState);
+      }
+    };
+
+    // Subscribe to store updates, skipping initial load changes
+    const unsubPlanner = usePlanner.subscribe((state, prevState) => {
+      if (!isHydratedRef.current) return;
+
+      // If active tab view changed, flush any pending save immediately
+      if (state.activeView !== prevState.activeView) {
+        flushSync();
+        return;
+      }
+
+      pendingPush = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        flushSync();
       }, 2000); // 2 second debounce to bundle rapid UI updates
     });
 
     const unsubJobs = useJobs.subscribe(() => {
       if (!isHydratedRef.current) return;
 
-      clearTimeout(timeoutId);
+      pendingPush = true;
+      if (timeoutId) clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        const pState = usePlanner.getState().exportState();
-        const jState = useJobs.getState().exportJobs();
-        pushStateToDB(pState, jState);
+        flushSync();
       }, 2000);
     });
+
+    // Also register an unload / beforeunload handler to flush any pending save on page close/reload
+    const handleBeforeUnload = () => {
+      flushSync();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
       unsubPlanner();
       unsubJobs();
-      clearTimeout(timeoutId);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, []);
 
