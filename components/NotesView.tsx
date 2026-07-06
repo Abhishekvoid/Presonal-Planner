@@ -531,6 +531,54 @@ export function NotesView() {
     }
   };
 
+  // Keyboard listener to intercept Tab/Shift+Tab for custom indentation
+  const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      if (!activeNote) return;
+
+      const textarea = e.currentTarget;
+      const content = activeNote.content;
+      const cursor = textarea.selectionStart;
+
+      // Find the start of the current line
+      const lastNewline = content.lastIndexOf("\n", cursor - 1);
+      const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
+
+      let updatedContent = "";
+      let newCursorPos = cursor;
+
+      if (!e.shiftKey) {
+        // Indent: Add 2 spaces at the beginning of the line
+        const beforeLine = content.substring(0, lineStart);
+        const restOfContent = content.substring(lineStart);
+        updatedContent = `${beforeLine}  ${restOfContent}`;
+        newCursorPos = cursor + 2;
+      } else {
+        // Outdent: Remove up to 2 spaces from the start of the line
+        const beforeLine = content.substring(0, lineStart);
+        const restOfLine = content.substring(lineStart);
+        let spacesToRemove = 0;
+        if (restOfLine.startsWith("  ")) {
+          spacesToRemove = 2;
+        } else if (restOfLine.startsWith(" ")) {
+          spacesToRemove = 1;
+        }
+        updatedContent = beforeLine + restOfLine.substring(spacesToRemove);
+        newCursorPos = Math.max(lineStart, cursor - spacesToRemove);
+      }
+
+      updateNote(activeNote.id, { content: updatedContent });
+      triggerSaveIndicator();
+
+      // Maintain cursor position and focus
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+      }, 10);
+    }
+  };
+
   const handleInsertSlashOption = (syntax: string) => {
     if (!activeNote || !textareaRef.current || slashIndex === null) return;
 
@@ -965,6 +1013,7 @@ export function NotesView() {
                       ref={textareaRef}
                       value={activeNote.content}
                       onChange={handleTextareaChange}
+                      onKeyDown={handleTextareaKeyDown}
                       placeholder={"Start writing notes for \"" + activeNote.title + "\"...\n\nUse markdown:\n# Heading\n- Bullet point\n- [ ] Checklist item\n```code block```\n> [!NOTE] Callout\n[[Link to another note]]"}
                       className="w-full flex-grow p-5 bg-transparent text-sm font-mono leading-[1.8] text-espresso focus:outline-none resize-none min-h-[400px]"
                     />
