@@ -114,7 +114,7 @@ export function StudyLounge() {
   }, [alerts, dismissAlert]);
 
   const sendAction = async (type: "nudge" | "applaud") => {
-    if (!isConnected || !roomCode) return;
+    if (!roomCode) return;
     const payload = {
       roomCode,
       sender: yourName,

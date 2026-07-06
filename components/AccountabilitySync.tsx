@@ -58,7 +58,7 @@ export function AccountabilitySync() {
 
   // Broadcast state to partner
   const broadcastState = async () => {
-    if (!isConnected || !roomCode || !yourName) return;
+    if (!roomCode || !yourName) return;
 
     const currentTimer = usePlanner.getState().activeTimer;
     const now = Date.now();
@@ -121,7 +121,7 @@ export function AccountabilitySync() {
 
   // 1. Pusher subscription and connection
   useEffect(() => {
-    if (!isConnected || !roomCode) return;
+    if (!roomCode) return;
 
     // Use custom credentials or fallback to process.env config
     const key = customPusherKey || process.env.NEXT_PUBLIC_PUSHER_KEY || "";
@@ -172,33 +172,33 @@ export function AccountabilitySync() {
       client.disconnect();
       useAccountability.getState().clearPartnerState();
     };
-  }, [isConnected, roomCode, yourName, customPusherKey, customPusherCluster]);
+  }, [roomCode, yourName, customPusherKey, customPusherCluster]);
 
   // 2. Broadcast on local timer / checklist updates
   useEffect(() => {
-    if (!isConnected || !roomCode) return;
+    if (!roomCode) return;
 
     const timer = setTimeout(() => {
       void broadcastState();
     }, 1500); // Debounce updates
 
     return () => clearTimeout(timer);
-  }, [activeTimer, localStats, isConnected, roomCode]);
+  }, [activeTimer, localStats, roomCode]);
 
   // 3. Heartbeat loop (every 10s)
   useEffect(() => {
-    if (!isConnected || !roomCode) return;
+    if (!roomCode) return;
 
     const interval = setInterval(() => {
       void broadcastState();
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [isConnected, roomCode, yourName]);
+  }, [roomCode, yourName]);
 
   // 4. Partner Offline watchdog (every 5s)
   useEffect(() => {
-    if (!isConnected || !roomCode) return;
+    if (!roomCode) return;
 
     const watchdog = setInterval(() => {
       const state = useAccountability.getState().partnerState;
@@ -211,7 +211,7 @@ export function AccountabilitySync() {
     }, 5000);
 
     return () => clearInterval(watchdog);
-  }, [isConnected, roomCode]);
+  }, [roomCode]);
 
   return null;
 }
