@@ -29,3 +29,6 @@ yarn-error.log*
 .env
 
 /lib/generated/prisma
+
+# Local Netlify folder
+.netlify
