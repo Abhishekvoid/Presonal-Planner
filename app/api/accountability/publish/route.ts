@@ -1,38 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import Pusher from "pusher";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json();
-    const {
-      roomCode,
-      eventName,
-      data,
-      // Optional client-provided overrides
-      pusherAppId,
-      pusherKey,
-      pusherSecret,
-      pusherCluster,
-    } = payload;
+    const { roomCode, event, sender, data, customCredentials } = payload;
 
-    if (!roomCode || !eventName || !data) {
+    if (!roomCode || !event || !sender) {
       return NextResponse.json(
-        { error: "Missing required fields: roomCode, eventName, data" },
+        { error: "Missing required fields: roomCode, event, sender" },
         { status: 400 }
       );
     }
 
-    // Resolve credentials
-    const appId = pusherAppId || process.env.PUSHER_APP_ID;
-    const key = pusherKey || process.env.NEXT_PUBLIC_PUSHER_KEY;
-    const secret = pusherSecret || process.env.PUSHER_SECRET;
-    const cluster = pusherCluster || process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+    const appId = customCredentials?.appId || process.env.PUSHER_APP_ID;
+    const key = customCredentials?.key || process.env.NEXT_PUBLIC_PUSHER_KEY || process.env.PUSHER_KEY;
+    const secret = customCredentials?.secret || process.env.PUSHER_SECRET;
+    const cluster = customCredentials?.cluster || process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
 
     if (!appId || !key || !secret || !cluster) {
       return NextResponse.json(
-        {
-          error: "Pusher credentials are not configured! Please set them via Netlify environment variables or input them in the settings panel.",
-        },
+        { error: "Pusher credentials not configured" },
         { status: 400 }
       );
     }
@@ -45,8 +35,7 @@ export async function POST(req: NextRequest) {
       useTLS: true,
     });
 
-    const channelName = `accountability-${roomCode}`;
-    await pusher.trigger(channelName, eventName, data);
+    await pusher.trigger(`room-${roomCode}`, event, { sender, data });
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

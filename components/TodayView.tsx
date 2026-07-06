@@ -12,8 +12,8 @@ import {
   tasksForDayAndTrack,
 } from "@/lib/selectors";
 import { Day, Task, Track } from "@/lib/types";
-import { useAccountability } from "@/lib/accountabilityStore";
 import { yesterdayKey } from "@/lib/focus";
+import { StudyLounge } from "./StudyLounge";
 import { TaskItem } from "./TaskItem";
 import { Button, Modal, ProgressBar } from "./primitives";
 import { DayForm, TaskForm } from "./forms";
@@ -275,8 +275,6 @@ export function TodayView() {
     return () => clearInterval(interval);
   }, []);
 
-  const partnerState = useAccountability((s) => s.partnerState);
-
   const sortedCohort = useMemo(() => {
     const youItem = {
       name: "You (Nexus Automech)",
@@ -285,31 +283,10 @@ export function TodayView() {
       status: isTimerRunning ? "active" : "idle",
       isYou: true,
     };
-
-    const partnerItem = partnerState
-      ? {
-          name: `${partnerState.name} (Partner)`,
-          action: partnerState.activeTask || (partnerState.isOnline ? "Idle" : "Offline"),
-          minutes: partnerState.focusMinutes,
-          status: partnerState.isOnline
-            ? partnerState.timerMode === "break"
-              ? "break"
-              : "active"
-            : "offline",
-          isYou: false,
-          isPartner: true,
-        }
-      : null;
-
-    const items = [...cohort];
-    const cohortList = partnerItem
-      ? [...items.filter((c) => c.name !== "Pooja M. (BITS-P)"), partnerItem]
-      : items;
-
-    const finalCohort = [...cohortList, youItem];
-    finalCohort.sort((a, b) => b.minutes - a.minutes);
-    return finalCohort;
-  }, [cohort, totalFocusMinutes, isTimerRunning, partnerState]);
+    const items = [...cohort, youItem];
+    items.sort((a, b) => b.minutes - a.minutes);
+    return items;
+  }, [cohort, totalFocusMinutes, isTimerRunning]);
 
   const rivalLogs = useMemo(() => {
     const index = day.index;
@@ -859,11 +836,7 @@ export function TodayView() {
                 <div 
                   key={item.name} 
                   className={`flex items-center justify-between text-[11px] py-1 border-b border-coffee/5 last:border-0 ${
-                    item.isYou
-                      ? "font-bold text-olive-deep bg-olive/10 px-1 rounded-sm"
-                      : (item as any).isPartner
-                        ? "font-bold text-clay-deep bg-clay/5 px-1 rounded-sm border border-clay/10"
-                        : "text-espresso"
+                    item.isYou ? "font-bold text-olive-deep bg-olive/10 px-1 rounded-sm" : "text-espresso"
                   }`}
                 >
                   <span className="truncate flex items-center gap-1.5 max-w-[140px]">
@@ -927,6 +900,13 @@ export function TodayView() {
             </div>
           </div>
         </div>
+      </div>
+
+      <SectionDivider className="mt-6" />
+
+      {/* Direct Study Partner Accountability Lounge */}
+      <div className="reveal mt-6" style={delay(3.7)}>
+        <StudyLounge />
       </div>
 
       <SectionDivider className="mt-6" />

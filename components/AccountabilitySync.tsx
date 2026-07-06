@@ -1,68 +1,111 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import PusherClient from "pusher-js";
 import { usePlanner } from "@/lib/store";
 import { useAccountability } from "@/lib/accountabilityStore";
-import { localDateKey } from "@/lib/focus";
+import { localDateKey, elapsedSec } from "@/lib/focus";
 
 export function AccountabilitySync() {
+  const isConnected = useAccountability((s) => s.isConnected);
   const roomCode = useAccountability((s) => s.roomCode);
-  const userName = useAccountability((s) => s.userName);
+  const yourName = useAccountability((s) => s.yourName);
   const partnerName = useAccountability((s) => s.partnerName);
 
-  const pusherAppId = useAccountability((s) => s.pusherAppId);
-  const pusherKey = useAccountability((s) => s.pusherKey);
-  const pusherSecret = useAccountability((s) => s.pusherSecret);
-  const pusherCluster = useAccountability((s) => s.pusherCluster);
+  const customPusherAppId = useAccountability((s) => s.customPusherAppId);
+  const customPusherKey = useAccountability((s) => s.customPusherKey);
+  const customPusherSecret = useAccountability((s) => s.customPusherSecret);
+  const customPusherCluster = useAccountability((s) => s.customPusherCluster);
 
   const activeTimer = usePlanner((s) => s.activeTimer);
   const tasks = usePlanner((s) => s.tasks);
   const sessions = usePlanner((s) => s.sessions);
+  const days = usePlanner((s) => s.days);
+  const focusSettings = usePlanner((s) => s.focusSettings);
 
-  // Compute stats to trigger updates
-  const completedTasksToday = useMemo(() => {
-    const todayKey = localDateKey(new Date());
-    return tasks.filter((t) => t.done && t.doneAt && t.doneAt.startsWith(todayKey)).length;
-  }, [tasks]);
+  const statsRef = useRef({
+    completedTasks: 0,
+    totalTasks: 0,
+    completedTaskList: [] as string[],
+    focusMinutes: 0,
+    focusTarget: 240,
+  });
 
-  const focusMinutesToday = useMemo(() => {
+  // Calculate local stats reactively
+  const localStats = useMemo(() => {
     const todayKey = localDateKey(new Date());
-    return sessions
+    const day = days.find((d) => d.date === todayKey);
+    const dayTasks = day ? tasks.filter((t) => t.dayId === day.id) : [];
+    const completedList = dayTasks.filter((t) => t.done).map((t) => t.text);
+    const focusMin = sessions
       .filter((s) => s.date === todayKey)
       .reduce((acc, s) => acc + s.minutes, 0);
-  }, [sessions]);
+    const targetMin = 240; // Default target of 4 hours (240m)
 
-  // Securely broadcast status via server endpoint
-  const broadcastStatus = async () => {
-    if (!roomCode) return;
+    return {
+      completedTasks: completedList.length,
+      totalTasks: dayTasks.length,
+      completedTaskList: completedList,
+      focusMinutes: focusMin,
+      focusTarget: targetMin,
+    };
+  }, [tasks, sessions, days, focusSettings]);
 
-    let activeTaskText: string | null = null;
+  // Keep ref up to date
+  useEffect(() => {
+    statsRef.current = localStats;
+  }, [localStats]);
+
+  // Broadcast state to partner
+  const broadcastState = async () => {
+    if (!isConnected || !roomCode || !yourName) return;
+
     const currentTimer = usePlanner.getState().activeTimer;
-    if (currentTimer && currentTimer.taskId) {
-      const currentTasks = usePlanner.getState().tasks;
-      const task = currentTasks.find((t) => t.id === currentTimer.taskId);
-      activeTaskText = task ? task.text : null;
+    const now = Date.now();
+    let isRunning = false;
+    let timerEndsAt: number | null = null;
+    let timerRemainingMs = 0;
+    let activeTaskText = "";
+
+    if (currentTimer) {
+      isRunning = !currentTimer.pausedAt;
+      const elapsed = elapsedSec(currentTimer, now);
+      const remainingSecs = Math.max(0, currentTimer.plannedSec - elapsed);
+      timerRemainingMs = remainingSecs * 1000;
+      timerEndsAt = isRunning ? now + timerRemainingMs : null;
+
+      if (currentTimer.taskId) {
+        const currentTasks = usePlanner.getState().tasks;
+        const task = currentTasks.find((t) => t.id === currentTimer.taskId);
+        activeTaskText = task ? task.text : "";
+      }
     }
 
     const payload = {
       roomCode,
-      eventName: "status-update",
+      sender: yourName,
+      event: "partner-status",
       data: {
-        sender: userName,
-        activeTask: activeTaskText,
-        timerMode: currentTimer ? currentTimer.mode : null,
-        timerStartedAt: currentTimer ? currentTimer.startedAt : null,
-        timerPlannedSec: currentTimer ? currentTimer.plannedSec : 0,
-        timerPausedAccumMs: currentTimer ? currentTimer.pausedAccumMs : 0,
-        timerPausedAt: currentTimer ? currentTimer.pausedAt : null,
-        completedTasks: completedTasksToday,
-        focusMinutes: focusMinutesToday,
+        online: true,
+        activeTask: activeTaskText || (currentTimer ? `Focus Block (${currentTimer.mode})` : "Idle"),
+        isRunning,
+        timerEndsAt,
+        timerRemainingMs,
+        timerPhase: currentTimer ? currentTimer.mode : "work",
+        completedTasks: statsRef.current.completedTasks,
+        totalTasks: statsRef.current.totalTasks,
+        completedTaskList: statsRef.current.completedTaskList,
+        focusMinutes: statsRef.current.focusMinutes,
+        focusTarget: statsRef.current.focusTarget,
       },
-      pusherAppId: pusherAppId || undefined,
-      pusherKey: pusherKey || undefined,
-      pusherSecret: pusherSecret || undefined,
-      pusherCluster: pusherCluster || undefined,
+      customCredentials: customPusherAppId
+        ? {
+            appId: customPusherAppId,
+            key: customPusherKey,
+            secret: customPusherSecret,
+            cluster: customPusherCluster,
+          }
+        : undefined,
     };
 
     try {
@@ -72,20 +115,20 @@ export function AccountabilitySync() {
         body: JSON.stringify(payload),
       });
     } catch (err) {
-      console.error("[AccountabilitySync] Failed to publish status:", err);
+      console.error("[AccountabilitySync] Broadcast failed:", err);
     }
   };
 
-  // 1. Pusher subscription management
+  // 1. Pusher subscription and connection
   useEffect(() => {
-    if (!roomCode) return;
+    if (!isConnected || !roomCode) return;
 
-    // Use user-configured key OR Netlify build key
-    const key = pusherKey || process.env.NEXT_PUBLIC_PUSHER_KEY;
-    const cluster = pusherCluster || process.env.NEXT_PUBLIC_PUSHER_CLUSTER || "ap2";
+    // Use custom credentials or fallback to process.env config
+    const key = customPusherKey || process.env.NEXT_PUBLIC_PUSHER_KEY || "";
+    const cluster = customPusherCluster || process.env.NEXT_PUBLIC_PUSHER_CLUSTER || "";
 
-    if (!key) {
-      console.warn("[AccountabilitySync] No Pusher Key configured.");
+    if (!key || !cluster) {
+      console.warn("[AccountabilitySync] Pusher credentials missing.");
       return;
     }
 
@@ -94,93 +137,82 @@ export function AccountabilitySync() {
       forceTLS: true,
     });
 
-    const channelName = `accountability-${roomCode}`;
+    const channelName = `room-${roomCode}`;
     const channel = client.subscribe(channelName);
 
-    console.log(`[AccountabilitySync] Connecting to room: ${channelName}`);
+    console.log(`[AccountabilitySync] Listening on channel: ${channelName}`);
 
-    // Update partner status on event
-    channel.bind("status-update", (data: any) => {
-      if (data.sender !== userName) {
-        useAccountability.getState().updatePartnerState({
-          name: data.sender,
-          activeTask: data.activeTask,
-          timerMode: data.timerMode,
-          timerStartedAt: data.timerStartedAt,
-          timerPlannedSec: data.timerPlannedSec,
-          timerPausedAccumMs: data.timerPausedAccumMs,
-          timerPausedAt: data.timerPausedAt,
-          completedTasks: data.completedTasks,
-          focusMinutes: data.focusMinutes,
-          isOnline: true,
-          lastActive: Date.now(),
-        });
+    // Listen for partner state changes
+    channel.bind("partner-status", (payload: any) => {
+      if (payload.sender !== yourName) {
+        useAccountability.getState().updatePartnerState(payload.data);
       }
     });
 
-    // Alert toast on nudge
-    channel.bind("nudge-trigger", (data: any) => {
-      if (data.sender !== userName) {
-        useAccountability.getState().addNotification("nudge", data.sender);
+    // Listen for nudges
+    channel.bind("nudge", (payload: any) => {
+      if (payload.sender !== yourName) {
+        useAccountability.getState().addAlert("nudge", payload.sender);
       }
     });
 
-    // Alert toast on applause
-    channel.bind("applaud-trigger", (data: any) => {
-      if (data.sender !== userName) {
-        useAccountability.getState().addNotification("applaud", data.sender);
+    // Listen for applause
+    channel.bind("applaud", (payload: any) => {
+      if (payload.sender !== yourName) {
+        useAccountability.getState().addAlert("applaud", payload.sender);
       }
     });
 
-    // Send initial status immediately on link
-    broadcastStatus();
+    // Initial broadcast on sync setup
+    void broadcastState();
 
     return () => {
       channel.unbind_all();
       client.unsubscribe(channelName);
       client.disconnect();
+      useAccountability.getState().clearPartnerState();
     };
-  }, [roomCode, pusherKey, pusherCluster, userName]);
+  }, [isConnected, roomCode, yourName, customPusherKey, customPusherCluster]);
 
-  // 2. React to changes and broadcast
+  // 2. Broadcast on local timer / checklist updates
   useEffect(() => {
-    if (!roomCode) return;
+    if (!isConnected || !roomCode) return;
 
-    const timeoutId = setTimeout(() => {
-      broadcastStatus();
-    }, 1500); // 1.5s debounce to bundle quick actions
+    const timer = setTimeout(() => {
+      void broadcastState();
+    }, 1500); // Debounce updates
 
-    return () => clearTimeout(timeoutId);
-  }, [activeTimer, completedTasksToday, focusMinutesToday, roomCode]);
+    return () => clearTimeout(timer);
+  }, [activeTimer, localStats, isConnected, roomCode]);
 
-  // 3. Heartbeat (every 12 seconds)
+  // 3. Heartbeat loop (every 10s)
   useEffect(() => {
-    if (!roomCode) return;
+    if (!isConnected || !roomCode) return;
 
-    const intervalId = setInterval(() => {
-      broadcastStatus();
-    }, 12000);
+    const interval = setInterval(() => {
+      void broadcastState();
+    }, 10000);
 
-    return () => clearInterval(intervalId);
-  }, [roomCode, userName]);
+    return () => clearInterval(interval);
+  }, [isConnected, roomCode, yourName]);
 
-  // 4. Partner Offline Detection (every 5 seconds)
+  // 4. Partner Offline watchdog (every 5s)
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      const state = useAccountability.getState();
-      const partner = state.partnerState;
-      if (partner && partner.isOnline) {
-        const inactiveMs = Date.now() - partner.lastActive;
-        if (inactiveMs > 28000) {
-          // If no message for 28s, mark offline
-          state.updatePartnerState({ isOnline: false });
+    if (!isConnected || !roomCode) return;
+
+    const watchdog = setInterval(() => {
+      const state = useAccountability.getState().partnerState;
+      if (state && state.online) {
+        const inactiveTime = Date.now() - state.lastActive;
+        if (inactiveTime > 28000) {
+          useAccountability.getState().updatePartnerState({ online: false });
         }
       }
     }, 5000);
 
-    return () => clearInterval(intervalId);
-  }, []);
+    return () => clearInterval(watchdog);
+  }, [isConnected, roomCode]);
 
-  return null; // Headless synchronization coordinator
+  return null;
 }
 export default AccountabilitySync;

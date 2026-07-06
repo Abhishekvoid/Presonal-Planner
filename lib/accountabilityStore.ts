@@ -4,111 +4,137 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export interface PartnerState {
-  name: string;
-  activeTask: string | null;
-  timerMode: "work" | "break" | "flow" | null;
-  timerStartedAt: string | null;
-  timerPlannedSec: number;
-  timerPausedAccumMs: number;
-  timerPausedAt: string | null;
-  completedTasks: number;
-  focusMinutes: number;
+  online: boolean;
   lastActive: number;
-  isOnline: boolean;
+  activeTask: string;
+  isRunning: boolean;
+  timerEndsAt: number | null;
+  timerRemainingMs: number;
+  timerPhase: string;
+  completedTasks: number;
+  totalTasks: number;
+  completedTaskList: string[];
+  focusMinutes: number;
+  focusTarget: number;
 }
 
-interface NotificationItem {
+export interface AccountabilityAlert {
   id: string;
   type: "nudge" | "applaud";
   sender: string;
   timestamp: number;
 }
 
-interface AccountabilityStore {
+interface AccountabilityState {
   // Connection Room
-  roomCode: string;
-  userName: string;
+  yourName: string;
   partnerName: string;
+  roomCode: string;
+  isConnected: boolean;
 
   // Custom credentials (optional, falls back to env vars)
-  pusherAppId: string;
-  pusherKey: string;
-  pusherSecret: string;
-  pusherCluster: string;
+  customPusherKey: string;
+  customPusherCluster: string;
+  customPusherAppId: string;
+  customPusherSecret: string;
 
   // Partner State
   partnerState: PartnerState | null;
 
   // Active transient notifications
-  notifications: NotificationItem[];
+  alerts: AccountabilityAlert[];
 
   // Actions
-  setRoomCode: (code: string) => void;
-  setNames: (user: string, partner: string) => void;
-  setPusherCredentials: (appId: string, key: string, secret: string, cluster: string) => void;
-  updatePartnerState: (state: Partial<PartnerState> | null) => void;
-  addNotification: (type: "nudge" | "applaud", sender: string) => void;
-  removeNotification: (id: string) => void;
-  clearNotifications: () => void;
+  setSettings: (settings: Partial<{
+    yourName: string;
+    partnerName: string;
+    roomCode: string;
+    customPusherKey: string;
+    customPusherCluster: string;
+    customPusherAppId: string;
+    customPusherSecret: string;
+  }>) => void;
+  setConnected: (connected: boolean) => void;
+  updatePartnerState: (partnerStatePatch: Partial<PartnerState>) => void;
+  addAlert: (type: "nudge" | "applaud", sender: string) => void;
+  dismissAlert: (id: string) => void;
+  clearPartnerState: () => void;
 }
 
-export const useAccountability = create<AccountabilityStore>()(
+export const useAccountability = create<AccountabilityState>()(
   persist(
     (set) => ({
-      roomCode: "",
-      userName: "Abhishek",
-      partnerName: "Partner",
+      yourName: "Abhishek",
+      partnerName: "Ayushi",
+      roomCode: "love-coding-2026",
+      isConnected: true, // Connected by default
 
-      pusherAppId: "",
-      pusherKey: "",
-      pusherSecret: "",
-      pusherCluster: "ap2", // Default common cluster
+      customPusherKey: "",
+      customPusherCluster: "",
+      customPusherAppId: "",
+      customPusherSecret: "",
 
       partnerState: null,
-      notifications: [],
+      alerts: [],
 
-      setRoomCode: (roomCode) => set({ roomCode }),
-      setNames: (userName, partnerName) => set({ userName, partnerName }),
-      setPusherCredentials: (pusherAppId, pusherKey, pusherSecret, pusherCluster) =>
-        set({ pusherAppId, pusherKey, pusherSecret, pusherCluster }),
-      updatePartnerState: (state) =>
-        set((s) => ({
-          partnerState: state
-            ? { ...(s.partnerState || {
-                name: s.partnerName,
-                activeTask: null,
-                timerMode: null,
-                timerStartedAt: null,
-                timerPlannedSec: 0,
-                timerPausedAccumMs: 0,
-                timerPausedAt: null,
-                completedTasks: 0,
-                focusMinutes: 0,
-                lastActive: Date.now(),
-                isOnline: false,
-              }), ...state }
-            : null,
-        })),
-      addNotification: (type, sender) =>
-        set((s) => ({
-          notifications: [
-            ...s.notifications,
+      setSettings: (settings) => set((state) => ({ ...state, ...settings })),
+      setConnected: (isConnected) => set({ isConnected }),
+      updatePartnerState: (partnerStatePatch) =>
+        set((state) => {
+          const current = state.partnerState || {
+            online: false,
+            lastActive: 0,
+            activeTask: "",
+            isRunning: false,
+            timerEndsAt: null,
+            timerRemainingMs: 0,
+            timerPhase: "work",
+            completedTasks: 0,
+            totalTasks: 0,
+            completedTaskList: [],
+            focusMinutes: 0,
+            focusTarget: 240, // 4 hours target
+          };
+          return {
+            partnerState: {
+              ...current,
+              ...partnerStatePatch,
+              lastActive: Date.now(),
+              online: true,
+            },
+          };
+        }),
+      addAlert: (type, sender) =>
+        set((state) => ({
+          alerts: [
+            ...state.alerts,
             {
-              id: `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              id: `${type}-${Date.now()}-${Math.random()}`,
               type,
               sender,
               timestamp: Date.now(),
             },
           ],
         })),
-      removeNotification: (id) =>
-        set((s) => ({
-          notifications: s.notifications.filter((n) => n.id !== id),
+      dismissAlert: (id) =>
+        set((state) => ({
+          alerts: state.alerts.filter((a) => a.id !== id),
         })),
-      clearNotifications: () => set({ notifications: [] }),
+      clearPartnerState: () => set({ partnerState: null }),
     }),
     {
-      name: "study-accountability-store",
+      name: "goals-learning-accountability",
+      partialize: (s) => ({
+        yourName: s.yourName,
+        partnerName: s.partnerName,
+        roomCode: s.roomCode,
+        customPusherKey: s.customPusherKey,
+        customPusherCluster: s.customPusherCluster,
+        customPusherAppId: s.customPusherAppId,
+        customPusherSecret: s.customPusherSecret,
+        isConnected: s.isConnected,
+      }),
     }
   )
 );
+export default useAccountability;

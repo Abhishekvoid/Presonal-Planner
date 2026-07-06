@@ -13,7 +13,6 @@ import { BackupPanel } from "./BackupPanel";
 import { Modal } from "./primitives";
 import { ThemeToggle } from "./ThemeToggle";
 import { AccountabilitySync } from "./AccountabilitySync";
-import { AccountabilityWidget } from "./accountability/AccountabilityWidget";
 import { ViewTransition } from "./transitions/ViewTransition";
 import { playTurn } from "@/lib/sound";
 
@@ -85,9 +84,8 @@ export function Planner({ replayIntro }: { replayIntro?: () => void } = {}) {
         <BackupPanel onDone={() => setBackupOpen(false)} />
       </Modal>
 
-      {/* Real-time Accountability Partner Sync & Widget */}
+      {/* Real-time Accountability Partner Sync */}
       <AccountabilitySync />
-      <AccountabilityWidget />
     </div>
     </MotionConfig>
   );
