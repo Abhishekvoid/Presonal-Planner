@@ -102,6 +102,7 @@ export interface PlannerState {
   notes: Note[];
   activeView?: string;
   activeNoteId?: string | null;
+  codeTheme?: "editorial" | "midnight";
 }
 
 export const SCHEMA_VERSION = 2;

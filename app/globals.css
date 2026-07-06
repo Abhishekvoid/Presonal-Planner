@@ -309,3 +309,170 @@
   box-shadow: inset 0 0 50px rgba(244, 63, 94, 0.5) !important;
   border-color: var(--clay) !important;
 }
+
+/* ==========================================================================
+   PRISM SYNTAX HIGHLIGHTING & CODE BLOCK THEMES
+   ========================================================================== */
+
+/* Outer wrapper container for markdown code blocks */
+.code-block-container {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--code-bg);
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+/* Header bar displaying language and copy button */
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--hair);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.code-block-lang {
+  opacity: 0.75;
+}
+
+.copy-code-btn {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  user-select: none;
+}
+.copy-code-btn:hover {
+  opacity: 1;
+}
+
+/* Custom Editorial theme */
+.code-theme-editorial {
+  --code-bg: var(--cream-deep);
+  --code-header-bg: rgba(90, 69, 52, 0.05);
+  --code-text: var(--espresso);
+  --code-comment: var(--coffee-soft);
+  --code-keyword: var(--clay-deep);
+  --code-string: var(--olive-deep);
+  --code-number: var(--clay-deep);
+  --code-function: var(--slate);
+  --code-operator: var(--coffee);
+  --code-variable: var(--espresso);
+  --code-punctuation: var(--coffee);
+}
+.code-theme-editorial .code-block-header {
+  background-color: var(--code-header-bg);
+  color: var(--coffee);
+}
+.code-theme-editorial .copy-code-btn:hover {
+  color: var(--olive-deep);
+}
+
+/* Custom Midnight theme */
+.code-theme-midnight {
+  --code-bg: #0f1015;
+  --code-header-bg: #161822;
+  --code-text: #abb2bf;
+  --code-comment: #5c6370;
+  --code-keyword: #c678dd;
+  --code-string: #98c379;
+  --code-number: #d19a66;
+  --code-function: #61afef;
+  --code-operator: #56b6c2;
+  --code-variable: #e06c75;
+  --code-punctuation: #abb2bf;
+}
+.code-theme-midnight .code-block-header {
+  background-color: var(--code-header-bg);
+  color: #8a909e;
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+.code-theme-midnight .copy-code-btn:hover {
+  color: #fff;
+}
+.code-theme-midnight.code-block-container {
+  border-color: #242738;
+}
+
+/* Code block pre styles */
+.code-block-container pre {
+  margin: 0 !important;
+  padding: 12px 14px !important;
+  background-color: var(--code-bg) !important;
+  color: var(--code-text) !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+/* Prism syntax tokens styling */
+.code-block-container .token.comment,
+.code-block-container .token.prolog,
+.code-block-container .token.doctype,
+.code-block-container .token.cdata {
+  color: var(--code-comment) !important;
+  font-style: italic;
+}
+
+.code-block-container .token.punctuation {
+  color: var(--code-punctuation) !important;
+}
+
+.code-block-container .token.property,
+.code-block-container .token.tag,
+.code-block-container .token.boolean,
+.code-block-container .token.number,
+.code-block-container .token.constant,
+.code-block-container .token.symbol,
+.code-block-container .token.deleted {
+  color: var(--code-number) !important;
+}
+
+.code-block-container .token.selector,
+.code-block-container .token.attr-name,
+.code-block-container .token.string,
+.code-block-container .token.char,
+.code-block-container .token.builtin,
+.code-block-container .token.inserted {
+  color: var(--code-string) !important;
+}
+
+.code-block-container .token.operator,
+.code-block-container .token.entity,
+.code-block-container .token.url,
+.language-css .token.string,
+.style .token.string {
+  color: var(--code-operator) !important;
+}
+
+.code-block-container .token.atrule,
+.code-block-container .token.attr-value,
+.code-block-container .token.keyword {
+  color: var(--code-keyword) !important;
+  font-weight: bold;
+}
+
+.code-block-container .token.function,
+.code-block-container .token.class-name {
+  color: var(--code-function) !important;
+}
+
+.code-block-container .token.regex,
+.code-block-container .token.important,
+.code-block-container .token.variable {
+  color: var(--code-variable) !important;
+}
+
+.code-block-container .token.bold {
+  font-weight: bold;
+}
+.code-block-container .token.italic {
+  font-style: italic;
+}
+

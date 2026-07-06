@@ -64,6 +64,7 @@ interface PlannerStore extends PlannerState {
   // navigation
   setActiveView: (view: string) => void;
   setActiveNoteId: (id: string | null) => void;
+  setCodeTheme: (theme: "editorial" | "midnight") => void;
 
   // data management
   exportState: () => PlannerState;
@@ -300,13 +301,15 @@ export const usePlanner = create<PlannerStore>()(
 
       activeView: "today",
       activeNoteId: null,
+      codeTheme: "editorial",
       setActiveView: (view) => set({ activeView: view }),
       setActiveNoteId: (id) => set({ activeNoteId: id }),
+      setCodeTheme: (theme) => set({ codeTheme: theme }),
 
       /* ---------- data management ---------- */
 
       exportState: () => {
-        const { tracks, days, tasks, sessions, reflections, focusSettings, notes, activeView, activeNoteId } = get();
+        const { tracks, days, tasks, sessions, reflections, focusSettings, notes, activeView, activeNoteId, codeTheme } = get();
         return {
           version: SCHEMA_VERSION,
           tracks,
@@ -319,6 +322,7 @@ export const usePlanner = create<PlannerStore>()(
           notes: notes ?? [],
           activeView: activeView ?? "today",
           activeNoteId: activeNoteId ?? null,
+          codeTheme: codeTheme ?? "editorial",
         };
       },
 
@@ -335,6 +339,7 @@ export const usePlanner = create<PlannerStore>()(
           notes: data.notes ?? [],
           activeView: data.activeView ?? "today",
           activeNoteId: data.activeNoteId ?? null,
+          codeTheme: data.codeTheme ?? "editorial",
         })),
 
       resetToSeed: () => {
@@ -351,6 +356,7 @@ export const usePlanner = create<PlannerStore>()(
           notes: [],
           activeView: "today",
           activeNoteId: null,
+          codeTheme: "editorial",
         });
       },
     }),
@@ -370,6 +376,7 @@ export const usePlanner = create<PlannerStore>()(
             notes: p.notes ?? [],
             activeView: p.activeView ?? "today",
             activeNoteId: p.activeNoteId ?? null,
+            codeTheme: p.codeTheme ?? "editorial",
           } as PlannerState;
         }
         return p as PlannerState;
@@ -386,6 +393,7 @@ export const usePlanner = create<PlannerStore>()(
         notes: s.notes ?? [],
         activeView: s.activeView ?? "today",
         activeNoteId: s.activeNoteId ?? null,
+        codeTheme: s.codeTheme ?? "editorial",
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
@@ -396,6 +404,7 @@ export const usePlanner = create<PlannerStore>()(
           state.notes ??= [];
           state.activeView ??= "today";
           state.activeNoteId ??= null;
+          state.codeTheme ??= "editorial";
           
           // Backfill track accents to apply high-contrast colors (e.g. system design to var(--slate))
           state.tracks = (state.tracks ?? []).map((t) => {
