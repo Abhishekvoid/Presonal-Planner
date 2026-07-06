@@ -23,6 +23,7 @@ export interface AccountabilityAlert {
   type: "nudge" | "applaud";
   sender: string;
   timestamp: number;
+  message?: string;
 }
 
 interface AccountabilityState {
@@ -56,7 +57,7 @@ interface AccountabilityState {
   }>) => void;
   setConnected: (connected: boolean) => void;
   updatePartnerState: (partnerStatePatch: Partial<PartnerState>) => void;
-  addAlert: (type: "nudge" | "applaud", sender: string) => void;
+  addAlert: (type: "nudge" | "applaud", sender: string, message?: string) => void;
   dismissAlert: (id: string) => void;
   clearPartnerState: () => void;
 }
@@ -105,7 +106,7 @@ export const useAccountability = create<AccountabilityState>()(
             },
           };
         }),
-      addAlert: (type, sender) =>
+      addAlert: (type, sender, message) =>
         set((state) => ({
           alerts: [
             ...state.alerts,
@@ -114,6 +115,7 @@ export const useAccountability = create<AccountabilityState>()(
               type,
               sender,
               timestamp: Date.now(),
+              message,
             },
           ],
         })),

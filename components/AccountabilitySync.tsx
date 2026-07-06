@@ -155,14 +155,14 @@ export function AccountabilitySync() {
     // Listen for nudges
     channel.bind("nudge", (payload: any) => {
       if (payload.sender !== yourName) {
-        useAccountability.getState().addAlert("nudge", payload.sender);
+        useAccountability.getState().addAlert("nudge", payload.sender, payload.data?.message);
       }
     });
 
     // Listen for applause
     channel.bind("applaud", (payload: any) => {
       if (payload.sender !== yourName) {
-        useAccountability.getState().addAlert("applaud", payload.sender);
+        useAccountability.getState().addAlert("applaud", payload.sender, payload.data?.message);
       }
     });
 

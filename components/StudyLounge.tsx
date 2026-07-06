@@ -61,6 +61,23 @@ function CircularProgress({
   );
 }
 
+const presetMessages = {
+  nudge: [
+    "Hey gorgeous, stop dreaming about me and focus! 😘",
+    "I'm keeping my eyes on you... get back to work! 🧐💖",
+    "Focus up! The faster we finish, the faster we can talk. 😉",
+    "Sending a warm virtual hug to help you concentrate. 🤗✨",
+    "A cute little reminder to crush your tasks today! 🥰",
+  ],
+  applaud: [
+    "You're doing amazing, my love! ❤️",
+    "Proud of you! Sending a virtual hug and a kiss. 😘",
+    "You crush every task so beautifully. 😍",
+    "My heart skips a beat seeing you work so hard! 💓",
+    "Absolute superstar! You're inspiring me today. 🌟",
+  ],
+};
+
 export function StudyLounge() {
   const isConnected = useAccountability((s) => s.isConnected);
   const roomCode = useAccountability((s) => s.roomCode);
@@ -78,6 +95,27 @@ export function StudyLounge() {
 
   // Tick partner countdown clock locally
   const [partnerRemainingSec, setPartnerRemainingSec] = useState<number>(0);
+
+  // Custom flirty / lovely active action panel state
+  const [activeAction, setActiveAction] = useState<"nudge" | "applaud" | null>(null);
+  const [customMsg, setCustomMsg] = useState("");
+  const [partnerMoniker, setPartnerMoniker] = useState("My Favorite Distraction");
+
+  useEffect(() => {
+    if (!partnerName) return;
+    const monikers = [
+      "My Favorite Distraction",
+      "My Sweetheart",
+      "My Sunshine",
+      "My Dearest",
+      "Better Half",
+      "My Bae",
+      "My Love"
+    ];
+    // Dynamic selection on partner Name change or mount
+    const randomIdx = Math.floor(Math.random() * monikers.length);
+    setPartnerMoniker(monikers[randomIdx]);
+  }, [partnerName]);
 
   useEffect(() => {
     if (
@@ -113,13 +151,15 @@ export function StudyLounge() {
     }
   }, [alerts, dismissAlert]);
 
-  const sendAction = async (type: "nudge" | "applaud") => {
-    if (!roomCode) return;
+  const handleSendCustomAction = async () => {
+    if (!activeAction || !roomCode) return;
     const payload = {
       roomCode,
       sender: yourName,
-      event: type,
-      data: {},
+      event: activeAction,
+      data: {
+        message: customMsg.trim() || undefined,
+      },
       customCredentials: customPusherAppId
         ? {
             appId: customPusherAppId,
@@ -136,8 +176,10 @@ export function StudyLounge() {
         body: JSON.stringify(payload),
       });
     } catch (err) {
-      console.error(`Failed to send ${type}:`, err);
+      console.error(`Failed to send ${activeAction}:`, err);
     }
+    setActiveAction(null);
+    setCustomMsg("");
   };
 
   const isPartnerOnline = partnerState && partnerState.online;
@@ -161,9 +203,9 @@ export function StudyLounge() {
             <div className="flex items-center gap-2">
               <span>{alert.type === "nudge" ? "⏰" : "🎉"}</span>
               <span>
-                {alert.type === "nudge"
+                {alert.message || (alert.type === "nudge"
                   ? `${alert.sender} nudged you to focus!`
-                  : `${alert.sender} applauded your progress!`}
+                  : `${alert.sender} applauded your progress!`)}
               </span>
             </div>
             <button
@@ -180,11 +222,11 @@ export function StudyLounge() {
       <div className="flex flex-col md:flex-row gap-6 justify-between items-stretch">
         
         {/* Left column: Online status, Active task description, and Nudge/Applaud actions */}
-        <div className="flex-1 flex flex-col justify-between gap-4">
+        <div className="flex-grow flex-1 flex flex-col justify-between gap-4">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-[10px] font-bold text-coffee-soft uppercase tracking-wider font-mono">
-                Study Partner
+                {partnerMoniker}
               </span>
               <h3 className="text-lg font-bold text-espresso tracking-tight mt-0.5">
                 {partnerName}
@@ -243,19 +285,116 @@ export function StudyLounge() {
 
           {/* Action buttons */}
           {isPartnerOnline && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => sendAction("nudge")}
-                className="flex-1 py-1.5 text-xs font-semibold bg-clay/10 hover:bg-clay/20 border border-clay text-clay-deep rounded-sm transition-colors cursor-pointer"
-              >
-                ⏰ Nudge
-              </button>
-              <button
-                onClick={() => sendAction("applaud")}
-                className="flex-1 py-1.5 text-xs font-semibold bg-olive/10 hover:bg-olive/20 border border-olive text-olive-deep rounded-sm transition-colors cursor-pointer"
-              >
-                👏 Applaud
-              </button>
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setActiveAction(activeAction === "nudge" ? null : "nudge");
+                    setCustomMsg("");
+                  }}
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-sm transition-all cursor-pointer border ${
+                    activeAction === "nudge"
+                      ? "bg-clay border-clay text-white shadow-sm font-bold"
+                      : "bg-clay/10 hover:bg-clay/20 border-clay text-clay-deep"
+                  }`}
+                >
+                  ⏰ Nudge
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveAction(activeAction === "applaud" ? null : "applaud");
+                    setCustomMsg("");
+                  }}
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-sm transition-all cursor-pointer border ${
+                    activeAction === "applaud"
+                      ? "bg-olive border-olive text-white shadow-sm font-bold"
+                      : "bg-olive/10 hover:bg-olive/20 border-olive text-olive-deep"
+                  }`}
+                >
+                  👏 Applaud
+                </button>
+              </div>
+
+              {/* Action Configuration Panel */}
+              <AnimatePresence>
+                {activeAction && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginTop: 4 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                    className="overflow-hidden bg-cream-base/60 border border-coffee/20 p-3 rounded-sm flex flex-col gap-3 shadow-inner"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold text-coffee-soft uppercase tracking-wider font-mono">
+                        Send {activeAction === "nudge" ? "Nudge ⏰" : "Applaud 👏"}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setActiveAction(null);
+                          setCustomMsg("");
+                        }}
+                        className="text-[9px] text-coffee/60 hover:text-espresso font-bold cursor-pointer font-mono"
+                      >
+                        ✕ CLOSE
+                      </button>
+                    </div>
+
+                    {/* Presets */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[8px] font-bold text-coffee/60 uppercase tracking-wider font-mono">
+                        Sweet presets:
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {presetMessages[activeAction].map((presetText) => (
+                          <button
+                            key={presetText}
+                            onClick={() => setCustomMsg(presetText)}
+                            className={`text-[10px] px-2 py-1 rounded-sm border transition-all text-left font-mono cursor-pointer ${
+                              customMsg === presetText
+                                ? "border-espresso bg-coffee/15 text-espresso font-bold"
+                                : "border-coffee/10 bg-cream-raised/50 hover:bg-cream-raised text-coffee hover:text-espresso"
+                            }`}
+                          >
+                            {presetText}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Custom Input */}
+                    <div className="flex flex-col gap-1 mt-1">
+                      <span className="text-[8px] font-bold text-coffee/60 uppercase tracking-wider font-mono">
+                        Or write your own:
+                      </span>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={customMsg}
+                          onChange={(e) => setCustomMsg(e.target.value)}
+                          placeholder={
+                            activeAction === "nudge"
+                              ? "Type a sweet reminder..."
+                              : "Type a cute praise..."
+                          }
+                          className="flex-grow text-xs px-2.5 py-1.5 border border-coffee/30 bg-cream-raised focus:outline-none focus:border-espresso rounded-sm text-espresso font-mono placeholder:text-coffee/40"
+                        />
+                        <button
+                          onClick={handleSendCustomAction}
+                          disabled={!customMsg.trim()}
+                          className={`px-3 py-1.5 text-xs font-bold rounded-sm border cursor-pointer transition-colors font-mono ${
+                            activeAction === "nudge"
+                              ? "bg-clay/10 hover:bg-clay/20 border-clay text-clay-deep disabled:opacity-50"
+                              : "bg-olive/10 hover:bg-olive/20 border-olive text-olive-deep disabled:opacity-50"
+                          }`}
+                        >
+                          SEND
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
         </div>
