@@ -3,14 +3,15 @@
 import { FocusTimer } from "./focus/FocusTimer";
 import { Heatmap } from "./focus/Heatmap";
 import { ReflectionCard } from "./focus/ReflectionCard";
+import { StudyHistory } from "./focus/StudyHistory";
 import { SectionDivider } from "./SectionDivider";
 
 const delay = (i: number) => ({ animationDelay: `${i * 0.06}s` });
 
 export function FocusView() {
   return (
-    <div>
-      <header className="reveal mb-6" style={delay(0)}>
+    <div className="space-y-6">
+      <header className="reveal" style={delay(0)}>
         <h1 className="font-display text-2xl sm:text-[2rem] font-bold leading-[1.05] tracking-tightest text-espresso">
           Focus
         </h1>
@@ -23,15 +24,21 @@ export function FocusView() {
         <FocusTimer />
       </div>
 
-      <SectionDivider className="mt-6" />
+      <SectionDivider />
 
-      <div className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="reveal" style={delay(2)}>
           <Heatmap />
         </div>
         <div className="reveal" style={delay(3)}>
           <ReflectionCard />
         </div>
+      </div>
+
+      <SectionDivider />
+
+      <div className="reveal" style={delay(4)}>
+        <StudyHistory />
       </div>
     </div>
   );
