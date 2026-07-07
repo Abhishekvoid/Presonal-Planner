@@ -246,6 +246,40 @@ export function NotesView() {
     }
   };
 
+  // Helper to parse Markdown inline formatting (bold, italic, code, links)
+  const parseInlineStyles = (text: string) => {
+    let html = text;
+    // Bold
+    html = html.replace(/\*\*([\s\S]+?)\*\*/g, "<strong>$1</strong>");
+    // Italic
+    html = html.replace(/\*([\s\S]+?)\*/g, "<em>$1</em>");
+    // Inline code (checking for difficulty tags)
+    html = html.replace(/`([^`]+)`/g, (match, codeText) => {
+      const trimmed = codeText.trim();
+      if (trimmed === "Easy") {
+        return '<code class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] px-1.5 py-0.5 rounded-sm font-mono font-bold">Easy</code>';
+      }
+      if (trimmed === "Medium") {
+        return '<code class="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] px-1.5 py-0.5 rounded-sm font-mono font-bold">Medium</code>';
+      }
+      if (trimmed === "Hard") {
+        return '<code class="bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[11px] px-1.5 py-0.5 rounded-sm font-mono font-bold">Hard</code>';
+      }
+      return `<code class="bg-coffee/10 text-espresso text-[11px] px-1 rounded-sm font-mono">${codeText}</code>`;
+    });
+    // Standard links
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-olive-deep underline font-bold hover:text-olive transition-colors">$1</a>');
+    // Wikilinks
+    html = html.replace(/\[\[([\s\S]+?)\]\]/g, (match, title) => {
+      const targetNote = notes.find((n) => n.title.toLowerCase() === title.trim().toLowerCase());
+      if (targetNote) {
+        return `<span class="underline text-olive-deep font-bold cursor-pointer hover:text-olive transition-colors inline-block" data-note-id="${targetNote.id}">📄 ${title}</span>`;
+      }
+      return `<span class="text-clay font-mono italic select-none" title="Note does not exist yet. Create it to link.">[[${title} (Broken Link)]]</span>`;
+    });
+    return html;
+  };
+
   // Helper to render Markdown Table rows to HTML
   const renderTableHTML = (rows: string[]) => {
     const cells = rows.map((r) =>
@@ -265,7 +299,7 @@ export function NotesView() {
     // Header
     html += '<thead class="bg-coffee/10 border-b border-coffee/20"><tr>';
     headers.forEach((h) => {
-      html += `<th class="p-2 font-mono font-bold text-espresso">${h}</th>`;
+      html += `<th class="p-2 font-mono font-bold text-espresso">${parseInlineStyles(h)}</th>`;
     });
     html += "</tr></thead>";
 
@@ -274,7 +308,7 @@ export function NotesView() {
     dataRows.forEach((row) => {
       html += "<tr>";
       row.forEach((cell) => {
-        html += `<td class="p-2 text-espresso font-mono">${cell}</td>`;
+        html += `<td class="p-2 text-espresso font-mono">${parseInlineStyles(cell)}</td>`;
       });
       html += "</tr>";
     });
@@ -315,6 +349,20 @@ export function NotesView() {
         parsedLines.push(line);
         continue;
       }
+
+      // We are NOT in a code block. Check for indentation
+      const indentMatch = line.match(/^(\s+)(.*)/);
+      let lineText = line;
+      let leadingSpaces = "";
+      if (indentMatch) {
+        leadingSpaces = indentMatch[1];
+        lineText = indentMatch[2];
+      }
+
+      // Parse inline styles for line contents
+      const parsedLineText = parseInlineStyles(lineText);
+      // Reassemble the line with its original leading spaces
+      line = leadingSpaces + parsedLineText;
 
       // Markdown Tables
       if (line.trim().startsWith("|")) {
@@ -423,6 +471,24 @@ export function NotesView() {
         continue;
       }
 
+      // Indented lines (e.g. for Example Input/Output blocks):
+      if (indentMatch) {
+        const indentLevel = leadingSpaces.length;
+        const indentStyle = `style="margin-left: ${indentLevel * 8}px;"`;
+        
+        let formattedContent = parsedLineText;
+        // Check if the text matches LeetCode keys (e.g. Input:, Output:, Explanation:, Constraints:)
+        if (parsedLineText.startsWith("Input:") || parsedLineText.startsWith("Output:") || parsedLineText.startsWith("Explanation:") || parsedLineText.startsWith("Constraints:")) {
+          const colonIdx = parsedLineText.indexOf(":");
+          const key = parsedLineText.substring(0, colonIdx);
+          const val = parsedLineText.substring(colonIdx + 1);
+          formattedContent = `<strong class="text-espresso font-mono">${key}:</strong><span class="font-mono text-coffee-soft">${val}</span>`;
+        }
+        
+        parsedLines.push(`<div class="border-l-2 border-coffee/15 pl-2.5 my-1 text-xs font-mono" ${indentStyle}>${formattedContent}</div>`);
+        continue;
+      }
+
       // Regular paragraph
       parsedLines.push(line.trim() ? `<p class="text-xs sm:text-[13.5px] leading-relaxed text-espresso my-1">${line}</p>` : "");
     }
@@ -431,24 +497,7 @@ export function NotesView() {
       parsedLines.push(renderTableHTML(tableRows));
     }
 
-    let parsedHtml = parsedLines.join("\n");
-
-    // Inline elements styling replacements
-    parsedHtml = parsedHtml.replace(/\*\*([\s\S]+?)\*\*/g, "<strong>$1</strong>");
-    parsedHtml = parsedHtml.replace(/\*([\s\S]+?)\*/g, "<em>$1</em>");
-    parsedHtml = parsedHtml.replace(/`([^`]+)`/g, '<code class="bg-coffee/10 text-espresso text-[11px] px-1 rounded-sm font-mono">$1</code>');
-    parsedHtml = parsedHtml.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-olive-deep underline font-bold hover:text-olive transition-colors">$1</a>');
-
-    // Wikilinks navigation resolution
-    parsedHtml = parsedHtml.replace(/\[\[([\s\S]+?)\]\]/g, (match, title) => {
-      const targetNote = notes.find((n) => n.title.toLowerCase() === title.trim().toLowerCase());
-      if (targetNote) {
-        return `<span class="underline text-olive-deep font-bold cursor-pointer hover:text-olive transition-colors inline-block" data-note-id="${targetNote.id}">📄 ${title}</span>`;
-      }
-      return `<span class="text-clay font-mono italic select-none" title="Note does not exist yet. Create it to link.">[[${title} (Broken Link)]]</span>`;
-    });
-
-    return parsedHtml;
+    return parsedLines.join("\n");
   };
 
   // Preview click handler mapping for wikilinks, copy buttons, and interactive checkboxes
@@ -649,6 +698,18 @@ export function NotesView() {
     } else if (syntax === "```\n\n```") {
       selStart = before.length + 3;
       selEnd = before.length + 3;
+    } else if (syntax === "\n**Example 1:**\n  Input: \n  Output: \n  Explanation: \n") {
+      selStart = before.length + 25;
+      selEnd = before.length + 25;
+    } else if (syntax === "\n**Constraints:**\n- `1 <= s.length <= 10^4`\n") {
+      selStart = before.length + 21;
+      selEnd = before.length + 43;
+    } else if (syntax === "[Title](url)") {
+      selStart = before.length + 1;
+      selEnd = before.length + 6;
+    } else if (syntax === "\n> [!NOTE]\n> Content\n") {
+      selStart = before.length + 14;
+      selEnd = before.length + 21;
     }
 
     setTimeout(() => {
@@ -1031,13 +1092,19 @@ export function NotesView() {
                           { label: "H1 Header", syntax: "# ", hint: "#" },
                           { label: "H2 Subheading", syntax: "## ", hint: "##" },
                           { label: "H3 Subheading", syntax: "### ", hint: "###" },
-                          { label: "H4 Subheading", syntax: "#### ", hint: "####" },
-                          { label: "H5 Subheading", syntax: "##### ", hint: "#####" },
-                          { label: "H6 Subheading", syntax: "###### ", hint: "######" },
                           { label: "Bold Text", syntax: "**Bold**", hint: "**bold**" },
                           { label: "Italic Text", syntax: "*Italic*", hint: "*italic*" },
                           { label: "Indent Line", syntax: "indent", hint: "Tab" },
                           { label: "Outdent Line", syntax: "outdent", hint: "Shift+Tab" },
+                          { label: "LeetCode Example", syntax: "\n**Example 1:**\n  Input: \n  Output: \n  Explanation: \n", hint: "/ex" },
+                          { label: "Constraints List", syntax: "\n**Constraints:**\n- `1 <= s.length <= 10^4`\n", hint: "/const" },
+                          { label: "Complexity Analysis", syntax: "\n**Complexity Analysis:**\n- **Time Complexity:** `O(N)`\n- **Space Complexity:** `O(1)`\n", hint: "/comp" },
+                          { label: "Easy Badge", syntax: "`Easy` ", hint: "/easy" },
+                          { label: "Medium Badge", syntax: "`Medium` ", hint: "/medium" },
+                          { label: "Hard Badge", syntax: "`Hard` ", hint: "/hard" },
+                          { label: "Solution (Python)", syntax: "```python\ndef solve(self):\n    pass\n```", hint: "/py" },
+                          { label: "Solution (Java)", syntax: "```java\npublic class Solution {\n    // code\n}\n```", hint: "/java" },
+                          { label: "Solution (C++)", syntax: "```cpp\nclass Solution {\npublic:\n    // code\n};\n```", hint: "/cpp" },
                           { label: "Checklist", syntax: "- [ ] ", hint: "- [ ]" },
                           { label: "Code Block", syntax: "```\n\n```", hint: "```" },
                           { label: "Inline Code", syntax: "`code`", hint: "`code`" },
