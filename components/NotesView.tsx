@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePlanner } from "@/lib/store";
 import { Note } from "@/lib/types";
 import { Button, Field, inputClass } from "./primitives";
+import { NotesGraph } from "./NotesGraph";
 
 // PrismJS imports for syntax highlighting
 import Prism from "prismjs";
@@ -32,6 +33,7 @@ export function NotesView() {
   const setCodeTheme = state.setCodeTheme;
 
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"editor" | "graph">("editor");
   const [search, setSearch] = useState("");
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [newFolderInput, setNewFolderInput] = useState("");
@@ -180,6 +182,12 @@ export function NotesView() {
   const handleSetActiveNote = (id: string | null) => {
     setActiveId(id);
     setActiveNoteId(id);
+  };
+
+  // Opening a note from the graph flips back to the editor with it active.
+  const handleOpenNoteFromGraph = (id: string) => {
+    handleSetActiveNote(id);
+    setViewMode("editor");
   };
 
   // Task-selection handler: auto-create or navigate to the note for the selected task
@@ -732,7 +740,37 @@ export function NotesView() {
   }, [activeNote, days]);
 
   return (
-    <div className="reveal flex items-stretch gap-0 min-h-[520px]">
+    <div className="reveal flex flex-col gap-3">
+
+      {/* ── Mode toggle: Editor / Graph ───────────────────────── */}
+      <div className="flex items-center gap-0.5 border border-coffee/25 bg-cream-raised rounded-sm p-0.5 self-start shadow-sm">
+        {([
+          { id: "editor", label: "✏️ Editor" },
+          { id: "graph", label: "🕸 Graph" },
+        ] as const).map((m) => (
+          <button
+            key={m.id}
+            onClick={() => setViewMode(m.id)}
+            className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-sm transition-colors ${
+              viewMode === m.id
+                ? "bg-espresso text-cream-raised shadow-sm"
+                : "text-coffee hover:text-espresso hover:bg-coffee/5"
+            }`}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {viewMode === "graph" ? (
+        <NotesGraph
+          notes={notes}
+          tasks={tasks}
+          days={days}
+          onOpenNote={handleOpenNoteFromGraph}
+        />
+      ) : (
+      <div className="flex items-stretch gap-0 min-h-[520px]">
 
       {/* ── Push Sidebar ──────────────────────────────────────── */}
       <motion.div
@@ -1168,6 +1206,8 @@ export function NotesView() {
           </div>
         )}
       </div>
+      </div>
+      )}
 
       {/* Add Folder Modal */}
       {showFolderModal && (

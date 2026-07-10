@@ -1,12 +1,14 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Task } from "@/lib/types";
 import { usePlanner } from "@/lib/store";
 import { DifficultyChip } from "./primitives";
 import { EASE_OUT_EXPO, spring } from "@/lib/motion";
 import { playStamp } from "@/lib/sound";
+import { useToast } from "./system/Toaster";
+import { useCelebrate } from "./system/Celebration";
 
 export function TaskItem({
   task,
@@ -23,6 +25,10 @@ export function TaskItem({
   const setView = usePlanner((s) => s.setActiveView);
   const setActiveNoteId = usePlanner((s) => s.setActiveNoteId);
 
+  const { toast } = useToast();
+  const celebrate = useCelebrate();
+  const checkboxRef = useRef<HTMLButtonElement>(null);
+
   // Find note linked to this specific task
   const linkedNote = notes.find((n) => n.taskId === task.id);
 
@@ -30,11 +36,28 @@ export function TaskItem({
   const [burst, setBurst] = useState(0);
 
   const onToggle = () => {
-    if (!task.done) {
+    const completing = !task.done;
+    if (completing) {
       setBurst((b) => b + 1);
       playStamp(); // no-op unless interface cues are enabled
     }
     toggle(task.id);
+
+    // Milestone: this completion just finished the task's whole day.
+    if (completing && task.dayId) {
+      const st = usePlanner.getState();
+      const dayTasks = st.tasks.filter((t) => t.dayId === task.dayId);
+      if (dayTasks.length > 1 && dayTasks.every((t) => t.done)) {
+        const day = st.days.find((d) => d.id === task.dayId);
+        const rect = checkboxRef.current?.getBoundingClientRect();
+        celebrate(rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : undefined);
+        toast({
+          tone: "success",
+          title: day ? `Day ${day.index} complete` : "Day complete",
+          desc: day?.title ? `${day.title}: every task done.` : "Every task done.",
+        });
+      }
+    }
   };
 
   const handleOpenNote = (e: React.MouseEvent) => {
@@ -56,6 +79,7 @@ export function TaskItem({
   return (
     <div className="group flex items-start gap-3 py-2.5 border-b hairline last:border-b-0">
       <motion.button
+        ref={checkboxRef}
         onClick={onToggle}
         role="checkbox"
         aria-checked={task.done}

@@ -181,10 +181,12 @@
   100% {
     opacity: 0.04;
   }
+
+
   50% {
     opacity: 0.3;
   }
-}
+} 
 
 @keyframes frameEmberBreath {
   0%,

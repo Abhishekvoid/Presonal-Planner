@@ -1,7 +1,6 @@
 "use client";
 
-import { motion, MotionConfig } from "framer-motion";
-import Link from "next/link";
+import { MotionConfig } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { usePlanner } from "@/lib/store";
 import { TodayView } from "./TodayView";
@@ -14,17 +13,15 @@ import { Modal } from "./primitives";
 import { ThemeToggle } from "./ThemeToggle";
 import { AccountabilitySync } from "./AccountabilitySync";
 import { ViewTransition } from "./transitions/ViewTransition";
+import { DockNav } from "./DockNav";
+import { CommandPalette } from "./CommandPalette";
+import { ShortcutsOverlay } from "./ShortcutsOverlay";
+import { ToastProvider } from "./system/Toaster";
+import { CelebrationProvider } from "./system/Celebration";
+import { useGlobalShortcuts } from "@/lib/useGlobalShortcuts";
 import { playTurn } from "@/lib/sound";
 
 type View = "today" | "goals" | "progress" | "focus" | "notes";
-
-const NAV: { id: View; label: string }[] = [
-  { id: "today", label: "Today" },
-  { id: "goals", label: "Goals" },
-  { id: "progress", label: "Progress" },
-  { id: "focus", label: "Focus" },
-  { id: "notes", label: "Notes" },
-];
 
 const ORDER: View[] = ["today", "goals", "progress", "focus", "notes"];
 
@@ -34,6 +31,8 @@ export function Planner({ replayIntro }: { replayIntro?: () => void } = {}) {
   const view = usePlanner((s) => (s.activeView as View) ?? "today");
   const setView = usePlanner((s) => s.setActiveView);
   const [backupOpen, setBackupOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const prevView = useRef<View>("today");
   const mainRef = useRef<HTMLElement>(null);
 
@@ -49,16 +48,23 @@ export function Planner({ replayIntro }: { replayIntro?: () => void } = {}) {
     requestAnimationFrame(() => mainRef.current?.focus());
   };
 
+  useGlobalShortcuts({
+    openPalette: () => setPaletteOpen(true),
+    toggleShortcuts: () => setShortcutsOpen((v) => !v),
+    changeView,
+  });
+
   const direction: 1 | -1 =
     ORDER.indexOf(view) >= ORDER.indexOf(prevView.current) ? 1 : -1;
 
   return (
     <MotionConfig reducedMotion="user">
+    <ToastProvider>
+    <CelebrationProvider>
     <div className="min-h-screen">
       <Header
-        view={view}
-        setView={changeView}
         onBackup={() => setBackupOpen(true)}
+        onCommand={() => setPaletteOpen(true)}
         replayIntro={replayIntro}
       />
 
@@ -84,22 +90,35 @@ export function Planner({ replayIntro }: { replayIntro?: () => void } = {}) {
         <BackupPanel onDone={() => setBackupOpen(false)} />
       </Modal>
 
+      {/* Bottom navigation dock */}
+      <DockNav view={view} setView={changeView} />
+
+      {/* Command palette (⌘K) + shortcuts (?) */}
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        changeView={changeView}
+        onBackup={() => setBackupOpen(true)}
+        replayIntro={replayIntro}
+      />
+      <ShortcutsOverlay open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+
       {/* Real-time Accountability Partner Sync */}
       <AccountabilitySync />
     </div>
+    </CelebrationProvider>
+    </ToastProvider>
     </MotionConfig>
   );
 }
 
 function Header({
-  view,
-  setView,
   onBackup,
+  onCommand,
   replayIntro,
 }: {
-  view: View;
-  setView: (v: View) => void;
   onBackup: () => void;
+  onCommand: () => void;
   replayIntro?: () => void;
 }) {
   return (
@@ -112,37 +131,15 @@ function Header({
           </span>
         </div>
 
-        <nav className="ml-1 sm:ml-2 flex items-center gap-0.5 sm:gap-1">
-          {NAV.map((n) => {
-            const active = view === n.id;
-            return (
-              <button
-                key={n.id}
-                onClick={() => setView(n.id)}
-                className={`relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
-                  active ? "text-espresso" : "text-coffee hover:text-espresso"
-                }`}
-              >
-                {n.label}
-                {active && (
-                  <motion.span
-                    layoutId="nav-underline"
-                    className="absolute inset-x-1.5 sm:inset-x-2 -bottom-[15px] h-[2px] bg-espresso"
-                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                  />
-                )}
-              </button>
-            );
-          })}
-        </nav>
-
         <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
-          <Link
-            href="/jobs"
-            className="label text-coffee hover:text-espresso transition-colors text-[10px] sm:text-xs"
+          <button
+            onClick={onCommand}
+            aria-label="Open command palette"
+            className="group flex items-center gap-1.5 rounded-md border border-coffee/25 bg-cream-raised/60 px-2 py-1 text-coffee transition-colors hover:border-coffee/40 hover:text-espresso"
           >
-            Outreach<span className="hidden sm:inline"> →</span>
-          </Link>
+            <span className="text-[11px]">Search</span>
+            <kbd className="rounded border border-coffee/25 bg-cream-base px-1 py-[1px] font-mono text-[9px] text-coffee-soft group-hover:text-coffee">⌘K</kbd>
+          </button>
           <button
             onClick={onBackup}
             className="label text-coffee hover:text-espresso transition-colors hidden md:inline-block text-[10px] sm:text-xs"
