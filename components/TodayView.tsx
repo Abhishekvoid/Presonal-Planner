@@ -14,6 +14,7 @@ import {
 import { Day, Task, Track } from "@/lib/types";
 import { yesterdayKey } from "@/lib/focus";
 import { StudyLounge } from "./StudyLounge";
+import { RevisionCard } from "./RevisionCard";
 import { TaskItem } from "./TaskItem";
 import { Button, Modal, ProgressBar } from "./primitives";
 import { DayForm, TaskForm } from "./forms";
@@ -78,46 +79,34 @@ export function TodayView() {
     return lines;
   }, [day.must]);
 
-  const [checkedMusts, setCheckedMusts] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    const saved = localStorage.getItem(`must-checked-${day.id}`);
-    if (saved) {
-      try {
-        setCheckedMusts(JSON.parse(saved));
-      } catch {
-        setCheckedMusts({});
-      }
-    } else {
-      setCheckedMusts({});
+  // Per-day checklist state now lives in the synced kv bag (Neon), not raw
+  // localStorage, so it round-trips across devices.
+  const mustKey = `must-checked-${day.id}`;
+  const checkedMusts = useMemo<Record<string, boolean>>(() => {
+    try {
+      return JSON.parse(state.kv?.[mustKey] ?? "{}");
+    } catch {
+      return {};
     }
-  }, [day.id]);
+  }, [state.kv, mustKey]);
 
   const toggleMust = (idx: number) => {
     const next = { ...checkedMusts, [idx]: !checkedMusts[idx] };
-    setCheckedMusts(next);
-    localStorage.setItem(`must-checked-${day.id}`, JSON.stringify(next));
+    state.setKv(mustKey, JSON.stringify(next));
   };
 
-  const [pitchChecked, setPitchChecked] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    const saved = localStorage.getItem(`pitch-checked-${day.id}`);
-    if (saved) {
-      try {
-        setPitchChecked(JSON.parse(saved));
-      } catch {
-        setPitchChecked({});
-      }
-    } else {
-      setPitchChecked({});
+  const pitchKey = `pitch-checked-${day.id}`;
+  const pitchChecked = useMemo<Record<string, boolean>>(() => {
+    try {
+      return JSON.parse(state.kv?.[pitchKey] ?? "{}");
+    } catch {
+      return {};
     }
-  }, [day.id]);
+  }, [state.kv, pitchKey]);
 
   const togglePitch = (key: string) => {
     const next = { ...pitchChecked, [key]: !pitchChecked[key] };
-    setPitchChecked(next);
-    localStorage.setItem(`pitch-checked-${day.id}`, JSON.stringify(next));
+    state.setKv(pitchKey, JSON.stringify(next));
   };
 
   const isTimerRunning = useMemo(() => {
@@ -178,18 +167,14 @@ export function TodayView() {
   };
 
   const [showGlitch, setShowGlitch] = useState(false);
-  const [pausesCount, setPausesCount] = useState(0);
-  const [penalty, setPenalty] = useState(0);
-  const [rivalBonus, setRivalBonus] = useState(0);
 
-  useEffect(() => {
-    const pCount = Number(localStorage.getItem(`focus-pauses-${day.id}`) ?? 0);
-    setPausesCount(pCount);
-    const pAmt = Number(localStorage.getItem(`focus-distraction-penalty-${day.id}`) ?? 0);
-    setPenalty(pAmt);
-    const rBonus = Number(localStorage.getItem(`rival-bonus-${day.id}`) ?? 0);
-    setRivalBonus(rBonus);
-  }, [day.id]);
+  // Gamification counters, derived from the synced kv bag (Neon-backed).
+  const pausesKey = `focus-pauses-${day.id}`;
+  const penaltyKey = `focus-distraction-penalty-${day.id}`;
+  const rivalKey = `rival-bonus-${day.id}`;
+  const pausesCount = Number(state.kv?.[pausesKey] ?? 0);
+  const penalty = Number(state.kv?.[penaltyKey] ?? 0);
+  const rivalBonus = Number(state.kv?.[rivalKey] ?? 0);
 
   const [mockCapital, setMockCapital] = useState(0);
 
@@ -210,17 +195,11 @@ export function TodayView() {
     setShowGlitch(true);
     setTimeout(() => setShowGlitch(false), 1200);
 
-    const nextPauses = Number(localStorage.getItem(`focus-pauses-${day.id}`) ?? 0) + 1;
-    setPausesCount(nextPauses);
-    localStorage.setItem(`focus-pauses-${day.id}`, String(nextPauses));
-
-    const nextPenalty = Number(localStorage.getItem(`focus-distraction-penalty-${day.id}`) ?? 0) + 100;
-    setPenalty(nextPenalty);
-    localStorage.setItem(`focus-distraction-penalty-${day.id}`, String(nextPenalty));
-
-    const nextRivalBonus = Number(localStorage.getItem(`rival-bonus-${day.id}`) ?? 0) + 3;
-    setRivalBonus(nextRivalBonus);
-    localStorage.setItem(`rival-bonus-${day.id}`, String(nextRivalBonus));
+    // Read the latest counters from the store so rapid pauses don't clobber.
+    const cur = usePlanner.getState().kv ?? {};
+    state.setKv(pausesKey, String(Number(cur[pausesKey] ?? 0) + 1));
+    state.setKv(penaltyKey, String(Number(cur[penaltyKey] ?? 0) + 100));
+    state.setKv(rivalKey, String(Number(cur[rivalKey] ?? 0) + 3));
 
     // Web Audio Low Buzz
     try {
@@ -1067,6 +1046,13 @@ export function TodayView() {
         <div className="col-span-12 lg:col-span-5">
           <ReflectionCard />
         </div>
+      </div>
+
+      <SectionDivider className="mt-6" />
+
+      {/* Revision & Summary — distilled, review-later notes for the day */}
+      <div className="reveal mt-6" style={delay(3.9)}>
+        <RevisionCard day={day} />
       </div>
 
       <SectionDivider className="mt-6" />

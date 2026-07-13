@@ -22,6 +22,39 @@ import { focusedMinutes, elapsedSec, localDateKey } from "./focus";
 const uid = (prefix: string) =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
+/**
+ * One-time migration: lift user state that used to be written to raw
+ * localStorage keys into the synced `kv` bag so it reaches Neon. Device-only
+ * prefs (theme, sfx, has-entered, study-active-space) are intentionally
+ * excluded. Safe to run repeatedly; it only reads.
+ */
+function migrateLegacyLocalStorage(): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (typeof window === "undefined") return out;
+  const prefixes = [
+    "must-checked-",
+    "pitch-checked-",
+    "focus-pauses-",
+    "focus-distraction-penalty-",
+    "rival-bonus-",
+    "star-",
+  ];
+  const exact = ["leetcode-quiz-score", "ical-cycle-start"];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      if (exact.includes(key) || prefixes.some((p) => key.startsWith(p))) {
+        const v = localStorage.getItem(key);
+        if (v != null) out[key] = v;
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return out;
+}
+
 interface PlannerStore extends PlannerState {
   hasHydrated: boolean;
   setHasHydrated: (v: boolean) => void;
@@ -60,6 +93,9 @@ interface PlannerStore extends PlannerState {
   addNote: (title: string, content: string, folder?: string | null, taskId?: string | null, dayId?: string | null) => string;
   updateNote: (id: string, patch: Partial<Omit<Note, "id">>) => void;
   deleteNote: (id: string) => void;
+
+  // synced key/value bag (replaces ad-hoc localStorage for user state)
+  setKv: (key: string, value: string) => void;
 
   // navigation
   setActiveView: (view: string) => void;
@@ -302,6 +338,9 @@ export const usePlanner = create<PlannerStore>()(
       activeView: "today",
       activeNoteId: null,
       codeTheme: "editorial",
+      setKv: (key, value) =>
+        set((s) => ({ kv: { ...(s.kv ?? {}), [key]: value } })),
+
       setActiveView: (view) => set({ activeView: view }),
       setActiveNoteId: (id) => set({ activeNoteId: id }),
       setCodeTheme: (theme) => set({ codeTheme: theme }),
@@ -309,7 +348,7 @@ export const usePlanner = create<PlannerStore>()(
       /* ---------- data management ---------- */
 
       exportState: () => {
-        const { tracks, days, tasks, sessions, reflections, focusSettings, notes, activeView, activeNoteId, codeTheme } = get();
+        const { tracks, days, tasks, sessions, reflections, focusSettings, notes, kv, activeView, activeNoteId, codeTheme } = get();
         return {
           version: SCHEMA_VERSION,
           tracks,
@@ -320,6 +359,7 @@ export const usePlanner = create<PlannerStore>()(
           focusSettings,
           activeTimer: null,
           notes: notes ?? [],
+          kv: kv ?? {},
           activeView: activeView ?? "today",
           activeNoteId: activeNoteId ?? null,
           codeTheme: codeTheme ?? "editorial",
@@ -337,6 +377,7 @@ export const usePlanner = create<PlannerStore>()(
           focusSettings: data.focusSettings ?? { ...DEFAULT_FOCUS_SETTINGS },
           activeTimer: state.activeTimer || null,
           notes: data.notes ?? [],
+          kv: data.kv ?? {},
           activeView: data.activeView ?? "today",
           activeNoteId: data.activeNoteId ?? null,
           codeTheme: data.codeTheme ?? "editorial",
@@ -354,6 +395,7 @@ export const usePlanner = create<PlannerStore>()(
           focusSettings: fresh.focusSettings,
           activeTimer: null,
           notes: [],
+          kv: {},
           activeView: "today",
           activeNoteId: null,
           codeTheme: "editorial",
@@ -374,6 +416,7 @@ export const usePlanner = create<PlannerStore>()(
             focusSettings: p.focusSettings ?? { ...DEFAULT_FOCUS_SETTINGS },
             activeTimer: p.activeTimer ?? null,
             notes: p.notes ?? [],
+            kv: p.kv ?? {},
             activeView: p.activeView ?? "today",
             activeNoteId: p.activeNoteId ?? null,
             codeTheme: p.codeTheme ?? "editorial",
@@ -391,6 +434,7 @@ export const usePlanner = create<PlannerStore>()(
         focusSettings: s.focusSettings,
         activeTimer: s.activeTimer,
         notes: s.notes ?? [],
+        kv: s.kv ?? {},
         activeView: s.activeView ?? "today",
         activeNoteId: s.activeNoteId ?? null,
         codeTheme: s.codeTheme ?? "editorial",
@@ -402,6 +446,9 @@ export const usePlanner = create<PlannerStore>()(
           state.reflections ??= [];
           state.focusSettings ??= { ...DEFAULT_FOCUS_SETTINGS };
           state.notes ??= [];
+          // Fold any legacy raw-localStorage user state into kv (existing kv
+          // entries win, so this never clobbers already-synced values).
+          state.kv = { ...migrateLegacyLocalStorage(), ...(state.kv ?? {}) };
           state.activeView ??= "today";
           state.activeNoteId ??= null;
           state.codeTheme ??= "editorial";

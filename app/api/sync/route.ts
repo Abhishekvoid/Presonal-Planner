@@ -21,10 +21,12 @@ export async function GET() {
     });
     const templates = await prisma.template.findMany({ orderBy: { order: "asc" } });
     const notes = await prisma.note.findMany({ orderBy: { updatedAt: "desc" } });
+    const kvRows = await prisma.kv.findMany();
     const config = await prisma.appConfig.findFirst();
 
     const focusSettings = config ? JSON.parse(config.focusSettings) : null;
     const activeTimer = config?.activeTimer ? JSON.parse(config.activeTimer) : null;
+    const kv = Object.fromEntries(kvRows.map((r: { key: string; value: string }) => [r.key, r.value]));
 
     return NextResponse.json({
       empty: false,
@@ -36,6 +38,7 @@ export async function GET() {
       companies,
       templates,
       notes,
+      kv,
       focusSettings,
       activeTimer,
     });
@@ -57,6 +60,7 @@ export async function POST(req: NextRequest) {
       companies = [],
       templates = [],
       notes = [],
+      kv = {},
       focusSettings = { workMin: 25, breakMin: 5 },
       activeTimer = null,
     } = payload;
@@ -73,6 +77,7 @@ export async function POST(req: NextRequest) {
       await tx.contact.deleteMany({});
       await tx.company.deleteMany({});
       await tx.note.deleteMany({});
+      await tx.kv.deleteMany({});
       await tx.appConfig.deleteMany({});
 
       // 2. Bulk insert study planner data
@@ -80,7 +85,20 @@ export async function POST(req: NextRequest) {
         await tx.track.createMany({ data: tracks });
       }
       if (days.length > 0) {
-        await tx.day.createMany({ data: days });
+        // Whitelist Day columns so client-only fields never break createMany.
+        const sanitisedDays = days.map((d: any) => ({
+          id: d.id,
+          index: d.index,
+          date: d.date,
+          title: d.title,
+          goal: d.goal,
+          must: d.must,
+          result: d.result,
+          notes: d.notes ?? null,
+          revision: d.revision ?? null,
+          order: d.order ?? 0,
+        }));
+        await tx.day.createMany({ data: sanitisedDays });
       }
       if (tasks.length > 0) {
         // Ensure difficulty is properly set as text, mapping default empty difficulty
@@ -101,6 +119,16 @@ export async function POST(req: NextRequest) {
       }
       if (notes.length > 0) {
         await tx.note.createMany({ data: notes });
+      }
+
+      // Persist the generic key/value bag (checklist toggles, gamification
+      // counters, STAR stories, quiz score, cycle-start) that used to live in
+      // raw localStorage.
+      const kvEntries = Object.entries(kv as Record<string, unknown>)
+        .filter(([, v]) => typeof v === "string")
+        .map(([key, value]) => ({ key, value: value as string }));
+      if (kvEntries.length > 0) {
+        await tx.kv.createMany({ data: kvEntries });
       }
 
       // 3. Insert companies and associated nested contacts

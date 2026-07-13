@@ -372,10 +372,8 @@ function CalendarNotificationCard() {
   const [notifState, setNotifState] = useState<NotificationPermission | "unsupported">("default");
 
   const [startDate, setStartDate] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("ical-cycle-start");
-      if (saved) return saved;
-    }
+    const saved = state.kv?.["ical-cycle-start"];
+    if (saved) return saved;
     const d = new Date();
     return d.toISOString().split("T")[0];
   });
@@ -392,7 +390,7 @@ function CalendarNotificationCard() {
 
   const handleDateChange = (val: string) => {
     setStartDate(val);
-    localStorage.setItem("ical-cycle-start", val);
+    state.setKv("ical-cycle-start", val);
   };
 
   const enableNotifications = async () => {
@@ -599,21 +597,25 @@ function StartupPredictorCard() {
 }
 
 function STARWorkbookCard() {
+  const setKv = usePlanner((st) => st.setKv);
   const [storyId, setStoryId] = useState("nexus_latency");
   const [s, setS] = useState("");
   const [t, setT] = useState("");
   const [a, setA] = useState("");
   const [r, setR] = useState("");
 
+  // STAR story prose now lives in the synced kv bag (Neon-backed). Load the
+  // active story's answers when the selection changes.
   useEffect(() => {
-    setS(localStorage.getItem(`star-${storyId}-s`) ?? "");
-    setT(localStorage.getItem(`star-${storyId}-t`) ?? "");
-    setA(localStorage.getItem(`star-${storyId}-a`) ?? "");
-    setR(localStorage.getItem(`star-${storyId}-r`) ?? "");
+    const kv = usePlanner.getState().kv ?? {};
+    setS(kv[`star-${storyId}-s`] ?? "");
+    setT(kv[`star-${storyId}-t`] ?? "");
+    setA(kv[`star-${storyId}-a`] ?? "");
+    setR(kv[`star-${storyId}-r`] ?? "");
   }, [storyId]);
 
   const save = (key: "s" | "t" | "a" | "r", val: string) => {
-    localStorage.setItem(`star-${storyId}-${key}`, val);
+    setKv(`star-${storyId}-${key}`, val);
   };
 
   const score = useMemo(() => {
@@ -740,15 +742,11 @@ function STARWorkbookCard() {
 }
 
 function LeetcodeQuizCard() {
+  const setKv = usePlanner((st) => st.setKv);
   const [activeQ, setActiveQ] = useState(0);
   const [selectedOpt, setSelectedOpt] = useState<number | null>(null);
   const [answered, setAnswered] = useState(false);
-  const [score, setScore] = useState(() => {
-    if (typeof window !== "undefined") {
-      return Number(localStorage.getItem("leetcode-quiz-score") ?? 0);
-    }
-    return 0;
-  });
+  const [score, setScore] = useState(() => Number(usePlanner.getState().kv?.["leetcode-quiz-score"] ?? 0));
 
   const questions = [
     {
@@ -792,7 +790,7 @@ function LeetcodeQuizCard() {
     if (idx === current.correct) {
       const nextScore = score + 50;
       setScore(nextScore);
-      localStorage.setItem("leetcode-quiz-score", String(nextScore));
+      setKv("leetcode-quiz-score", String(nextScore));
     }
   };
 

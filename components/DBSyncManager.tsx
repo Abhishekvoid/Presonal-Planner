@@ -50,9 +50,14 @@ export function DBSyncManager() {
             }
           });
           
+          // Merge kv: keep any local entries (e.g. freshly migrated from legacy
+          // localStorage, or edits not yet pushed) over the DB snapshot.
+          const mergedKv = { ...(data.kv || {}), ...(localState.kv || {}) };
+
           const mergedData = {
             ...data,
             notes: mergedNotes,
+            kv: mergedKv,
           };
           
           usePlanner.getState().importState(mergedData, "replace");
@@ -90,6 +95,7 @@ export function DBSyncManager() {
           focusSettings: planner.focusSettings,
           activeTimer: planner.activeTimer,
           notes: planner.notes,
+          kv: planner.kv,
           companies: jobs.companies,
           templates: jobs.templates,
         }),

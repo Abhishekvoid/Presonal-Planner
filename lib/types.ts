@@ -32,6 +32,8 @@ export interface Day {
   must: string;
   result: string;
   notes?: string;
+  /** distilled end-of-day revision / summary (markdown) */
+  revision?: string;
   order: number;
 }
 
@@ -100,6 +102,13 @@ export interface PlannerState {
   focusSettings: FocusSettings;
   activeTimer: ActiveTimer | null;
   notes: Note[];
+  /**
+   * Generic synced key/value bag for small pieces of user state that used to
+   * live in raw localStorage (per-day checklist toggles, gamification counters,
+   * STAR stories, quiz score, cycle-start). Round-trips to Neon via /api/sync.
+   * Device-only prefs (theme, sound, ambience) are intentionally NOT here.
+   */
+  kv: Record<string, string>;
   activeView?: string;
   activeNoteId?: string | null;
   codeTheme?: "editorial" | "midnight";

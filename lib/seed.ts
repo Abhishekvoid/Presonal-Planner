@@ -452,6 +452,7 @@ export function buildSeed(): PlannerState {
     focusSettings: { ...DEFAULT_FOCUS_SETTINGS },
     activeTimer: null,
     notes: [],
+    kv: {},
     activeView: "today",
     activeNoteId: null,
   };

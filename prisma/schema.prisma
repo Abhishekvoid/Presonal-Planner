@@ -30,15 +30,24 @@ model Task {
 }
 
 model Day {
-  id     String  @id
-  index  Int
-  date   String
-  title  String
-  goal   String
-  must   String
-  result String
-  notes  String?
-  order  Int
+  id       String  @id
+  index    Int
+  date     String
+  title    String
+  goal     String
+  must     String
+  result   String
+  notes    String?
+  revision String?
+  order    Int
+}
+
+// Generic key/value store for small pieces of user state that used to live in
+// localStorage (checklist toggles, gamification counters, STAR stories, quiz
+// score, cycle-start). Device-only prefs (theme, sound, ambience) stay local.
+model Kv {
+  key   String @id
+  value String
 }
 
 model FocusSession {
