@@ -7,6 +7,10 @@ import { TimerMode } from "@/lib/types";
 import { formatClock, remainingSec } from "@/lib/focus";
 import { Button, Modal } from "@/components/primitives";
 import { TaskPicker } from "./TaskPicker";
+import { ProgressRing } from "./ProgressRing";
+import { ZenMode } from "./ZenMode";
+import { useToast } from "@/components/system/Toaster";
+import { useCelebrate } from "@/components/system/Celebration";
 
 // WebGL halo loads client-only; the timer stays fully usable without it.
 const FocusHalo = dynamic(() => import("@/components/webgl/FocusHalo"), { ssr: false });
@@ -127,11 +131,15 @@ export function FocusTimer() {
   const startFlowTimer = usePlanner((s) => s.startFlowTimer);
   const endFlowTimer = usePlanner((s) => s.endFlowTimer);
   const updateFocusSettings = usePlanner((s) => s.updateFocusSettings);
+  const tasks = usePlanner((s) => s.tasks);
+  const { toast } = useToast();
+  const celebrate = useCelebrate();
 
   const [, setTick] = useState(0);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [zenOpen, setZenOpen] = useState(false);
   const audioRef = useRef<AudioContext | null>(null);
   const completedAnchor = useRef<string | null>(null);
   const [completionModal, setCompletionModal] = useState<{ mode: TimerMode } | null>(null);
@@ -175,11 +183,16 @@ export function FocusTimer() {
     if (!muted) playChime(audioRef);
     flashTitle(activeTimer.mode);
     sendNotification(activeTimer.mode);
+    if (activeTimer.mode === "work") {
+      celebrate();
+      toast({ tone: "success", title: "Focus block complete", desc: `${settings.workMin}m logged. Time to breathe.` });
+    }
     setCompletionModal({ mode: activeTimer.mode });
     completeSession();
-  }, [remaining, activeTimer, isFlow, muted, completeSession]);
+  }, [remaining, activeTimer, isFlow, muted, completeSession, celebrate, toast, settings.workMin]);
 
   const selectedTaskId = activeTimer ? activeTimer.taskId : taskId;
+  const taskLabel = tasks.find((t) => t.id === selectedTaskId)?.text ?? null;
   const mode: TimerMode = activeTimer?.mode ?? "work";
 
   // Session progress (0..1) drives the halo's density/tightening.
@@ -192,6 +205,11 @@ export function FocusTimer() {
     completedAnchor.current = null;
     startTimer(taskId, "work");
     requestPermission();
+  };
+
+  const enterZen = () => {
+    if (!activeTimer) start();
+    setZenOpen(true);
   };
 
   return (
@@ -256,42 +274,41 @@ export function FocusTimer() {
       )}
 
       {/* Clock */}
-      <div className="relative px-4 py-10 text-center">
+      <div className="relative flex flex-col items-center px-4 py-9">
         <FocusHalo
-          className="absolute left-1/2 top-[44%] h-[340px] w-[340px] -translate-x-1/2 -translate-y-1/2"
+          className="absolute left-1/2 top-1/2 h-[340px] w-[340px] -translate-x-1/2 -translate-y-1/2"
           progress={progress}
           running={running}
           paused={paused}
           active={!!activeTimer}
           mode={mode}
         />
-        <div className="relative font-display text-[5rem] leading-none font-extrabold tracking-tightest tabular-nums text-espresso">
-          {isFlow ? formatClock(flowElapsed) : formatClock(remaining)}
-        </div>
-        <div className="relative mt-4 flex items-center justify-center gap-2">
-          <span
-            className={`h-2 w-2 rounded-full ${running ? "animate-pulse" : ""}`}
-            style={{
-              backgroundColor:
-                isFlow ? "var(--flow)" :
-                mode === "work" ? "var(--olive)" : "var(--clay)"
-            }}
-            aria-hidden
-          />
-          <span className="label" style={{ color: isFlow ? "var(--flow)" : undefined }}>
-            {isFlow ? "Flow" : mode === "work" ? "Focus" : "Break"}
-            {paused && " · paused"}
-          </span>
-          {isFlow && running && (
-            <span className="text-[10px] font-mono text-coffee-soft ml-1">
-              {Math.floor(flowElapsed / 60)}m deep
+        <ProgressRing progress={progress} mode={mode} running={running} isFlow={isFlow} size={248} stroke={6}>
+          <div className="font-display text-[3.4rem] sm:text-[4rem] leading-none font-extrabold tracking-tightest tabular-nums text-espresso">
+            {isFlow ? formatClock(flowElapsed) : formatClock(remaining)}
+          </div>
+          <div className="mt-2 flex items-center justify-center gap-2">
+            <span
+              className={`h-2 w-2 rounded-full ${running ? "animate-pulse" : ""}`}
+              style={{ backgroundColor: isFlow ? "var(--flow)" : mode === "work" ? "var(--olive)" : "var(--clay)" }}
+              aria-hidden
+            />
+            <span className="label" style={{ color: isFlow ? "var(--flow)" : undefined }}>
+              {isFlow ? "Flow" : mode === "work" ? "Focus" : "Break"}
+              {paused && " · paused"}
             </span>
+          </div>
+          {isFlow && running && (
+            <span className="mt-1 text-[10px] font-mono text-coffee-soft">{Math.floor(flowElapsed / 60)}m deep</span>
           )}
-        </div>
+        </ProgressRing>
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-center gap-2 border-t hairline px-4 py-3">
+      <div className="flex flex-wrap items-center justify-center gap-2 border-t hairline px-4 py-3">
+        <Button variant="ghost" onClick={enterZen} className="!px-3" aria-label="Enter fullscreen focus space">
+          ⛶ Zen
+        </Button>
         {!activeTimer && (
           <>
             <Button variant="solid" onClick={start}>
@@ -415,6 +432,30 @@ export function FocusTimer() {
           </div>
         </div>
       </Modal>
+
+      {/* Fullscreen zen focus space */}
+      <ZenMode
+        open={zenOpen}
+        onClose={() => setZenOpen(false)}
+        display={isFlow ? formatClock(flowElapsed) : formatClock(remaining)}
+        progress={progress}
+        mode={mode}
+        isFlow={isFlow}
+        running={running}
+        paused={paused}
+        hasTimer={!!activeTimer}
+        taskLabel={taskLabel}
+        controls={{
+          start,
+          pause: pauseTimer,
+          resume: () => {
+            resumeTimer();
+            requestPermission();
+          },
+          reset: resetTimer,
+          endFlow: endFlowTimer,
+        }}
+      />
     </div>
   );
 }
