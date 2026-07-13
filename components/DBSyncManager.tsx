@@ -50,12 +50,33 @@ export function DBSyncManager() {
             }
           });
           
+          // Merge days by updatedAt so a local edit (e.g. a revision saved just
+          // before a reload) isn't clobbered by a staler Neon copy when the
+          // debounced push hadn't landed yet. Mirrors the notes merge above.
+          const dbDays = data.days || [];
+          const localDays = localState.days || [];
+          const mergedDays = [...dbDays];
+          localDays.forEach((localDay) => {
+            const idx = mergedDays.findIndex((d) => d.id === localDay.id);
+            if (idx === -1) {
+              mergedDays.push(localDay);
+            } else {
+              const localTime = new Date(localDay.updatedAt || 0).getTime();
+              const dbTime = new Date(mergedDays[idx].updatedAt || 0).getTime();
+              // Tie favours local so a local edit made before updatedAt was
+              // tracked (or before its push landed) is never lost; a genuinely
+              // newer edit on another device carries a real timestamp and wins.
+              if (localTime >= dbTime) mergedDays[idx] = localDay;
+            }
+          });
+
           // Merge kv: keep any local entries (e.g. freshly migrated from legacy
           // localStorage, or edits not yet pushed) over the DB snapshot.
           const mergedKv = { ...(data.kv || {}), ...(localState.kv || {}) };
 
           const mergedData = {
             ...data,
+            days: mergedDays,
             notes: mergedNotes,
             kv: mergedKv,
           };

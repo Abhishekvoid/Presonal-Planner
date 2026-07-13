@@ -169,13 +169,17 @@ export const usePlanner = create<PlannerStore>()(
 
       addDay: (input) => {
         const id = uid("day");
-        set((s) => ({ days: [...s.days, { ...input, id, order: s.days.length }] }));
+        set((s) => ({
+          days: [...s.days, { ...input, id, order: s.days.length, updatedAt: new Date().toISOString() }],
+        }));
         return id;
       },
 
       updateDay: (id, patch) =>
         set((s) => ({
-          days: s.days.map((d) => (d.id === id ? { ...d, ...patch } : d)),
+          days: s.days.map((d) =>
+            d.id === id ? { ...d, ...patch, updatedAt: new Date().toISOString() } : d,
+          ),
         })),
 
       deleteDay: (id) =>

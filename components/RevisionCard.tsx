@@ -6,10 +6,16 @@ import { Day } from "@/lib/types";
 import { renderMarkdown } from "@/lib/markdown";
 
 // PrismJS for code-block highlighting inside the rendered preview.
+// Same language set as NotesView so revision code is coloured identically
+// (order matters: cpp depends on c).
 import Prism from "prismjs";
 import "prismjs/components/prism-python";
 import "prismjs/components/prism-typescript";
 import "prismjs/components/prism-sql";
+import "prismjs/components/prism-c";
+import "prismjs/components/prism-cpp";
+import "prismjs/components/prism-java";
+import "prismjs/components/prism-go";
 import "prismjs/components/prism-bash";
 
 /** Seeded into an empty day so the summary starts with a light structure. */
@@ -55,13 +61,12 @@ export function RevisionCard({ day }: { day: Day }) {
     [text, codeTheme, notes]
   );
 
-  // Highlight code blocks once the preview HTML is in the DOM.
+  // Highlight code blocks. This effect runs after the preview innerHTML is
+  // committed to the DOM, so tokenising synchronously is deterministic — no
+  // setTimeout whose cleanup could cancel the highlight and leave code plain.
   useEffect(() => {
-    if (tab !== "preview") return;
-    const t = setTimeout(() => {
-      if (previewRef.current) Prism.highlightAllUnder(previewRef.current);
-    }, 10);
-    return () => clearTimeout(t);
+    if (tab !== "preview" || !previewRef.current) return;
+    Prism.highlightAllUnder(previewRef.current);
   }, [tab, previewHtml]);
 
   const showPreview = () => {

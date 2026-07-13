@@ -37,9 +37,10 @@ model Day {
   goal     String
   must     String
   result   String
-  notes    String?
-  revision String?
-  order    Int
+  notes     String?
+  revision  String?
+  updatedAt String?
+  order     Int
 }
 
 // Generic key/value store for small pieces of user state that used to live in

@@ -96,6 +96,7 @@ export async function POST(req: NextRequest) {
           result: d.result,
           notes: d.notes ?? null,
           revision: d.revision ?? null,
+          updatedAt: d.updatedAt ?? null,
           order: d.order ?? 0,
         }));
         await tx.day.createMany({ data: sanitisedDays });

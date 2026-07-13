@@ -34,6 +34,8 @@ export interface Day {
   notes?: string;
   /** distilled end-of-day revision / summary (markdown) */
   revision?: string;
+  /** ISO timestamp of last edit; used to merge local vs Neon on hydrate */
+  updatedAt?: string;
   order: number;
 }
 
