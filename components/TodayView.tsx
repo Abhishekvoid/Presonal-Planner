@@ -28,7 +28,17 @@ export function TodayView() {
   const days = useMemo(() => orderedDays(state), [state]);
   const tracks = useMemo(() => orderedTracks(state), [state]);
 
-  const [activeId, setActiveId] = useState<string | null>(days[0]?.id ?? null);
+  // Open on the first day that still has work left — landing on a finished day
+  // is dead weight. Scanning in order means a partly-done later day never jumps
+  // the queue ahead of an earlier unfinished one. A day with no tasks yet (just
+  // added) counts as unfinished; if every day is done, fall back to the last.
+  const [activeId, setActiveId] = useState<string | null>(() => {
+    const next = days.find((d) => {
+      const p = dayProgress(state, d.id);
+      return p.total === 0 || p.done < p.total;
+    });
+    return (next ?? days[days.length - 1])?.id ?? null;
+  });
   const day = days.find((d) => d.id === activeId) ?? days[0] ?? null;
 
   const [taskModal, setTaskModal] = useState<{ open: boolean; task?: Task }>({ open: false });

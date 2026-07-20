@@ -3,6 +3,32 @@
 import { useEffect, useRef } from "react";
 import { usePlanner } from "@/lib/store";
 import { useJobs } from "@/lib/jobs/store";
+import { mergeById, mergeKv } from "@/lib/syncMerge";
+
+/**
+ * Device-local marker for "this browser has edits the debounced push never
+ * flushed". Survives reload (that is the whole point) and stays in raw
+ * localStorage rather than the synced kv bag because it describes this device's
+ * push state, not user data.
+ */
+const UNPUSHED_KEY = "planner-unpushed";
+
+const hasUnpushedEdits = () => {
+  try {
+    return localStorage.getItem(UNPUSHED_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const setUnpushedEdits = (v: boolean) => {
+  try {
+    if (v) localStorage.setItem(UNPUSHED_KEY, "1");
+    else localStorage.removeItem(UNPUSHED_KEY);
+  } catch {
+    /* ignore */
+  }
+};
 
 export function DBSyncManager() {
   const plannerState = usePlanner();
@@ -70,14 +96,26 @@ export function DBSyncManager() {
             }
           });
 
-          // Merge kv: keep any local entries (e.g. freshly migrated from legacy
-          // localStorage, or edits not yet pushed) over the DB snapshot.
-          const mergedKv = { ...(data.kv || {}), ...(localState.kv || {}) };
+          // Tasks, sessions and kv used to be taken wholesale from Neon, which
+          // discarded any tick or study block the 2s debounce hadn't pushed yet
+          // — the cause of checkboxes and focus minutes resetting on reload.
+          // Local only wins while it is flagged as holding unpushed edits; on a
+          // fresh browser local is just buildSeed() and must never clobber Neon.
+          const localWins = hasUnpushedEdits();
+          const mergedTasks = localWins
+            ? mergeById(data.tasks || [], localState.tasks || [])
+            : data.tasks || [];
+          const mergedSessions = localWins
+            ? mergeById(data.sessions || [], localState.sessions || [])
+            : data.sessions || [];
+          const mergedKv = mergeKv(data.kv || {}, localState.kv || {}, localWins);
 
           const mergedData = {
             ...data,
             days: mergedDays,
             notes: mergedNotes,
+            tasks: mergedTasks,
+            sessions: mergedSessions,
             kv: mergedKv,
           };
           
@@ -91,18 +129,25 @@ export function DBSyncManager() {
       } catch (err) {
         console.error("[DBSyncManager] Initial load error:", err);
       } finally {
-        isHydratedRef.current = true;
-        // Explicitly set store hydration flags to trigger render mounting
+        // Flip the hydration flags *before* arming the subscriber, otherwise
+        // hydration itself counts as a local edit: it marked the store dirty
+        // and fired a redundant full-state push on every page load.
         usePlanner.getState().setHasHydrated(true);
         useJobs.getState().setHasHydrated(true);
+        isHydratedRef.current = true;
       }
     }
     
     loadInitialData();
   }, []);
 
-  // Helper to push state to the sync endpoint
-  async function pushStateToDB(planner: any, jobs: any) {
+  // Helper to push state to the sync endpoint.
+  // `keepalive` is only for the unload path: the Fetch spec caps keepalive
+  // request bodies at 64 KiB total, and a full planner payload (tasks, notes,
+  // sessions, companies) can exceed that — the browser then rejects the request
+  // outright. Sending it on ordinary in-page pushes bought nothing and risked
+  // failing every single save.
+  async function pushStateToDB(planner: any, jobs: any, keepalive = false) {
     try {
       const res = await fetch("/api/sync", {
         method: "POST",
@@ -120,11 +165,14 @@ export function DBSyncManager() {
           companies: jobs.companies,
           templates: jobs.templates,
         }),
-        keepalive: true,
+        keepalive,
       });
-      if (!res.ok) throw new Error("Sync upload failed");
+      if (!res.ok) throw new Error(`Sync upload failed (${res.status})`);
+      // Neon now holds everything local does — stop preferring local on hydrate.
+      setUnpushedEdits(false);
       console.log("[DBSyncManager] Neon DB synced successfully.");
     } catch (err) {
+      // Leave the unpushed flag set so the next hydrate keeps local edits.
       console.error("[DBSyncManager] Neon DB sync failed:", err);
     }
   }
@@ -134,7 +182,7 @@ export function DBSyncManager() {
     let timeoutId: NodeJS.Timeout | null = null;
     let pendingPush = false;
 
-    const flushSync = () => {
+    const flushSync = (keepalive = false) => {
       if (timeoutId) {
         clearTimeout(timeoutId);
         timeoutId = null;
@@ -144,8 +192,17 @@ export function DBSyncManager() {
         console.log("[DBSyncManager] Flushing state push to Neon DB immediately...");
         const pState = usePlanner.getState().exportState();
         const jState = useJobs.getState().exportJobs();
-        pushStateToDB(pState, jState);
+        pushStateToDB(pState, jState, keepalive);
       }
+    };
+
+    // Any local mutation is unpushed until a push confirms otherwise. Set this
+    // before scheduling, so a reload inside the debounce window still finds it.
+    const markDirty = () => {
+      setUnpushedEdits(true);
+      pendingPush = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => flushSync(), 2000);
     };
 
     // Subscribe to store updates, skipping initial load changes
@@ -154,36 +211,34 @@ export function DBSyncManager() {
 
       // If active tab view changed, flush any pending save immediately
       if (state.activeView !== prevState.activeView) {
+        setUnpushedEdits(true);
+        pendingPush = true;
         flushSync();
         return;
       }
 
-      pendingPush = true;
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        flushSync();
-      }, 2000); // 2 second debounce to bundle rapid UI updates
+      markDirty(); // 2 second debounce to bundle rapid UI updates
     });
 
     const unsubJobs = useJobs.subscribe(() => {
       if (!isHydratedRef.current) return;
-
-      pendingPush = true;
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        flushSync();
-      }, 2000);
+      markDirty();
     });
 
-    // Also register an unload / beforeunload handler to flush any pending save on page close/reload
-    const handleBeforeUnload = () => {
-      flushSync();
+    // Flush while the page is still alive. `beforeunload` fires too late for a
+    // normal fetch and too big for a keepalive one, so it is only a last resort;
+    // `visibilitychange` is the reliable signal for reload, tab switch and close.
+    const handleHidden = () => {
+      if (document.visibilityState === "hidden") flushSync();
     };
+    const handleBeforeUnload = () => flushSync(true);
+    document.addEventListener("visibilitychange", handleHidden);
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
       unsubPlanner();
       unsubJobs();
+      document.removeEventListener("visibilitychange", handleHidden);
       window.removeEventListener("beforeunload", handleBeforeUnload);
       if (timeoutId) clearTimeout(timeoutId);
     };
