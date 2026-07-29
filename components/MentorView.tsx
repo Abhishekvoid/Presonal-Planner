@@ -124,6 +124,18 @@ export function MentorView() {
     return () => ctx.revert();
   }, [activeTopicId]);
 
+  useEffect(() => {
+    const handleLockTopicEvent = (e: Event) => {
+      const customEv = e as CustomEvent<{ topicTitle: string; prompt: string }>;
+      if (customEv.detail && customEv.detail.prompt) {
+        handleSendMessage(customEv.detail.prompt);
+      }
+    };
+
+    window.addEventListener("lock-topic-and-start", handleLockTopicEvent);
+    return () => window.removeEventListener("lock-topic-and-start", handleLockTopicEvent);
+  }, [activeTopicId, activeMode, customApiKey, provider, selectedModel, isStreaming]);
+
   const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || input).trim();
     if (!query || isStreaming) return;

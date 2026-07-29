@@ -14,6 +14,8 @@ import { KineticNumber, PressIn } from "@/lib/kineticType";
 import { SectionDivider } from "./SectionDivider";
 import { Button } from "./primitives";
 import { buildHeatmap, computeStreak } from "@/lib/focus";
+import { lockTopicAndOpenMentor } from "@/lib/topicLocker";
+import { Brain } from "@phosphor-icons/react";
 
 export function ProgressView() {
   const state = usePlanner();
@@ -922,9 +924,25 @@ function RevisionGrillingDeck() {
             Locks in finished lessons so skills stick instead of leaking
           </p>
         </div>
-        <span className="font-mono text-[10px] uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded">
-          {revisesLogged} Revises Logged
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              lockTopicAndOpenMentor({
+                id: `active-recall-${index}`,
+                title: current.topic,
+                description: current.prompt,
+              });
+            }}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1 font-mono text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-all shadow-xs"
+            title="Lock topic and open AI Senior Mentor"
+          >
+            <Brain size={14} weight="fill" />
+            <span>⚡ Lock & Drill</span>
+          </button>
+          <span className="font-mono text-[10px] uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded">
+            {revisesLogged} Revises Logged
+          </span>
+        </div>
       </div>
 
       <div className="bg-cream-deep dark:bg-[#181C27] border border-hair rounded p-4 space-y-3 font-mono text-xs">

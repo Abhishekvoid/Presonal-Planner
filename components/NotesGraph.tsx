@@ -19,6 +19,7 @@ import {
   BookOpen,
 } from "@phosphor-icons/react";
 import { Note, Task, Day } from "@/lib/types";
+import { lockTopicAndOpenMentor } from "@/lib/topicLocker";
 
 export interface SpatialNode {
   id: string;
@@ -655,7 +656,22 @@ export function NotesGraph({
                 </div>
               )}
 
-              <div className="mt-6">
+              <div className="mt-6 space-y-3">
+                <button
+                  onClick={() => {
+                    lockTopicAndOpenMentor({
+                      id: selectedNode.id,
+                      title: selectedNode.title,
+                      sprintDay: selectedNode.chapterNumber ?? 1,
+                      description: selectedNode.content,
+                    });
+                  }}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 font-mono text-xs font-bold text-black hover:from-amber-400 hover:to-amber-500 shadow-lg transition-all active:scale-95"
+                >
+                  <Brain size={16} weight="fill" />
+                  <span>⚡ Lock Topic & Drill in AI Mentor</span>
+                </button>
+
                 {selectedNode.noteId ? (
                   <button
                     onClick={() => {
@@ -671,7 +687,7 @@ export function NotesGraph({
                     onClick={() => {
                       if (onCreateNote) onCreateNote(selectedNode.title);
                     }}
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 font-mono text-xs font-bold text-black hover:bg-amber-400 shadow-md transition-all"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl border border-hair bg-cream-deep px-4 py-2.5 font-mono text-xs font-bold text-espresso hover:bg-coffee/10 shadow-sm transition-all"
                   >
                     <Plus size={16} />
                     <span>Create Note for Topic</span>

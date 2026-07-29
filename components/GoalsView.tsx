@@ -9,6 +9,8 @@ import { TaskItem } from "./TaskItem";
 import { Button, Field, inputClass, Modal, ProgressBar } from "./primitives";
 import { TaskForm } from "./forms";
 import { SectionDivider } from "./SectionDivider";
+import { lockTopicAndOpenMentor } from "@/lib/topicLocker";
+import { Brain } from "@phosphor-icons/react";
 
 export function GoalsView() {
   const state = usePlanner();
@@ -448,6 +450,22 @@ function RPGSkillTree() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    lockTopicAndOpenMentor({
+                      id: node.id,
+                      title: node.name,
+                      description: node.desc,
+                    });
+                  }}
+                  className="inline-flex items-center gap-1 text-[9px] font-mono text-amber-600 dark:text-amber-400 font-bold hover:underline"
+                  title="Lock topic and open AI Senior Mentor"
+                >
+                  <Brain size={11} weight="fill" />
+                  <span>⚡ Lock & Drill</span>
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
                     const topicIdMap: Record<string, string> = {
                       llm: "day-1-django-orm",
                       rag: "day-6-rag-architecture",
@@ -463,15 +481,6 @@ function RPGSkillTree() {
                   className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 font-bold underline"
                 >
                   [0-1 Notes]
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setFixModal({ open: true, title: node.name, prompt: node.prompt });
-                  }}
-                  className="text-[9px] font-mono text-coffee hover:text-espresso underline"
-                >
-                  [Fix-Lesson]
                 </button>
               </div>
             </div>
