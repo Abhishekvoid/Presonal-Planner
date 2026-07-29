@@ -69,7 +69,7 @@ export const useMentorStore = create<MentorState>()(
       activeMode: "grill",
       customApiKey: "",
       provider: "openrouter",
-      selectedModel: "google/gemini-2.0-flash-exp:free",
+      selectedModel: "deepseek/deepseek-v4-flash:free",
 
       threads: {
         "general-backend": [

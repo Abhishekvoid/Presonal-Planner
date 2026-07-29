@@ -61,7 +61,15 @@ export async function POST(req: NextRequest) {
         ? "nvidia/nemotron-3-ultra-550b-a55b:free"
         : "deepseek/deepseek-v4-flash:free";
 
-    let selectedModel = (!model || model === "auto") ? defaultForMode : model;
+    const ALLOWED_MODELS = [
+      "deepseek/deepseek-v4-flash:free",
+      "nvidia/nemotron-3-ultra-550b-a55b:free",
+    ];
+
+    let selectedModel =
+      !model || model === "auto" || !ALLOWED_MODELS.includes(model)
+        ? defaultForMode
+        : model;
 
     // Build complete message chain
     const formattedMessages: ChatMessage[] = [

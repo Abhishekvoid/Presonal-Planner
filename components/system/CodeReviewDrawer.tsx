@@ -52,31 +52,31 @@ export function CodeReviewDrawer() {
             transition={{ type: "spring", stiffness: 360, damping: 34 }}
             className="relative z-10 flex h-full w-full max-w-2xl p-3 sm:p-5"
           >
-            <div className="relative flex h-full w-full flex-col overflow-hidden rounded-[1.75rem] border border-white/15 bg-[#0a0b0e]/95 p-2 shadow-2xl backdrop-blur-2xl">
+            <div className="relative flex h-full w-full flex-col overflow-hidden rounded-[1.75rem] border border-hair bg-cream-raised dark:bg-[#0a0b0e]/95 p-2 shadow-2xl backdrop-blur-2xl">
               {/* Inner Core Container */}
-              <div className="relative flex h-full w-full flex-col overflow-hidden rounded-[calc(1.75rem-0.5rem)] border border-white/5 bg-[#101218]/90 p-5 sm:p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] text-cream">
+              <div className="relative flex h-full w-full flex-col overflow-hidden rounded-[calc(1.75rem-0.5rem)] border border-hair bg-cream-base dark:bg-[#101218]/90 p-5 sm:p-6 shadow-sm text-espresso dark:text-cream">
                 
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center justify-between border-b border-hair pb-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/25 shadow-md">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/25 shadow-md">
                       <Code size={22} weight="bold" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h2 className="text-base font-bold text-cream">Code Review Workbench</h2>
-                        <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 font-mono text-[10px] uppercase font-bold tracking-wider text-amber-400 border border-amber-500/30">
+                        <h2 className="text-base font-bold text-espresso dark:text-cream">Code Review Workbench</h2>
+                        <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 font-mono text-[10px] uppercase font-bold tracking-wider text-amber-600 dark:text-amber-400 border border-amber-500/30">
                           Senior Review
                         </span>
                       </div>
-                      <p className="text-xs text-cream/60">
+                      <p className="text-xs text-coffee dark:text-cream/60">
                         Submit snippets for edge-case, memory leak & concurrency analysis
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => toggleCodeDrawer(false)}
-                    className="rounded-xl p-2 text-cream/60 hover:bg-white/10 hover:text-cream transition-colors"
+                    className="rounded-xl p-2 text-coffee dark:text-cream/60 hover:bg-black/5 dark:hover:bg-white/10 hover:text-espresso dark:hover:text-cream transition-colors"
                   >
                     <X size={20} />
                   </button>
