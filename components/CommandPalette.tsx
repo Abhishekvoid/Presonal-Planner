@@ -16,6 +16,7 @@ import {
   ChartLineUp,
   Timer,
   NotePencil,
+  MapTrifold,
   PaperPlaneTilt,
   Palette,
   FloppyDisk,
@@ -27,7 +28,7 @@ import { usePlanner } from "@/lib/store";
 import { useTheme } from "@/lib/theme";
 import { EASE_OUT_EXPO } from "@/lib/motion";
 
-type View = "today" | "goals" | "progress" | "focus" | "notes";
+type View = "today" | "goals" | "progress" | "focus" | "notes" | "spatial" | "mentor";
 
 interface Command {
   id: string;
@@ -74,6 +75,7 @@ export function CommandPalette({
       { id: "progress", label: "Progress", hint: "g p", group: "Navigate", Icon: ChartLineUp, run: () => go("progress") },
       { id: "focus", label: "Focus", hint: "g f", group: "Navigate", Icon: Timer, run: () => go("focus") },
       { id: "notes", label: "Notes", hint: "g n", group: "Navigate", Icon: NotePencil, run: () => go("notes") },
+      { id: "spatial", label: "Spatial Canvas", hint: "g s", group: "Navigate", Icon: MapTrifold, keywords: "mind map spatial graph nodes", run: () => go("spatial") },
       { id: "outreach", label: "Outreach", group: "Navigate", Icon: PaperPlaneTilt, keywords: "jobs companies", run: () => { router.push("/jobs"); onClose(); } },
     ];
     const actions: Command[] = [

@@ -26,12 +26,13 @@ import {
   ChartLineUp,
   Timer,
   NotePencil,
+  MapTrifold,
   PaperPlaneTilt,
   GraduationCap,
   type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
 
-type View = "today" | "goals" | "progress" | "focus" | "notes" | "mentor";
+type View = "today" | "goals" | "progress" | "focus" | "notes" | "spatial" | "mentor";
 
 interface Entry {
   id: string;
@@ -47,6 +48,7 @@ const ENTRIES: Entry[] = [
   { id: "progress", label: "Progress", Icon: ChartLineUp, view: "progress" },
   { id: "focus", label: "Focus", Icon: Timer, view: "focus" },
   { id: "notes", label: "Notes", Icon: NotePencil, view: "notes" },
+  { id: "spatial", label: "Spatial Canvas", Icon: MapTrifold, view: "spatial" },
   { id: "mentor", label: "AI Mentor", Icon: GraduationCap, view: "mentor" },
   { id: "outreach", label: "Outreach", Icon: PaperPlaneTilt, href: "/jobs" },
 ];

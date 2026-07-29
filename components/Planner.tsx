@@ -8,6 +8,7 @@ import { GoalsView } from "./GoalsView";
 import { ProgressView } from "./ProgressView";
 import { FocusView } from "./FocusView";
 import { NotesView } from "./NotesView";
+import { NotesGraph } from "./NotesGraph";
 import { MentorView } from "./MentorView";
 import { BackupPanel } from "./BackupPanel";
 import { Modal } from "./primitives";
@@ -23,15 +24,20 @@ import { useGlobalShortcuts } from "@/lib/useGlobalShortcuts";
 import { playTurn } from "@/lib/sound";
 import { useMentorStore } from "@/lib/mentorStore";
 
-type View = "today" | "goals" | "progress" | "focus" | "notes" | "mentor";
+type View = "today" | "goals" | "progress" | "focus" | "notes" | "spatial" | "mentor";
 
-const ORDER: View[] = ["today", "goals", "progress", "focus", "notes", "mentor"];
+const ORDER: View[] = ["today", "goals", "progress", "focus", "notes", "spatial", "mentor"];
 
 import { FDETopicDrawer } from "./system/FDETopicDrawer";
 import { StaffMasterclassDeck } from "./system/StaffMasterclassDeck";
 
 export function Planner({ replayIntro }: { replayIntro?: () => void } = {}) {
   const hasHydrated = usePlanner((s) => s.hasHydrated);
+  const notes = usePlanner((s) => s.notes ?? []);
+  const tasks = usePlanner((s) => s.tasks ?? []);
+  const days = usePlanner((s) => s.days ?? []);
+  const addNote = usePlanner((s) => s.addNote);
+  const setActiveNoteId = usePlanner((s) => s.setActiveNoteId);
   const [mounted, setMounted] = useState(false);
   const view = usePlanner((s) => (s.activeView as View) ?? "today");
   const setView = usePlanner((s) => s.setActiveView);
@@ -124,6 +130,23 @@ export function Planner({ replayIntro }: { replayIntro?: () => void } = {}) {
             {view === "progress" && <ProgressView />}
             {view === "focus" && <FocusView />}
             {view === "notes" && <NotesView />}
+            {view === "spatial" && (
+              <NotesGraph
+                notes={notes}
+                tasks={tasks}
+                days={days}
+                onOpenNote={(noteId) => {
+                  setActiveNoteId(noteId);
+                  setView("notes");
+                }}
+                onCreateNote={(topicTitle) => {
+                  const defaultContent = `# ${topicTitle}\n\nKey Architectural Concepts & First Principles:\n- \n\nImplementation Notes:\n\`\`\`ts\n// Code snippet\n\`\`\``;
+                  const newNoteId = addNote(topicTitle, defaultContent, "Backend");
+                  setActiveNoteId(newNoteId);
+                  setView("notes");
+                }}
+              />
+            )}
             {view === "mentor" && <MentorView />}
           </ViewTransition>
         )}
