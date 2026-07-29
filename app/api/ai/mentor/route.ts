@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       mode = "grill",
       topicContext,
       apiKey: customApiKey,
-      provider = "openai",
+      provider = "openrouter",
       model,
     }: {
       messages: ChatMessage[];
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
         {
           error: "NO_API_KEY",
           message:
-            "No API key found. Please add OPENROUTER_API_KEY, GROQ_API_KEY, OPENAI_API_KEY, or GEMINI_API_KEY to your .env.local file, or configure your key in the AI Mentor settings.",
+            "No API key found. Please add OPENROUTER_API_KEY to your .env.local file or configure your key in settings.",
         },
         { status: 401 }
       );
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
-        ...(provider === "openrouter" ? { "HTTP-Referer": "http://localhost:3000" } : {}),
+        "HTTP-Referer": "http://localhost:3000",
       },
       body: JSON.stringify(payload),
     });
@@ -116,12 +116,57 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Return SSE stream directly to client
-    return new Response(response.body, {
+    // Transform OpenRouter SSE stream into clean text tokens
+    const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
+    let buffer = "";
+
+    const transformStream = new TransformStream({
+      transform(chunk, controller) {
+        buffer += decoder.decode(chunk, { stream: true });
+        const lines = buffer.split("\n");
+        // Keep the last incomplete line in buffer
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith(":")) continue; // Skip keepalive comments
+          if (trimmed === "data: [DONE]") continue;
+
+          if (trimmed.startsWith("data: ")) {
+            try {
+              const jsonStr = trimmed.slice(6);
+              const parsed = JSON.parse(jsonStr);
+              const deltaContent = parsed.choices?.[0]?.delta?.content;
+              if (deltaContent) {
+                controller.enqueue(encoder.encode(deltaContent));
+              }
+            } catch (e) {
+              // Ignore incomplete JSON chunks
+            }
+          }
+        }
+      },
+      flush(controller) {
+        if (buffer.trim().startsWith("data: ")) {
+          try {
+            const jsonStr = buffer.trim().slice(6);
+            const parsed = JSON.parse(jsonStr);
+            const deltaContent = parsed.choices?.[0]?.delta?.content;
+            if (deltaContent) {
+              controller.enqueue(encoder.encode(deltaContent));
+            }
+          } catch (e) {
+            // Ignore
+          }
+        }
+      },
+    });
+
+    return new Response(response.body?.pipeThrough(transformStream), {
       headers: {
-        "Content-Type": "text/event-stream; charset=utf-8",
-        "Cache-Control": "no-cache, no-transform",
-        Connection: "keep-alive",
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
       },
     });
   } catch (err: any) {

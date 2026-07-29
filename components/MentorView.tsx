@@ -164,11 +164,49 @@ export function MentorView() {
 
     if (!textToSend) setInput("");
 
+    // Auto-detect query intent and switch mode & model automatically!
+    let targetMode = activeMode;
+    let targetModel = selectedModel;
+
+    const lowerQuery = query.toLowerCase();
+    if (
+      lowerQuery.includes("```") ||
+      lowerQuery.includes("code review") ||
+      lowerQuery.includes("refactor") ||
+      lowerQuery.includes("debug function") ||
+      lowerQuery.includes("syntax")
+    ) {
+      targetMode = "code-review";
+      targetModel = "nvidia/nemotron-3-ultra-550b-a55b:free";
+      setMode("code-review");
+      setSelectedModel("nvidia/nemotron-3-ultra-550b-a55b:free");
+    } else if (
+      lowerQuery.includes("mock interview") ||
+      lowerQuery.includes("l6") ||
+      lowerQuery.includes("rank my performance") ||
+      lowerQuery.includes("scorecard")
+    ) {
+      targetMode = "mock-interview";
+      targetModel = "deepseek/deepseek-v4-flash";
+      setMode("mock-interview");
+      setSelectedModel("deepseek/deepseek-v4-flash");
+    } else if (
+      lowerQuery.includes("first principles") ||
+      lowerQuery.includes("grill") ||
+      lowerQuery.includes("why") ||
+      lowerQuery.includes("step")
+    ) {
+      targetMode = "grill";
+      targetModel = "deepseek/deepseek-v4-flash";
+      setMode("grill");
+      setSelectedModel("deepseek/deepseek-v4-flash");
+    }
+
     // Add user message
-    addMessage("user", query, activeMode);
+    addMessage("user", query, targetMode);
 
     // Add placeholder assistant message
-    addMessage("assistant", "", activeMode);
+    addMessage("assistant", "", targetMode);
     setStreaming(true);
 
     try {
@@ -182,11 +220,11 @@ export function MentorView() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: payloadMessages,
-          mode: activeMode,
+          mode: targetMode,
           topicContext: activeTopicContext || { id: activeTopicId },
           apiKey: customApiKey,
           provider,
-          model: selectedModel,
+          model: targetModel,
         }),
       });
 
@@ -214,7 +252,28 @@ export function MentorView() {
         done = readerDone;
         if (value) {
           const chunk = decoder.decode(value, { stream: true });
-          accumulated += chunk;
+
+          // Client-side fallback cleanup for any lingering SSE strings
+          let cleanChunk = chunk;
+          if (cleanChunk.includes("data: ") || cleanChunk.includes("OPENROUTER PROCESSING")) {
+            cleanChunk = cleanChunk
+              .split("\n")
+              .filter((l) => !l.startsWith(":") && !l.startsWith("data: [DONE]"))
+              .map((l) => {
+                if (l.startsWith("data: ")) {
+                  try {
+                    const parsed = JSON.parse(l.slice(6));
+                    return parsed.choices?.[0]?.delta?.content || "";
+                  } catch (e) {
+                    return "";
+                  }
+                }
+                return l;
+              })
+              .join("");
+          }
+
+          accumulated += cleanChunk;
           setLastMessageContent(accumulated);
 
           // Real-time Step Detection Metadata Parser
