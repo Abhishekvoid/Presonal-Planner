@@ -346,57 +346,74 @@ export function MentorView() {
               </span>
             </div>
 
-            {/* Seamless Topic Dropdown Selector */}
-            <div className="relative mt-2.5">
-              <button
-                onClick={() => setTopicDropdownOpen(!topicDropdownOpen)}
-                className="w-full flex items-center justify-between gap-2 border-b border-hair pb-2 text-left transition-colors hover:border-amber-500"
-              >
-                <div className="truncate">
-                  <div className="font-mono text-[9px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider">
-                    Sprint Day {currentTopicObj.day}
+              {/* Seamless Topic Dropdown Selector */}
+              <div className="relative mt-2.5">
+                <button
+                  onClick={() => setTopicDropdownOpen(!topicDropdownOpen)}
+                  className="w-full flex items-center justify-between gap-2 border-b border-hair pb-2 text-left transition-colors hover:border-amber-500"
+                >
+                  <div className="truncate">
+                    <div className="flex items-center justify-between font-mono text-[9px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider">
+                      <span>Sprint Day {currentTopicObj.day}</span>
+                      {((currentProgress.completedSteps?.length || 0) >= 13 || currentProgress.completedSteps?.includes(13)) && (
+                        <span className="text-emerald-500 flex items-center gap-1 font-bold text-[8px] bg-emerald-500/10 px-1 py-0.2 rounded border border-emerald-500/30">
+                          <CheckCircle size={10} />
+                          <span>COMPLETED</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className="truncate font-sans text-xs font-bold text-espresso dark:text-cream leading-tight mt-0.5">
+                      {currentTopicObj.title}
+                    </div>
                   </div>
-                  <div className="truncate font-sans text-xs font-bold text-espresso dark:text-cream leading-tight">
-                    {currentTopicObj.title}
-                  </div>
-                </div>
-                <CaretDown size={14} className="text-coffee flex-shrink-0" />
-              </button>
+                  <CaretDown size={14} className="text-coffee flex-shrink-0" />
+                </button>
 
-              {/* Dropdown Options */}
-              <AnimatePresence>
-                {topicDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-xl border border-hair bg-cream-raised dark:bg-[#161922] p-1 shadow-2xl backdrop-blur-2xl divide-y divide-hair"
-                  >
-                    {PRESET_TOPICS.map((topic) => (
-                      <button
-                        key={topic.id}
-                        onClick={() => {
-                          setActiveTopic(topic.id, {
-                            id: topic.id,
-                            title: topic.title,
-                            sprintDay: topic.day,
-                          });
-                          setTopicDropdownOpen(false);
-                        }}
-                        className={`w-full px-3 py-2 text-left transition-colors ${
-                          activeTopicId === topic.id
-                            ? "bg-amber-500/10 font-bold text-amber-600 dark:text-amber-400"
-                            : "text-coffee hover:text-espresso hover:bg-black/5 dark:hover:bg-white/5"
-                        }`}
-                      >
-                        <div className="font-mono text-[9px] uppercase">Day {topic.day}</div>
-                        <div className="truncate text-xs">{topic.title}</div>
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                {/* Dropdown Options */}
+                <AnimatePresence>
+                  {topicDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-xl border border-hair bg-cream-raised dark:bg-[#161922] p-1 shadow-2xl backdrop-blur-2xl divide-y divide-hair"
+                    >
+                      {PRESET_TOPICS.map((topic) => {
+                        const topicProg = topicProgress[topic.id];
+                        const isDone = (topicProg?.completedSteps?.length || 0) >= 13 || topicProg?.completedSteps?.includes(13);
+
+                        return (
+                          <button
+                            key={topic.id}
+                            onClick={() => {
+                              setActiveTopic(topic.id, {
+                                id: topic.id,
+                                title: topic.title,
+                                sprintDay: topic.day,
+                                isDayCompleted: isDone,
+                              });
+                              setTopicDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left transition-colors flex items-center justify-between ${
+                              activeTopicId === topic.id
+                                ? "bg-amber-500/10 font-bold text-amber-600 dark:text-amber-400"
+                                : "text-coffee hover:text-espresso hover:bg-black/5 dark:hover:bg-white/5"
+                            }`}
+                          >
+                            <div className="truncate">
+                              <div className="font-mono text-[9px] uppercase">Day {topic.day}</div>
+                              <div className="truncate text-xs">{topic.title}</div>
+                            </div>
+                            {isDone && (
+                              <CheckCircle size={14} className="text-emerald-500 flex-shrink-0 ml-1" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
           </div>
 
           {/* Minimalist Linear Progress Bar */}
