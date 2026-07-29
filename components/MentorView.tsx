@@ -21,6 +21,7 @@ import {
   Square,
   Flame,
   Star,
+  Check,
 } from "@phosphor-icons/react";
 import { useMentorStore, ChatMessageItem } from "@/lib/mentorStore";
 import { MentorMode } from "@/lib/ai/prompt";
@@ -67,8 +68,8 @@ const PRESET_TOPICS = [
 ];
 
 const AVAILABLE_MODELS = [
-  { id: "deepseek/deepseek-v4-flash", name: "DeepSeek V4 Flash", desc: "Socratic Reasoning & Systems Architecture" },
-  { id: "nvidia/nemotron-3-ultra-550b-a55b:free", name: "Nemotron 3 550B", desc: "Code Review & Concurrency Intelligence" },
+  { id: "deepseek/deepseek-v4-flash", name: "DeepSeek V4 Flash", desc: "Socratic Reasoning" },
+  { id: "nvidia/nemotron-3-ultra-550b-a55b:free", name: "Nemotron 3 550B", desc: "Code Intelligence" },
 ];
 
 export function MentorView() {
@@ -98,7 +99,8 @@ export function MentorView() {
 
   const [input, setInput] = useState("");
   const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
-  const [sidebarTab, setSidebarTab] = useState<"steps" | "plan8020">("steps");
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState<"plan8020" | "steps" | "rank">("plan8020");
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const stepperRef = useRef<HTMLDivElement>(null);
@@ -129,14 +131,14 @@ export function MentorView() {
     return () => clearTimeout(timer);
   }, [currentMessages, isStreaming]);
 
-  // GSAP animation for 13-step stepper bar track
+  // GSAP animation for stepper track nodes
   useEffect(() => {
     if (!stepperRef.current) return;
     const ctx = gsap.context(() => {
       gsap.fromTo(
         ".stepper-node",
-        { opacity: 0, x: -10 },
-        { opacity: 1, x: 0, duration: 0.3, stagger: 0.02, ease: "power2.out" }
+        { opacity: 0, x: -6 },
+        { opacity: 1, x: 0, duration: 0.25, stagger: 0.02, ease: "power2.out" }
       );
     }, stepperRef);
     return () => ctx.revert();
@@ -257,48 +259,50 @@ export function MentorView() {
   const progressPct = Math.round(((currentProgress.completedSteps?.length || 1) / 13) * 100);
 
   return (
-    <div className="flex h-[calc(100vh-6rem)] w-full gap-5 overflow-hidden rounded-3xl border border-hair bg-cream-base/90 dark:bg-[#0A0C10]/95 p-4 shadow-2xl backdrop-blur-2xl">
+    <div className="flex h-[calc(100vh-5.5rem)] w-full overflow-hidden rounded-2xl border border-hair bg-cream-base dark:bg-[#0A0C10] shadow-2xl backdrop-blur-3xl">
       {/* ==================================================================== */}
-      {/* LEFT PANEL: TOPIC CONTEXT, 80/20 PLAN & 13-STEP TRACKER             */}
+      {/* LEFT INSPECTOR SIDEBAR: LINEAR / RAYCAST ANTI-SLOP STYLE             */}
       {/* ==================================================================== */}
-      <div className="flex w-80 flex-col justify-between rounded-2xl border border-hair bg-cream-raised dark:bg-[#12151E] p-4 shadow-md overflow-y-auto">
+      <div className="flex w-80 flex-col justify-between border-r border-hair bg-cream-raised/50 dark:bg-[#0E1117]/80 p-4 overflow-y-auto">
         <div className="space-y-4">
-          {/* Header & Topic Lock Banner */}
+          {/* Header & Topic Title Selector */}
           <div>
-            <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-coffee dark:text-cream/60">
-              <span className="flex items-center gap-1.5 font-bold text-amber-500">
-                <Brain size={16} weight="fill" /> AI Senior Mentor
+            <div className="flex items-center justify-between text-[11px] font-mono font-medium text-coffee">
+              <span className="flex items-center gap-1.5 font-bold text-espresso dark:text-cream">
+                <Brain size={16} className="text-amber-500" />
+                <span>AI Senior Mentor</span>
               </span>
-              <span className="flex items-center gap-1 text-emerald-500 font-bold">
-                <Lock size={12} weight="fill" /> Topic Locked
+              <span className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Locked</span>
               </span>
             </div>
 
-            {/* Active Topic Dropdown Lock */}
-            <div className="relative mt-2">
+            {/* Seamless Topic Dropdown Selector */}
+            <div className="relative mt-2.5">
               <button
                 onClick={() => setTopicDropdownOpen(!topicDropdownOpen)}
-                className="w-full flex items-center justify-between gap-2 rounded-xl border border-hair bg-cream-deep/80 dark:bg-black/40 px-3 py-2 text-left transition-all hover:border-amber-500/50"
+                className="w-full flex items-center justify-between gap-2 border-b border-hair pb-2 text-left transition-colors hover:border-amber-500"
               >
                 <div className="truncate">
-                  <div className="font-mono text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400">
+                  <div className="font-mono text-[9px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider">
                     Sprint Day {currentTopicObj.day}
                   </div>
-                  <div className="truncate font-sans text-xs font-bold text-espresso dark:text-cream">
+                  <div className="truncate font-sans text-xs font-bold text-espresso dark:text-cream leading-tight">
                     {currentTopicObj.title}
                   </div>
                 </div>
                 <CaretDown size={14} className="text-coffee flex-shrink-0" />
               </button>
 
-              {/* Topic Selector Dropdown */}
+              {/* Dropdown Options */}
               <AnimatePresence>
                 {topicDropdownOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: -6 }}
+                    initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    className="absolute left-0 right-0 top-full z-30 mt-1 max-h-60 overflow-y-auto rounded-xl border border-hair bg-cream-raised dark:bg-[#181C27] p-1.5 shadow-2xl backdrop-blur-xl"
+                    exit={{ opacity: 0, y: -4 }}
+                    className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-xl border border-hair bg-cream-raised dark:bg-[#161922] p-1 shadow-2xl backdrop-blur-2xl divide-y divide-hair"
                   >
                     {PRESET_TOPICS.map((topic) => (
                       <button
@@ -311,14 +315,14 @@ export function MentorView() {
                           });
                           setTopicDropdownOpen(false);
                         }}
-                        className={`w-full rounded-lg px-3 py-2 text-left font-sans text-xs transition-all ${
+                        className={`w-full px-3 py-2 text-left transition-colors ${
                           activeTopicId === topic.id
-                            ? "bg-amber-500/20 font-bold text-amber-600 dark:text-amber-400 border border-amber-500/30"
-                            : "text-coffee hover:bg-black/5 dark:hover:bg-white/5 hover:text-espresso"
+                            ? "bg-amber-500/10 font-bold text-amber-600 dark:text-amber-400"
+                            : "text-coffee hover:text-espresso hover:bg-black/5 dark:hover:bg-white/5"
                         }`}
                       >
                         <div className="font-mono text-[9px] uppercase">Day {topic.day}</div>
-                        <div className="truncate">{topic.title}</div>
+                        <div className="truncate text-xs">{topic.title}</div>
                       </button>
                     ))}
                   </motion.div>
@@ -327,72 +331,104 @@ export function MentorView() {
             </div>
           </div>
 
-          {/* Topic Mastery Progress Bar */}
-          <div className="rounded-xl border border-hair bg-cream-deep/60 dark:bg-black/30 p-3 space-y-1.5">
-            <div className="flex items-center justify-between font-mono text-[10px] font-bold">
-              <span className="text-coffee dark:text-cream/70">Topic Mastery Progress</span>
-              <span className="text-amber-500">{progressPct}%</span>
+          {/* Minimalist Linear Progress Bar */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[11px] font-mono">
+              <span className="text-coffee">Mastery Progress</span>
+              <span className="font-bold text-amber-600 dark:text-amber-400">{progressPct}%</span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-cream-deep dark:bg-black/60 border border-hair">
+            <div className="h-1 w-full bg-hair/60 overflow-hidden rounded-full">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPct}%` }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full"
+                transition={{ duration: 0.4 }}
+                className="h-full bg-amber-500 rounded-full"
               />
             </div>
-            <div className="flex items-center justify-between text-[9px] font-mono text-coffee">
-              <span>{currentProgress.completedSteps?.length || 1} / 13 Steps Mastered</span>
-              <span className="font-bold text-emerald-500">{currentProgress.rank || "L5 Candidate"}</span>
+            <div className="flex justify-between text-[9px] font-mono text-coffee pt-0.5">
+              <span>{currentProgress.completedSteps?.length || 1}/13 Steps</span>
+              <span className="text-emerald-500 font-medium">{currentProgress.rank || "L5 Senior"}</span>
             </div>
           </div>
 
-          {/* Socratic Mode Switcher Pills */}
-          <div>
-            <div className="grid grid-cols-3 gap-1.5 rounded-xl border border-hair bg-cream-deep/60 dark:bg-black/40 p-1">
-              {(["grill", "code-review", "mock-interview"] as MentorMode[]).map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => setMode(mode)}
-                  className={`rounded-lg py-1.5 text-center font-mono text-[10px] font-bold uppercase transition-all ${
-                    activeMode === mode
-                      ? "bg-amber-500 text-black shadow-md"
-                      : "text-coffee hover:text-espresso hover:bg-black/5 dark:hover:bg-white/5"
-                  }`}
-                >
-                  {mode === "grill" ? "Grill" : mode === "code-review" ? "Review" : "Mock"}
-                </button>
-              ))}
+          {/* Clean Segmented Tab Switcher */}
+          <div className="flex border-b border-hair text-xs font-medium">
+            {[
+              { id: "plan8020", label: "80/20 Focus" },
+              { id: "steps", label: "13 Steps" },
+              { id: "rank", label: "Rank & Anti-Patterns" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setSidebarTab(tab.id as any)}
+                className={`flex-1 pb-2 text-center transition-colors relative ${
+                  sidebarTab === tab.id
+                    ? "text-espresso dark:text-cream font-bold"
+                    : "text-coffee hover:text-espresso"
+                }`}
+              >
+                {tab.label}
+                {sidebarTab === tab.id && (
+                  <motion.div
+                    layoutId="tabUnderline"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500"
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* TAB 1: 80/20 HIGH-ROI FOCUS CHECKLIST */}
+          {sidebarTab === "plan8020" && (
+            <div className="space-y-3 max-h-64 overflow-y-auto pr-1 text-xs">
+              <div className="font-mono text-[9px] uppercase tracking-wider text-amber-600 dark:text-amber-400 font-bold">
+                Top 20% High-ROI Concepts (80% Mastery)
+              </div>
+              <div className="space-y-2">
+                {plan8020.subtopics.map((subtopic) => {
+                  const isChecked = !!currentProgress.subtopicsDone[subtopic.id];
+                  return (
+                    <div
+                      key={subtopic.id}
+                      className="border-b border-hair/60 pb-2 space-y-1 transition-colors"
+                    >
+                      <div className="flex items-start gap-2">
+                        <button
+                          onClick={() => toggleSubtopicDone(activeTopicId, subtopic.id)}
+                          className="mt-0.5 text-coffee hover:text-amber-500 transition-colors"
+                        >
+                          {isChecked ? (
+                            <CheckSquare size={15} className="text-emerald-500" />
+                          ) : (
+                            <Square size={15} />
+                          )}
+                        </button>
+                        <div className="flex-1">
+                          <div className={`font-semibold ${isChecked ? "line-through text-coffee opacity-60" : "text-espresso dark:text-cream"}`}>
+                            {subtopic.title}
+                          </div>
+                          <p className="text-[11px] text-coffee leading-normal mt-0.5">
+                            {subtopic.description}
+                          </p>
+                          <button
+                            onClick={() => handleSendMessage(`Mentor, let's drill on subtopic: ${subtopic.title}. ${subtopic.practiceDrill}`)}
+                            className="mt-1 inline-flex items-center gap-1 font-mono text-[10px] text-amber-600 dark:text-amber-400 font-semibold hover:underline"
+                          >
+                            <span>⚡ Start Practice Drill</span>
+                            <ArrowUpRight size={10} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Sidebar Tab Selector: 13-Step Track vs 80/20 Focus Plan */}
-          <div className="flex rounded-xl border border-hair bg-cream-deep/40 p-1 font-mono text-[10px] font-bold">
-            <button
-              onClick={() => setSidebarTab("steps")}
-              className={`flex-1 py-1 rounded-lg text-center transition-all ${
-                sidebarTab === "steps"
-                  ? "bg-cream-raised dark:bg-[#181C27] text-espresso dark:text-cream shadow-xs"
-                  : "text-coffee hover:text-espresso"
-              }`}
-            >
-              13-Step Track
-            </button>
-            <button
-              onClick={() => setSidebarTab("plan8020")}
-              className={`flex-1 py-1 rounded-lg text-center transition-all ${
-                sidebarTab === "plan8020"
-                  ? "bg-amber-500/20 text-amber-600 dark:text-amber-400 shadow-xs"
-                  : "text-coffee hover:text-espresso"
-              }`}
-            >
-              ⚡ 80/20 Smart Focus
-            </button>
-          </div>
-
-          {/* TAB 1: 13-STEP PROGRESS TRACK */}
+          {/* TAB 2: 13-STEP PROGRESS TRACK */}
           {sidebarTab === "steps" && (
-            <div ref={stepperRef} className="space-y-1 max-h-52 overflow-y-auto pr-1">
+            <div ref={stepperRef} className="space-y-1.5 max-h-64 overflow-y-auto pr-1 font-mono text-xs">
               {STRUCTURE_STEPS.map((step) => {
                 const isDone = currentProgress.completedSteps?.includes(step.id);
                 const isActive = currentProgress.currentStep === step.id;
@@ -406,21 +442,21 @@ export function MentorView() {
                         `Mentor, let's focus specifically on Step ${step.id}: ${step.label} for ${currentTopicObj.title}.`
                       );
                     }}
-                    className={`stepper-node w-full flex items-center justify-between rounded-lg border px-2.5 py-1.5 font-mono text-[11px] transition-all text-left group ${
+                    className={`stepper-node w-full flex items-center justify-between py-1.5 border-b border-hair/40 transition-colors text-left group ${
                       isDone
-                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
+                        ? "text-emerald-600 dark:text-emerald-400 font-bold"
                         : isActive
-                        ? "border-amber-500/50 bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold animate-pulse"
-                        : "border-hair/50 bg-cream-deep/30 dark:bg-black/20 text-coffee hover:bg-amber-500/10 hover:text-espresso"
+                        ? "text-amber-600 dark:text-amber-400 font-bold"
+                        : "text-coffee hover:text-espresso"
                     }`}
                   >
                     <span className="truncate">{step.short}</span>
                     {isDone ? (
                       <CheckCircle size={13} className="text-emerald-500" />
                     ) : isActive ? (
-                      <Lightning size={13} className="text-amber-500" />
+                      <Lightning size={13} className="text-amber-500 animate-pulse" />
                     ) : (
-                      <Lock size={12} className="text-coffee opacity-50" />
+                      <Lock size={11} className="text-coffee opacity-40" />
                     )}
                   </button>
                 );
@@ -428,131 +464,139 @@ export function MentorView() {
             </div>
           )}
 
-          {/* TAB 2: 80/20 HIGH-ROI SMART FOCUS PLAN */}
-          {sidebarTab === "plan8020" && (
-            <div className="space-y-2 max-h-52 overflow-y-auto pr-1 font-sans text-xs">
-              <div className="font-mono text-[9px] uppercase tracking-wider text-amber-500 font-bold">
-                Top 20% High-ROI Concepts (80% Mastery)
+          {/* TAB 3: RANK & MISTAKE WATCHER */}
+          {sidebarTab === "rank" && (
+            <div className="space-y-3 font-sans text-xs max-h-64 overflow-y-auto">
+              <div className="border-b border-hair pb-2 space-y-1">
+                <div className="font-mono text-[9px] uppercase tracking-wider text-coffee">Evaluated Rank</div>
+                <div className="font-bold text-sm text-espresso dark:text-cream">{currentProgress.rank || "L5 Senior Candidate"}</div>
+                <p className="text-coffee text-[11px]">Assessed against Sarvam AI, Krutrim & Observe.AI senior interview benchmarks.</p>
               </div>
-              {plan8020.subtopics.map((subtopic) => {
-                const isChecked = !!currentProgress.subtopicsDone[subtopic.id];
-                return (
-                  <div
-                    key={subtopic.id}
-                    className={`rounded-xl border p-2.5 transition-all ${
-                      isChecked
-                        ? "border-emerald-500/30 bg-emerald-500/10"
-                        : "border-hair bg-cream-deep/40 dark:bg-black/20"
-                    }`}
-                  >
-                    <div className="flex items-start gap-2">
-                      <button
-                        onClick={() => toggleSubtopicDone(activeTopicId, subtopic.id)}
-                        className="mt-0.5 text-amber-500 hover:scale-110 transition-transform"
-                      >
-                        {isChecked ? (
-                          <CheckSquare size={16} className="text-emerald-500" />
-                        ) : (
-                          <Square size={16} className="text-coffee" />
-                        )}
-                      </button>
-                      <div className="flex-1">
-                        <div className={`font-bold ${isChecked ? "line-through text-coffee" : "text-espresso dark:text-cream"}`}>
-                          {subtopic.title}
-                        </div>
-                        <p className="text-[10px] text-coffee mt-0.5 leading-relaxed">{subtopic.description}</p>
-                        <button
-                          onClick={() => handleSendMessage(`Mentor, let's drill on subtopic: ${subtopic.title}. ${subtopic.practiceDrill}`)}
-                          className="mt-1.5 flex items-center gap-1 font-mono text-[9px] text-amber-500 hover:underline font-bold"
-                        >
-                          <span>⚡ Start Practice Drill</span>
-                          <ArrowUpRight size={10} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
 
-          {/* MISTAKE WATCHER BANNER */}
-          {currentProgress.mistakesLogged?.length > 0 && (
-            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-2.5 font-mono text-[10px] text-rose-500 space-y-1">
-              <div className="flex items-center gap-1 font-bold">
-                <WarningOctagon size={14} />
-                <span>Anti-Pattern Watcher Flagged:</span>
-              </div>
-              <ul className="list-disc list-inside space-y-0.5 opacity-90 text-[9.5px]">
-                {currentProgress.mistakesLogged.slice(-2).map((m, i) => (
-                  <li key={i}>{m}</li>
-                ))}
-              </ul>
+              {currentProgress.mistakesLogged?.length > 0 && (
+                <div className="border-b border-hair pb-2 space-y-1 text-rose-500">
+                  <div className="font-mono text-[9px] uppercase tracking-wider font-bold flex items-center gap-1">
+                    <WarningOctagon size={12} />
+                    <span>Anti-Pattern Watcher Flagged</span>
+                  </div>
+                  <ul className="list-disc list-inside space-y-0.5 text-[11px] opacity-90">
+                    {currentProgress.mistakesLogged.slice(-3).map((m, i) => (
+                      <li key={i}>{m}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Bottom Candidate Brief Quick Target */}
-        <div className="mt-4 rounded-xl border border-hair bg-cream-deep/80 dark:bg-black/40 p-3 font-mono text-[10px] text-coffee space-y-1">
-          <div className="flex items-center gap-1 text-espresso dark:text-cream font-bold">
+        {/* Footer Target Brief */}
+        <div className="border-t border-hair pt-3 font-mono text-[10px] text-coffee space-y-0.5">
+          <div className="flex items-center gap-1 text-espresso dark:text-cream font-semibold">
             <Trophy size={13} className="text-amber-500" />
-            <span>Candidate Rank: {currentProgress.rank || "L5 Senior Candidate"}</span>
+            <span>Target: ₹15–20 LPA / $55–70k</span>
           </div>
-          <p className="opacity-80">Sarvam AI · Krutrim · Observe.AI · Ripik.AI</p>
+          <div className="opacity-70">Sarvam AI · Krutrim · Observe.AI · Ripik.AI</div>
         </div>
       </div>
 
       {/* ==================================================================== */}
-      {/* RIGHT PANEL: INTERACTIVE CHAT STUDIO CANVAS WITH MERMAID & HIGH-LIGHT */}
+      {/* RIGHT STUDIO WORKSPACE: FULL-BLEED SPACIOUS CHAT & RAYCAST PROMPT BAR */}
       {/* ==================================================================== */}
-      <div className="flex flex-1 flex-col justify-between rounded-2xl border border-hair bg-cream-raised dark:bg-[#12151E] shadow-md overflow-hidden">
-        {/* Studio Top Control Bar */}
-        <div className="flex items-center justify-between border-b border-hair bg-cream-deep/50 dark:bg-black/40 px-5 py-3">
-          <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-mono text-xs font-bold text-espresso dark:text-cream">
-              {activeMode === "grill"
-                ? "🔥 Socratic First-Principles Drill (80/20 High-ROI)"
-                : activeMode === "code-review"
-                ? "🔍 Senior Production Code Review"
-                : "🏆 Staff Level Mock Interview"}
-            </span>
+      <div className="flex flex-1 flex-col justify-between bg-cream-base dark:bg-[#0A0C10] overflow-hidden">
+        {/* Studio Top Control Header */}
+        <div className="flex items-center justify-between border-b border-hair px-6 py-3">
+          {/* Mode Switcher */}
+          <div className="flex items-center gap-1">
+            {(["grill", "code-review", "mock-interview"] as MentorMode[]).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setMode(mode)}
+                className={`px-3 py-1 font-mono text-xs font-bold transition-all ${
+                  activeMode === mode
+                    ? "text-espresso dark:text-cream border-b-2 border-amber-500"
+                    : "text-coffee hover:text-espresso"
+                }`}
+              >
+                {mode === "grill" ? "🔥 Socratic Grill" : mode === "code-review" ? "🔍 Code Review" : "🏆 L6 Mock Interview"}
+              </button>
+            ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Model & Drawer Controls */}
+          <div className="flex items-center gap-3">
+            {/* Integrated Model Picker */}
+            <div className="relative">
+              <button
+                onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
+                className="flex items-center gap-1.5 font-mono text-xs font-semibold text-coffee hover:text-espresso transition-colors"
+              >
+                <span>{AVAILABLE_MODELS.find((m) => m.id === selectedModel)?.name}</span>
+                <CaretDown size={12} />
+              </button>
+
+              <AnimatePresence>
+                {modelDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    className="absolute right-0 top-full z-30 mt-1 w-64 rounded-xl border border-hair bg-cream-raised dark:bg-[#161922] p-1 shadow-2xl backdrop-blur-2xl divide-y divide-hair"
+                  >
+                    {AVAILABLE_MODELS.map((model) => (
+                      <button
+                        key={model.id}
+                        onClick={() => {
+                          setSelectedModel(model.id);
+                          setModelDropdownOpen(false);
+                        }}
+                        className={`w-full p-2.5 text-left transition-colors ${
+                          selectedModel === model.id ? "bg-amber-500/10 font-bold text-amber-600 dark:text-amber-400" : "text-coffee hover:text-espresso"
+                        }`}
+                      >
+                        <div className="font-mono text-xs">{model.name}</div>
+                        <div className="font-sans text-[10px] text-coffee opacity-80">{model.desc}</div>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <button
               onClick={() => toggleCodeDrawer(true)}
-              className="flex items-center gap-1.5 rounded-xl border border-hair bg-cream-deep px-3 py-1.5 font-mono text-xs font-bold text-espresso hover:bg-black/5 dark:hover:bg-white/10 transition-all"
+              className="flex items-center gap-1 text-xs font-mono font-bold text-espresso dark:text-cream hover:text-amber-500 transition-colors"
             >
               <Code size={14} />
               <span>Submit Code</span>
             </button>
+
             <button
               onClick={() => clearCurrentThread()}
-              className="rounded-xl border border-hair bg-cream-deep p-1.5 text-coffee hover:text-rose-500 transition-all"
-              title="Clear Session History"
+              className="text-coffee hover:text-rose-500 transition-colors"
+              title="Clear Thread"
             >
-              <Trash size={16} />
+              <Trash size={15} />
             </button>
           </div>
         </div>
 
-        {/* Messages Stream Container */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-6">
+        {/* Message Stream Container */}
+        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
           {currentMessages.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-center p-8 space-y-4">
-              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-500">
-                <Brain size={36} weight="fill" />
+            <div className="flex h-full flex-col items-center justify-center text-center space-y-4">
+              <div className="rounded-full bg-amber-500/10 p-3 text-amber-500">
+                <Brain size={32} />
               </div>
-              <h3 className="text-lg font-bold text-espresso dark:text-cream">
-                80/20 AI Senior Mentor Studio Ready
-              </h3>
-              <p className="max-w-md font-mono text-xs text-coffee leading-relaxed">
-                Topic locked to <strong className="text-amber-500">{currentTopicObj.title}</strong>. Click any prompt below to begin first-principles Socratic grilling.
+              <h2 className="text-xl font-bold text-espresso dark:text-cream tracking-tight">
+                AI Senior Mentor Studio
+              </h2>
+              <p className="max-w-md font-sans text-xs text-coffee leading-relaxed">
+                Locked on <strong className="text-espresso dark:text-cream">{currentTopicObj.title}</strong>. Ready for first-principles Socratic drilling, system architecture trade-offs, and code reviews.
               </p>
               <div className="flex flex-wrap justify-center gap-2 pt-2">
                 {[
-                  `Mentor, let me grill on 80/20 concepts for ${currentTopicObj.title}`,
+                  `Mentor, let's drill on 80/20 concepts for ${currentTopicObj.title}`,
                   "Guide me through Step 5: Visual Mental Model",
                   "Grill me on production failure trade-offs",
                   "Run an L6 Mock Interview and rank my performance",
@@ -560,7 +604,7 @@ export function MentorView() {
                   <button
                     key={idx}
                     onClick={() => handleSendMessage(preset)}
-                    className="rounded-xl border border-hair bg-cream-deep px-3 py-2 font-mono text-xs text-espresso hover:bg-amber-500/20 hover:border-amber-500/40 transition-all"
+                    className="border border-hair bg-cream-raised dark:bg-[#12151E] px-3.5 py-2 font-mono text-xs text-espresso dark:text-cream hover:border-amber-500 transition-colors rounded-xl shadow-xs"
                   >
                     ⚡ {preset}
                   </button>
@@ -571,33 +615,29 @@ export function MentorView() {
             currentMessages.map((msg: ChatMessageItem, idx: number) => (
               <motion.div
                 key={msg.id || idx}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
                 className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
               >
-                <div
-                  className={`max-w-3xl rounded-2xl p-4 text-xs font-sans leading-relaxed shadow-sm ${
-                    msg.role === "user"
-                      ? "bg-amber-500 text-black font-medium"
-                      : "bg-cream-deep/90 dark:bg-[#181C27] border border-hair text-espresso dark:text-cream"
-                  }`}
-                >
-                  {msg.role === "assistant" ? (
-                    <RenderMentorMessage content={msg.content} />
-                  ) : (
+                {msg.role === "user" ? (
+                  <div className="max-w-2xl rounded-2xl bg-espresso text-cream dark:bg-cream dark:text-espresso px-4 py-2.5 text-xs font-sans font-medium shadow-sm">
                     <div className="whitespace-pre-wrap">{msg.content}</div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="w-full max-w-3xl py-2 text-xs font-sans leading-relaxed text-espresso dark:text-cream">
+                    <RenderMentorMessage content={msg.content} />
+                  </div>
+                )}
               </motion.div>
             ))
           )}
           <div ref={chatBottomRef} />
         </div>
 
-        {/* Floating Input Control Bar */}
-        <div className="border-t border-hair bg-cream-deep/40 dark:bg-black/30 p-4">
-          <div className="flex gap-2">
+        {/* Raycast-Style Floating Command Prompt Bar */}
+        <div className="p-4 border-t border-hair bg-cream-raised/40 dark:bg-[#0A0C10]/80 backdrop-blur-xl">
+          <div className="flex items-center gap-3 rounded-2xl border border-hair bg-cream-raised dark:bg-[#12151E] p-2 px-4 shadow-xl focus-within:border-amber-500 transition-all">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -608,16 +648,19 @@ export function MentorView() {
                 }
               }}
               placeholder={`Ask AI Mentor on ${currentTopicObj.title}... (⌘ + Enter to send)`}
-              rows={2}
-              className="flex-1 resize-none rounded-xl border border-hair bg-cream-raised dark:bg-[#0A0C10] p-3 text-xs font-sans text-espresso dark:text-cream placeholder-coffee focus:border-amber-500 focus:outline-none transition-all"
+              rows={1}
+              className="flex-1 resize-none bg-transparent font-sans text-xs text-espresso dark:text-cream placeholder-coffee focus:outline-none"
             />
-            <button
-              onClick={() => handleSendMessage()}
-              disabled={!input.trim() || isStreaming}
-              className="flex items-center justify-center rounded-xl bg-amber-500 px-5 font-mono text-xs font-bold text-black hover:bg-amber-400 disabled:opacity-50 transition-all shadow-md active:scale-95"
-            >
-              <PaperPlaneTilt size={18} weight="fill" />
-            </button>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] text-coffee hidden sm:inline-block">⌘↵</span>
+              <button
+                onClick={() => handleSendMessage()}
+                disabled={!input.trim() || isStreaming}
+                className="flex items-center justify-center rounded-xl bg-espresso text-cream dark:bg-cream dark:text-espresso p-2 hover:opacity-90 disabled:opacity-40 transition-all shadow-xs active:scale-95"
+              >
+                <PaperPlaneTilt size={14} weight="fill" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -656,7 +699,7 @@ function RenderMentorMessage({ content }: { content: string }) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {parts.map((part, idx) => {
         if (part.type === "mermaid") {
           return <MermaidRenderer key={idx} chart={part.value} />;
@@ -664,7 +707,7 @@ function RenderMentorMessage({ content }: { content: string }) {
         return (
           <div
             key={idx}
-            className="prose dark:prose-invert prose-xs max-w-none text-espresso dark:text-cream leading-relaxed"
+            className="prose dark:prose-invert prose-xs max-w-none text-espresso dark:text-cream leading-relaxed font-sans"
             dangerouslySetInnerHTML={{ __html: renderMarkdown(part.value) }}
           />
         );
