@@ -19,6 +19,16 @@ export interface ThreadSession {
   lastUpdated: number;
 }
 
+export interface TopicProgressData {
+  topicId: string;
+  completedSteps: number[]; // e.g. [1, 2, 3]
+  currentStep: number;
+  subtopicsDone: Record<string, boolean>;
+  mistakesLogged: string[];
+  rank?: string;
+  scorePct?: number;
+}
+
 interface MentorState {
   activeTopicId: string;
   activeTopicContext: TopicContext | null;
@@ -29,6 +39,9 @@ interface MentorState {
 
   // Thread per topic map
   threads: Record<string, ChatMessageItem[]>;
+
+  // Progress per topic map
+  topicProgress: Record<string, TopicProgressData>;
 
   // Code review drawer state
   codeForReview: string;
@@ -53,18 +66,24 @@ interface MentorState {
   setLastMessageContent: (content: string) => void;
   clearCurrentThread: () => void;
   setStreaming: (streaming: boolean) => void;
+
+  // Progress & 13-Step tracking actions
+  markStepCompleted: (topicId: string, stepId: number) => void;
+  toggleSubtopicDone: (topicId: string, subtopicId: string) => void;
+  logMistake: (topicId: string, mistake: string) => void;
+  setCandidateRank: (topicId: string, rank: string, scorePct?: number) => void;
 }
 
 export const useMentorStore = create<MentorState>()(
   persist(
     (set, get) => ({
-      activeTopicId: "general-backend",
+      activeTopicId: "day-1-django-orm",
       activeTopicContext: {
-        id: "general-backend",
-        title: "Senior Backend Engineering & System Design",
+        id: "day-1-django-orm",
+        title: "Day 1: Django ORM & N+1 Optimization",
         trackTitle: "10-Day Sprint",
         sprintDay: 1,
-        description: "General system engineering, data structures, concurrency & scalability grill.",
+        description: "select_related, prefetch_related, annotate, F(), Q(), and N+1 query debugging.",
       },
       activeMode: "grill",
       customApiKey: "",
@@ -72,7 +91,7 @@ export const useMentorStore = create<MentorState>()(
       selectedModel: "deepseek/deepseek-v4-flash",
 
       threads: {
-        "general-backend": [
+        "day-1-django-orm": [
           {
             id: "init-welcome",
             role: "assistant",
@@ -82,6 +101,18 @@ export const useMentorStore = create<MentorState>()(
             mode: "grill",
           },
         ],
+      },
+
+      topicProgress: {
+        "day-1-django-orm": {
+          topicId: "day-1-django-orm",
+          completedSteps: [1, 2],
+          currentStep: 3,
+          subtopicsDone: {},
+          mistakesLogged: [],
+          rank: "L5 Senior Candidate",
+          scorePct: 45,
+        },
       },
 
       codeForReview: "",
@@ -100,115 +131,200 @@ export const useMentorStore = create<MentorState>()(
               mode: state.activeMode,
             },
           ];
+
+          const currentProgress = state.topicProgress[id] || {
+            topicId: id,
+            completedSteps: [1],
+            currentStep: 1,
+            subtopicsDone: {},
+            mistakesLogged: [],
+            rank: "In Progress",
+            scorePct: 10,
+          };
+
           return {
             activeTopicId: id,
             activeTopicContext: context || { id, title: id },
             threads: { ...state.threads, [id]: currentThread },
+            topicProgress: { ...state.topicProgress, [id]: currentProgress },
           };
         }),
 
-      setMode: (activeMode) => set({ activeMode }),
-      setCustomApiKey: (customApiKey) => set({ customApiKey }),
+      setMode: (mode) => set({ activeMode: mode }),
+      setCustomApiKey: (key) => set({ customApiKey: key }),
       setProvider: (provider) => set({ provider }),
-      setSelectedModel: (selectedModel) => set({ selectedModel }),
-
-      setCodeForReview: (codeForReview, codeLanguage = "typescript") =>
-        set({ codeForReview, codeLanguage }),
-
+      setSelectedModel: (model) => set({ selectedModel: model }),
+      setCodeForReview: (code, language) =>
+        set({ codeForReview: code, codeLanguage: language || "typescript" }),
       toggleCodeDrawer: (open) =>
-        set((state) => ({ isCodeDrawerOpen: open ?? !state.isCodeDrawerOpen })),
-
-      setStreaming: (isStreaming) => set({ isStreaming }),
+        set((state) => ({ isCodeDrawerOpen: open !== undefined ? open : !state.isCodeDrawerOpen })),
+      setStreaming: (streaming) => set({ isStreaming: streaming }),
 
       addMessage: (role, content, mode) => {
-        const id = `${role}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-        set((state) => {
-          const topicId = state.activeTopicId;
-          const currentMsgs = state.threads[topicId] || [];
-          const newMsg: ChatMessageItem = {
-            id,
-            role,
-            content,
-            timestamp: Date.now(),
-            mode: mode || state.activeMode,
-          };
-          return {
-            threads: {
-              ...state.threads,
-              [topicId]: [...currentMsgs, newMsg],
-            },
-          };
-        });
+        const id = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const newItem: ChatMessageItem = {
+          id,
+          role,
+          content,
+          timestamp: Date.now(),
+          mode: mode || get().activeMode,
+        };
+        const topicId = get().activeTopicId;
+        const currentThread = get().threads[topicId] || [];
+
+        set((state) => ({
+          threads: {
+            ...state.threads,
+            [topicId]: [...currentThread, newItem],
+          },
+        }));
         return id;
       },
 
-      appendToLastMessage: (chunk) =>
+      appendToLastMessage: (chunk) => {
+        const topicId = get().activeTopicId;
+        const currentThread = get().threads[topicId] || [];
+        if (currentThread.length === 0) return;
+
+        const lastIdx = currentThread.length - 1;
+        const updated = [...currentThread];
+        updated[lastIdx] = {
+          ...updated[lastIdx],
+          content: updated[lastIdx].content + chunk,
+        };
+
+        set((state) => ({
+          threads: { ...state.threads, [topicId]: updated },
+        }));
+      },
+
+      setLastMessageContent: (content) => {
+        const topicId = get().activeTopicId;
+        const currentThread = get().threads[topicId] || [];
+        if (currentThread.length === 0) return;
+
+        const lastIdx = currentThread.length - 1;
+        const updated = [...currentThread];
+        updated[lastIdx] = {
+          ...updated[lastIdx],
+          content,
+        };
+
+        set((state) => ({
+          threads: { ...state.threads, [topicId]: updated },
+        }));
+      },
+
+      clearCurrentThread: () => {
+        const topicId = get().activeTopicId;
+        set((state) => ({
+          threads: {
+            ...state.threads,
+            [topicId]: [],
+          },
+        }));
+      },
+
+      markStepCompleted: (topicId, stepId) =>
         set((state) => {
-          const topicId = state.activeTopicId;
-          const currentMsgs = state.threads[topicId] || [];
-          if (currentMsgs.length === 0) return state;
+          const current = state.topicProgress[topicId] || {
+            topicId,
+            completedSteps: [],
+            currentStep: 1,
+            subtopicsDone: {},
+            mistakesLogged: [],
+          };
+          if (current.completedSteps.includes(stepId)) return state;
 
-          const last = currentMsgs[currentMsgs.length - 1];
-          if (last.role !== "assistant") return state;
-
-          const updatedLast = { ...last, content: last.content + chunk };
-          const updatedMsgs = [...currentMsgs.slice(0, -1), updatedLast];
+          const nextCompleted = [...current.completedSteps, stepId].sort((a, b) => a - b);
+          const nextScorePct = Math.round((nextCompleted.length / 13) * 100);
 
           return {
-            threads: {
-              ...state.threads,
-              [topicId]: updatedMsgs,
+            topicProgress: {
+              ...state.topicProgress,
+              [topicId]: {
+                ...current,
+                completedSteps: nextCompleted,
+                currentStep: Math.min(stepId + 1, 13),
+                scorePct: nextScorePct,
+              },
             },
           };
         }),
 
-      setLastMessageContent: (content) =>
+      toggleSubtopicDone: (topicId, subtopicId) =>
         set((state) => {
-          const topicId = state.activeTopicId;
-          const currentMsgs = state.threads[topicId] || [];
-          if (currentMsgs.length === 0) return state;
+          const current = state.topicProgress[topicId] || {
+            topicId,
+            completedSteps: [],
+            currentStep: 1,
+            subtopicsDone: {},
+            mistakesLogged: [],
+          };
 
-          const last = currentMsgs[currentMsgs.length - 1];
-          const updatedLast = { ...last, content };
-          const updatedMsgs = [...currentMsgs.slice(0, -1), updatedLast];
+          const nextSubtopics = {
+            ...current.subtopicsDone,
+            [subtopicId]: !current.subtopicsDone[subtopicId],
+          };
 
           return {
-            threads: {
-              ...state.threads,
-              [topicId]: updatedMsgs,
+            topicProgress: {
+              ...state.topicProgress,
+              [topicId]: {
+                ...current,
+                subtopicsDone: nextSubtopics,
+              },
             },
           };
         }),
 
-      clearCurrentThread: () =>
+      logMistake: (topicId, mistake) =>
         set((state) => {
-          const topicId = state.activeTopicId;
+          const current = state.topicProgress[topicId] || {
+            topicId,
+            completedSteps: [],
+            currentStep: 1,
+            subtopicsDone: {},
+            mistakesLogged: [],
+          };
+
+          if (current.mistakesLogged.includes(mistake)) return state;
+
           return {
-            threads: {
-              ...state.threads,
-              [topicId]: [
-                {
-                  id: `reset-${Date.now()}`,
-                  role: "assistant",
-                  content: "Thread reset. What topic or problem statement should we explore next?",
-                  timestamp: Date.now(),
-                  mode: state.activeMode,
-                },
-              ],
+            topicProgress: {
+              ...state.topicProgress,
+              [topicId]: {
+                ...current,
+                mistakesLogged: [...current.mistakesLogged, mistake],
+              },
+            },
+          };
+        }),
+
+      setCandidateRank: (topicId, rank, scorePct) =>
+        set((state) => {
+          const current = state.topicProgress[topicId] || {
+            topicId,
+            completedSteps: [],
+            currentStep: 1,
+            subtopicsDone: {},
+            mistakesLogged: [],
+          };
+
+          return {
+            topicProgress: {
+              ...state.topicProgress,
+              [topicId]: {
+                ...current,
+                rank,
+                scorePct: scorePct !== undefined ? scorePct : current.scorePct,
+              },
             },
           };
         }),
     }),
     {
-      name: "goals-learning-mentor-store",
-      partialize: (s) => ({
-        threads: s.threads,
-        customApiKey: s.customApiKey,
-        provider: s.provider,
-        activeTopicId: s.activeTopicId,
-        activeTopicContext: s.activeTopicContext,
-        activeMode: s.activeMode,
-      }),
+      name: "study-assistant-mentor-store-v2",
     }
   )
 );

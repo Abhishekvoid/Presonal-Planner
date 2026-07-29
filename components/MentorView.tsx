@@ -14,12 +14,20 @@ import {
   CaretDown,
   Lock,
   Trophy,
+  Lightning,
+  Sparkle,
+  WarningOctagon,
+  CheckSquare,
+  Square,
+  Flame,
+  Star,
 } from "@phosphor-icons/react";
 import { useMentorStore, ChatMessageItem } from "@/lib/mentorStore";
 import { MentorMode } from "@/lib/ai/prompt";
 import { CodeReviewDrawer } from "./system/CodeReviewDrawer";
 import { MermaidRenderer } from "./system/MermaidRenderer";
 import { renderMarkdown } from "@/lib/markdown";
+import { get8020PlanForTopic } from "@/lib/ai/subtopics8020";
 
 import Prism from "prismjs";
 import "prismjs/components/prism-python";
@@ -72,6 +80,7 @@ export function MentorView() {
     provider,
     customApiKey,
     threads,
+    topicProgress,
     isStreaming,
     setMode,
     setActiveTopic,
@@ -81,15 +90,31 @@ export function MentorView() {
     clearCurrentThread,
     toggleCodeDrawer,
     setStreaming,
+    markStepCompleted,
+    toggleSubtopicDone,
+    logMistake,
+    setCandidateRank,
   } = useMentorStore();
 
   const [input, setInput] = useState("");
   const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState<"steps" | "plan8020">("steps");
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const stepperRef = useRef<HTMLDivElement>(null);
 
   const currentMessages: ChatMessageItem[] = threads[activeTopicId] || [];
+  const currentProgress = topicProgress[activeTopicId] || {
+    topicId: activeTopicId,
+    completedSteps: [1],
+    currentStep: 1,
+    subtopicsDone: {},
+    mistakesLogged: [],
+    rank: "L5 Senior Candidate",
+    scorePct: 15,
+  };
+
+  const plan8020 = get8020PlanForTopic(activeTopicId, activeTopicContext?.title);
 
   // Scroll to bottom when messages update
   useEffect(() => {
@@ -115,7 +140,7 @@ export function MentorView() {
       );
     }, stepperRef);
     return () => ctx.revert();
-  }, [activeTopicId]);
+  }, [activeTopicId, sidebarTab]);
 
   // Listen for single-click topic locking events
   useEffect(() => {
@@ -188,6 +213,9 @@ export function MentorView() {
           const chunk = decoder.decode(value, { stream: true });
           accumulated += chunk;
           setLastMessageContent(accumulated);
+
+          // Real-time Step Detection Metadata Parser
+          parseMetadataChunk(accumulated);
         }
       }
     } catch (err: any) {
@@ -197,19 +225,44 @@ export function MentorView() {
     }
   };
 
+  /**
+   * Meta JSON Tag Parser: Automatically updates completed steps, progress, and rank!
+   */
+  const parseMetadataChunk = (text: string) => {
+    const metaMatch = text.match(/<!--META:([\s\S]*?)-->/);
+    if (metaMatch && metaMatch[1]) {
+      try {
+        const meta = JSON.parse(metaMatch[1]);
+        if (Array.isArray(meta.completedSteps)) {
+          meta.completedSteps.forEach((sId: number) => markStepCompleted(activeTopicId, sId));
+        }
+        if (meta.mistakeLogged) {
+          logMistake(activeTopicId, meta.mistakeLogged);
+        }
+        if (meta.rank) {
+          setCandidateRank(activeTopicId, meta.rank, meta.progressPct);
+        }
+      } catch (e) {
+        // Silent fail on incomplete JSON chunk
+      }
+    }
+  };
+
   const currentTopicObj = PRESET_TOPICS.find((t) => t.id === activeTopicId) || {
     id: activeTopicId,
     title: activeTopicContext?.title || activeTopicId,
     day: activeTopicContext?.sprintDay || 1,
   };
 
+  const progressPct = Math.round(((currentProgress.completedSteps?.length || 1) / 13) * 100);
+
   return (
     <div className="flex h-[calc(100vh-6rem)] w-full gap-5 overflow-hidden rounded-3xl border border-hair bg-cream-base/90 dark:bg-[#0A0C10]/95 p-4 shadow-2xl backdrop-blur-2xl">
       {/* ==================================================================== */}
-      {/* LEFT PANEL: TOPIC CONTEXT, STEPPER & Socratic CONTROL CENTER        */}
+      {/* LEFT PANEL: TOPIC CONTEXT, 80/20 PLAN & 13-STEP TRACKER             */}
       {/* ==================================================================== */}
       <div className="flex w-80 flex-col justify-between rounded-2xl border border-hair bg-cream-raised dark:bg-[#12151E] p-4 shadow-md overflow-y-auto">
-        <div className="space-y-5">
+        <div className="space-y-4">
           {/* Header & Topic Lock Banner */}
           <div>
             <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-coffee dark:text-cream/60">
@@ -274,11 +327,28 @@ export function MentorView() {
             </div>
           </div>
 
+          {/* Topic Mastery Progress Bar */}
+          <div className="rounded-xl border border-hair bg-cream-deep/60 dark:bg-black/30 p-3 space-y-1.5">
+            <div className="flex items-center justify-between font-mono text-[10px] font-bold">
+              <span className="text-coffee dark:text-cream/70">Topic Mastery Progress</span>
+              <span className="text-amber-500">{progressPct}%</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-cream-deep dark:bg-black/60 border border-hair">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPct}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full"
+              />
+            </div>
+            <div className="flex items-center justify-between text-[9px] font-mono text-coffee">
+              <span>{currentProgress.completedSteps?.length || 1} / 13 Steps Mastered</span>
+              <span className="font-bold text-emerald-500">{currentProgress.rank || "L5 Candidate"}</span>
+            </div>
+          </div>
+
           {/* Socratic Mode Switcher Pills */}
           <div>
-            <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-coffee font-bold">
-              Select Interaction Mode
-            </div>
             <div className="grid grid-cols-3 gap-1.5 rounded-xl border border-hair bg-cream-deep/60 dark:bg-black/40 p-1">
               {(["grill", "code-review", "mock-interview"] as MentorMode[]).map((mode) => (
                 <button
@@ -296,62 +366,137 @@ export function MentorView() {
             </div>
           </div>
 
-          {/* Model Selector */}
-          <div>
-            <div className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-coffee font-bold">
-              Active Intelligence Model
-            </div>
-            <div className="space-y-1.5">
-              {AVAILABLE_MODELS.map((model) => (
-                <button
-                  key={model.id}
-                  onClick={() => setSelectedModel(model.id)}
-                  className={`w-full flex items-center justify-between rounded-xl border px-3 py-2 text-left transition-all ${
-                    selectedModel === model.id
-                      ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
-                      : "border-hair bg-cream-deep/40 dark:bg-black/20 text-coffee hover:text-espresso"
-                  }`}
-                >
-                  <div>
-                    <div className="font-mono text-xs">{model.name}</div>
-                    <div className="font-sans text-[10px] font-normal opacity-80">{model.desc}</div>
-                  </div>
-                  {selectedModel === model.id && <CheckCircle size={14} className="text-emerald-500" />}
-                </button>
-              ))}
-            </div>
+          {/* Sidebar Tab Selector: 13-Step Track vs 80/20 Focus Plan */}
+          <div className="flex rounded-xl border border-hair bg-cream-deep/40 p-1 font-mono text-[10px] font-bold">
+            <button
+              onClick={() => setSidebarTab("steps")}
+              className={`flex-1 py-1 rounded-lg text-center transition-all ${
+                sidebarTab === "steps"
+                  ? "bg-cream-raised dark:bg-[#181C27] text-espresso dark:text-cream shadow-xs"
+                  : "text-coffee hover:text-espresso"
+              }`}
+            >
+              13-Step Track
+            </button>
+            <button
+              onClick={() => setSidebarTab("plan8020")}
+              className={`flex-1 py-1 rounded-lg text-center transition-all ${
+                sidebarTab === "plan8020"
+                  ? "bg-amber-500/20 text-amber-600 dark:text-amber-400 shadow-xs"
+                  : "text-coffee hover:text-espresso"
+              }`}
+            >
+              ⚡ 80/20 Smart Focus
+            </button>
           </div>
 
-          {/* 13-Step Stepper Progress Track */}
-          <div>
-            <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-coffee font-bold flex justify-between items-center">
-              <span>Socratic 13-Step Track</span>
-              <span className="text-amber-500 font-bold">13/13</span>
+          {/* TAB 1: 13-STEP PROGRESS TRACK */}
+          {sidebarTab === "steps" && (
+            <div ref={stepperRef} className="space-y-1 max-h-52 overflow-y-auto pr-1">
+              {STRUCTURE_STEPS.map((step) => {
+                const isDone = currentProgress.completedSteps?.includes(step.id);
+                const isActive = currentProgress.currentStep === step.id;
+
+                return (
+                  <button
+                    key={step.id}
+                    onClick={() => {
+                      markStepCompleted(activeTopicId, step.id);
+                      handleSendMessage(
+                        `Mentor, let's focus specifically on Step ${step.id}: ${step.label} for ${currentTopicObj.title}.`
+                      );
+                    }}
+                    className={`stepper-node w-full flex items-center justify-between rounded-lg border px-2.5 py-1.5 font-mono text-[11px] transition-all text-left group ${
+                      isDone
+                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
+                        : isActive
+                        ? "border-amber-500/50 bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold animate-pulse"
+                        : "border-hair/50 bg-cream-deep/30 dark:bg-black/20 text-coffee hover:bg-amber-500/10 hover:text-espresso"
+                    }`}
+                  >
+                    <span className="truncate">{step.short}</span>
+                    {isDone ? (
+                      <CheckCircle size={13} className="text-emerald-500" />
+                    ) : isActive ? (
+                      <Lightning size={13} className="text-amber-500" />
+                    ) : (
+                      <Lock size={12} className="text-coffee opacity-50" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
-            <div ref={stepperRef} className="space-y-1 max-h-56 overflow-y-auto pr-1">
-              {STRUCTURE_STEPS.map((step) => (
-                <button
-                  key={step.id}
-                  onClick={() => {
-                    handleSendMessage(
-                      `Mentor, let's focus specifically on Step ${step.id}: ${step.label} for ${currentTopicObj.title}.`
-                    );
-                  }}
-                  className="stepper-node w-full flex items-center justify-between rounded-lg border border-hair/50 bg-cream-deep/30 dark:bg-black/20 px-2.5 py-1.5 font-mono text-[11px] text-coffee hover:bg-amber-500/10 hover:text-espresso transition-all text-left group"
-                >
-                  <span className="truncate group-hover:text-amber-500">{step.short}</span>
-                  <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-amber-500" />
-                </button>
-              ))}
+          )}
+
+          {/* TAB 2: 80/20 HIGH-ROI SMART FOCUS PLAN */}
+          {sidebarTab === "plan8020" && (
+            <div className="space-y-2 max-h-52 overflow-y-auto pr-1 font-sans text-xs">
+              <div className="font-mono text-[9px] uppercase tracking-wider text-amber-500 font-bold">
+                Top 20% High-ROI Concepts (80% Mastery)
+              </div>
+              {plan8020.subtopics.map((subtopic) => {
+                const isChecked = !!currentProgress.subtopicsDone[subtopic.id];
+                return (
+                  <div
+                    key={subtopic.id}
+                    className={`rounded-xl border p-2.5 transition-all ${
+                      isChecked
+                        ? "border-emerald-500/30 bg-emerald-500/10"
+                        : "border-hair bg-cream-deep/40 dark:bg-black/20"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <button
+                        onClick={() => toggleSubtopicDone(activeTopicId, subtopic.id)}
+                        className="mt-0.5 text-amber-500 hover:scale-110 transition-transform"
+                      >
+                        {isChecked ? (
+                          <CheckSquare size={16} className="text-emerald-500" />
+                        ) : (
+                          <Square size={16} className="text-coffee" />
+                        )}
+                      </button>
+                      <div className="flex-1">
+                        <div className={`font-bold ${isChecked ? "line-through text-coffee" : "text-espresso dark:text-cream"}`}>
+                          {subtopic.title}
+                        </div>
+                        <p className="text-[10px] text-coffee mt-0.5 leading-relaxed">{subtopic.description}</p>
+                        <button
+                          onClick={() => handleSendMessage(`Mentor, let's drill on subtopic: ${subtopic.title}. ${subtopic.practiceDrill}`)}
+                          className="mt-1.5 flex items-center gap-1 font-mono text-[9px] text-amber-500 hover:underline font-bold"
+                        >
+                          <span>⚡ Start Practice Drill</span>
+                          <ArrowUpRight size={10} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          )}
+
+          {/* MISTAKE WATCHER BANNER */}
+          {currentProgress.mistakesLogged?.length > 0 && (
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-2.5 font-mono text-[10px] text-rose-500 space-y-1">
+              <div className="flex items-center gap-1 font-bold">
+                <WarningOctagon size={14} />
+                <span>Anti-Pattern Watcher Flagged:</span>
+              </div>
+              <ul className="list-disc list-inside space-y-0.5 opacity-90 text-[9.5px]">
+                {currentProgress.mistakesLogged.slice(-2).map((m, i) => (
+                  <li key={i}>{m}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Bottom Candidate Brief Quick Target */}
         <div className="mt-4 rounded-xl border border-hair bg-cream-deep/80 dark:bg-black/40 p-3 font-mono text-[10px] text-coffee space-y-1">
           <div className="flex items-center gap-1 text-espresso dark:text-cream font-bold">
             <Trophy size={13} className="text-amber-500" />
-            <span>Target: ₹15–20 LPA / $55–70k</span>
+            <span>Candidate Rank: {currentProgress.rank || "L5 Senior Candidate"}</span>
           </div>
           <p className="opacity-80">Sarvam AI · Krutrim · Observe.AI · Ripik.AI</p>
         </div>
@@ -367,7 +512,7 @@ export function MentorView() {
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="font-mono text-xs font-bold text-espresso dark:text-cream">
               {activeMode === "grill"
-                ? "🔥 Socratic First-Principles Drill"
+                ? "🔥 Socratic First-Principles Drill (80/20 High-ROI)"
                 : activeMode === "code-review"
                 ? "🔍 Senior Production Code Review"
                 : "🏆 Staff Level Mock Interview"}
@@ -400,17 +545,17 @@ export function MentorView() {
                 <Brain size={36} weight="fill" />
               </div>
               <h3 className="text-lg font-bold text-espresso dark:text-cream">
-                AI Senior Mentor Studio Ready
+                80/20 AI Senior Mentor Studio Ready
               </h3>
               <p className="max-w-md font-mono text-xs text-coffee leading-relaxed">
-                Topic locked to <strong className="text-amber-500">{currentTopicObj.title}</strong>. Click any prompt below or type your question to start Socratic grilling.
+                Topic locked to <strong className="text-amber-500">{currentTopicObj.title}</strong>. Click any prompt below to begin first-principles Socratic grilling.
               </p>
               <div className="flex flex-wrap justify-center gap-2 pt-2">
                 {[
-                  `Mentor, let's drill on ${currentTopicObj.title}`,
+                  `Mentor, let me grill on 80/20 concepts for ${currentTopicObj.title}`,
                   "Guide me through Step 5: Visual Mental Model",
-                  "Grill me on PostgreSQL EXPLAIN ANALYZE vs B-Trees",
-                  "Run an L6 Mock Interview scenario",
+                  "Grill me on production failure trade-offs",
+                  "Run an L6 Mock Interview and rank my performance",
                 ].map((preset, idx) => (
                   <button
                     key={idx}
@@ -488,6 +633,9 @@ export function MentorView() {
  * Dynamically detects Mermaid ```mermaid ``` blocks and renders them with <MermaidRenderer />!
  */
 function RenderMentorMessage({ content }: { content: string }) {
+  // Strip hidden <!--META:...--> tags from visible text rendering
+  const cleanContent = content.replace(/<!--META:[\s\S]*?-->/g, "");
+
   const mermaidRegex = /```mermaid\s*([\s\S]*?)```/g;
 
   // Split content by mermaid blocks
@@ -495,16 +643,16 @@ function RenderMentorMessage({ content }: { content: string }) {
   let lastIndex = 0;
   let match;
 
-  while ((match = mermaidRegex.exec(content)) !== null) {
+  while ((match = mermaidRegex.exec(cleanContent)) !== null) {
     if (match.index > lastIndex) {
-      parts.push({ type: "text", value: content.substring(lastIndex, match.index) });
+      parts.push({ type: "text", value: cleanContent.substring(lastIndex, match.index) });
     }
     parts.push({ type: "mermaid", value: match[1] });
     lastIndex = mermaidRegex.lastIndex;
   }
 
-  if (lastIndex < content.length) {
-    parts.push({ type: "text", value: content.substring(lastIndex) });
+  if (lastIndex < cleanContent.length) {
+    parts.push({ type: "text", value: cleanContent.substring(lastIndex) });
   }
 
   return (
