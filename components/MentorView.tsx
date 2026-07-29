@@ -253,24 +253,32 @@ export function MentorView() {
         if (value) {
           const chunk = decoder.decode(value, { stream: true });
 
-          // Client-side fallback cleanup for any lingering SSE strings
+          // Client-side bulletproof sanitizer to filter out any lingering API JSON metadata
           let cleanChunk = chunk;
-          if (cleanChunk.includes("data: ") || cleanChunk.includes("OPENROUTER PROCESSING")) {
-            cleanChunk = cleanChunk
-              .split("\n")
-              .filter((l) => !l.startsWith(":") && !l.startsWith("data: [DONE]"))
-              .map((l) => {
-                if (l.startsWith("data: ")) {
+          if (
+            cleanChunk.includes("data: ") ||
+            cleanChunk.includes("OPENROUTER PROCESSING") ||
+            cleanChunk.includes('"choices":') ||
+            cleanChunk.includes('"provider":') ||
+            cleanChunk.includes('"usage":') ||
+            cleanChunk.includes("data: [DONE]")
+          ) {
+            // Extract ONLY valid delta content if chunk has JSON payload
+            const dataMatches = cleanChunk.match(/data:\s*(\{[\s\S]*?\})/g);
+            if (dataMatches) {
+              cleanChunk = dataMatches
+                .map((dm) => {
                   try {
-                    const parsed = JSON.parse(l.slice(6));
+                    const parsed = JSON.parse(dm.replace(/^data:\s*/, ""));
                     return parsed.choices?.[0]?.delta?.content || "";
                   } catch (e) {
                     return "";
                   }
-                }
-                return l;
-              })
-              .join("");
+                })
+                .join("");
+            } else {
+              cleanChunk = "";
+            }
           }
 
           accumulated += cleanChunk;

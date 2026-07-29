@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Transform OpenRouter SSE stream into clean text tokens
+    // Robust SSE Event Parser Stream
     const decoder = new TextDecoder();
     const encoder = new TextEncoder();
     let buffer = "";
@@ -124,40 +124,51 @@ export async function POST(req: NextRequest) {
     const transformStream = new TransformStream({
       transform(chunk, controller) {
         buffer += decoder.decode(chunk, { stream: true });
-        const lines = buffer.split("\n");
-        // Keep the last incomplete line in buffer
-        buffer = lines.pop() || "";
+        
+        // SSE events are demarcated by double newlines \n\n
+        const events = buffer.split("\n\n");
+        // Save incomplete tail in buffer
+        buffer = events.pop() || "";
 
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed.startsWith(":")) continue; // Skip keepalive comments
-          if (trimmed === "data: [DONE]") continue;
+        for (const event of events) {
+          const lines = event.split("\n");
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith(":")) continue; // Skip SSE keepalive comments
 
-          if (trimmed.startsWith("data: ")) {
-            try {
-              const jsonStr = trimmed.slice(6);
-              const parsed = JSON.parse(jsonStr);
-              const deltaContent = parsed.choices?.[0]?.delta?.content;
-              if (deltaContent) {
-                controller.enqueue(encoder.encode(deltaContent));
+            if (trimmed.startsWith("data: ")) {
+              const dataStr = trimmed.slice(6).trim();
+              if (dataStr === "[DONE]") continue;
+
+              try {
+                const parsed = JSON.parse(dataStr);
+                const textContent = parsed.choices?.[0]?.delta?.content;
+                if (textContent) {
+                  controller.enqueue(encoder.encode(textContent));
+                }
+              } catch (e) {
+                // Ignore incomplete JSON
               }
-            } catch (e) {
-              // Ignore incomplete JSON chunks
             }
           }
         }
       },
       flush(controller) {
-        if (buffer.trim().startsWith("data: ")) {
-          try {
-            const jsonStr = buffer.trim().slice(6);
-            const parsed = JSON.parse(jsonStr);
-            const deltaContent = parsed.choices?.[0]?.delta?.content;
-            if (deltaContent) {
-              controller.enqueue(encoder.encode(deltaContent));
+        if (buffer.includes("data: ")) {
+          const lines = buffer.split("\n");
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith("data: ") && !trimmed.includes("[DONE]")) {
+              try {
+                const parsed = JSON.parse(trimmed.slice(6).trim());
+                const textContent = parsed.choices?.[0]?.delta?.content;
+                if (textContent) {
+                  controller.enqueue(encoder.encode(textContent));
+                }
+              } catch (e) {
+                // Ignore
+              }
             }
-          } catch (e) {
-            // Ignore
           }
         }
       },
