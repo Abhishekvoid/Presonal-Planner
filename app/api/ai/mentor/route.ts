@@ -55,23 +55,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Determine Endpoint and Target Model
-    let endpoint = "https://api.openai.com/v1/chat/completions";
-    let selectedModel = model || "gpt-4o-mini";
+    let endpoint = "https://openrouter.ai/api/v1/chat/completions";
+    const defaultForMode =
+      mode === "code-review"
+        ? "nvidia/nemotron-3-ultra-550b-a55b:free"
+        : "deepseek/deepseek-v4-flash:free";
 
-    if (apiKey?.startsWith("sk-or-") || (envOpenRouter && !customApiKey) || provider === "openrouter") {
-      endpoint = "https://openrouter.ai/api/v1/chat/completions";
-      const defaultForMode =
-        mode === "code-review"
-          ? "nvidia/nemotron-3-ultra-550b-a55b:free"
-          : "deepseek/deepseek-v4-flash:free";
-      selectedModel = (!model || model === "auto") ? defaultForMode : model;
-    } else if (apiKey?.startsWith("AIza") || (envGemini && !customApiKey) || provider === "gemini") {
-      endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-      selectedModel = model || "gemini-1.5-pro";
-    } else if (apiKey?.startsWith("gsk_") || (envGroq && !customApiKey) || provider === "groq") {
-      endpoint = "https://api.groq.com/openai/v1/chat/completions";
-      selectedModel = model || "llama-3.3-70b-versatile";
-    }
+    let selectedModel = (!model || model === "auto") ? defaultForMode : model;
 
     // Build complete message chain
     const formattedMessages: ChatMessage[] = [
