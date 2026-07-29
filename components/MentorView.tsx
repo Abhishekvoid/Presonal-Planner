@@ -22,6 +22,7 @@ import {
   Flame,
   Star,
   Check,
+  Lightbulb,
 } from "@phosphor-icons/react";
 import { useMentorStore, ChatMessageItem } from "@/lib/mentorStore";
 import { MentorMode } from "@/lib/ai/prompt";
@@ -192,7 +193,7 @@ export function MentorView() {
       if (!res.ok) {
         const errorData = await res.json();
         setLastMessageContent(
-          `⚠️ **API Error (${res.status})**: ${errorData?.error || "Failed to reach AI Mentor endpoint."}`
+          `API Error (${res.status}): ${errorData?.error || "Failed to reach AI Mentor endpoint."}`
         );
         setStreaming(false);
         return;
@@ -221,7 +222,7 @@ export function MentorView() {
         }
       }
     } catch (err: any) {
-      setLastMessageContent(`⚠️ **Connection Error**: ${err.message || "Network request failed."}`);
+      setLastMessageContent(`Connection Error: ${err.message || "Network request failed."}`);
     } finally {
       setStreaming(false);
     }
@@ -416,7 +417,8 @@ export function MentorView() {
                               onClick={() => handleSendMessage(`Mentor, let's drill on subtopic: ${subtopic.title}. ${subtopic.practiceDrill}`)}
                               className="mt-1 inline-flex items-center gap-1 font-mono text-[10px] text-amber-600 dark:text-amber-400 font-semibold hover:underline"
                             >
-                              <span>⚡ Start Practice Drill</span>
+                              <Lightning size={11} className="text-amber-500" />
+                              <span>Start Practice Drill</span>
                               <ArrowUpRight size={10} />
                             </button>
                           </div>
@@ -431,7 +433,10 @@ export function MentorView() {
               {plan8020.dsaProblems && plan8020.dsaProblems.length > 0 && (
                 <div className="pt-2 border-t border-hair">
                   <div className="font-mono text-[9px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-bold mb-2 flex items-center justify-between">
-                    <span>💡 80/20 DSA Drills (45 Stored)</span>
+                    <span className="flex items-center gap-1">
+                      <Lightbulb size={13} className="text-emerald-500" />
+                      <span>80/20 DSA Drills (45 Stored)</span>
+                    </span>
                     <span className="text-[8px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">LeetCode</span>
                   </div>
                   <div className="space-y-2">
@@ -457,7 +462,8 @@ export function MentorView() {
                           }}
                           className="inline-flex items-center gap-1 font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline"
                         >
-                          <span>⚡ Drill DSA Problem</span>
+                          <Lightning size={11} className="text-emerald-500" />
+                          <span>Drill DSA Problem</span>
                           <ArrowUpRight size={10} />
                         </button>
                       </div>
@@ -554,13 +560,28 @@ export function MentorView() {
               <button
                 key={mode}
                 onClick={() => setMode(mode)}
-                className={`px-3 py-1 font-mono text-xs font-bold transition-all ${
+                className={`px-3 py-1 font-mono text-xs font-bold transition-all flex items-center gap-1.5 ${
                   activeMode === mode
                     ? "text-espresso dark:text-cream border-b-2 border-amber-500"
                     : "text-coffee hover:text-espresso"
                 }`}
               >
-                {mode === "grill" ? "🔥 Socratic Grill" : mode === "code-review" ? "🔍 Code Review" : "🏆 L6 Mock Interview"}
+                {mode === "grill" ? (
+                  <>
+                    <Flame size={14} className="text-amber-500" />
+                    <span>Socratic Grill</span>
+                  </>
+                ) : mode === "code-review" ? (
+                  <>
+                    <Code size={14} className="text-emerald-500" />
+                    <span>Code Review</span>
+                  </>
+                ) : (
+                  <>
+                    <Trophy size={14} className="text-amber-500" />
+                    <span>L6 Mock Interview</span>
+                  </>
+                )}
               </button>
             ))}
           </div>
@@ -646,9 +667,10 @@ export function MentorView() {
                   <button
                     key={idx}
                     onClick={() => handleSendMessage(preset)}
-                    className="border border-hair bg-cream-raised dark:bg-[#12151E] px-3.5 py-2 font-mono text-xs text-espresso dark:text-cream hover:border-amber-500 transition-colors rounded-xl shadow-xs"
+                    className="border border-hair bg-cream-raised dark:bg-[#12151E] px-3.5 py-2 font-mono text-xs text-espresso dark:text-cream hover:border-amber-500 transition-colors rounded-xl shadow-xs flex items-center gap-1.5"
                   >
-                    ⚡ {preset}
+                    <Lightning size={12} className="text-amber-500" />
+                    <span>{preset}</span>
                   </button>
                 ))}
               </div>

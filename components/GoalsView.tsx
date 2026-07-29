@@ -443,7 +443,7 @@ function RPGSkillTree() {
                   ? "text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/40 border border-amber-500/30"
                   : "text-coffee bg-cream-deep dark:bg-zinc-900 border border-hair"
               }`}>
-                {node.status === "PROVEN" ? "✓ PROVEN" : node.status === "BUILDING" ? "⚙ BUILDING" : "🔒 LOCKED"}
+                {node.status === "PROVEN" ? "PROVEN" : node.status === "BUILDING" ? "BUILDING" : "LOCKED"}
               </span>
 
               <div className="flex items-center gap-1.5">
@@ -460,7 +460,7 @@ function RPGSkillTree() {
                   title="Lock topic and open AI Senior Mentor"
                 >
                   <Brain size={11} weight="fill" />
-                  <span>⚡ Lock & Drill</span>
+                  <span>Lock & Drill</span>
                 </button>
 
                 <button

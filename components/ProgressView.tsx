@@ -937,7 +937,7 @@ function RevisionGrillingDeck() {
             title="Lock topic and open AI Senior Mentor"
           >
             <Brain size={14} weight="fill" />
-            <span>⚡ Lock & Drill</span>
+            <span>Lock & Drill</span>
           </button>
           <span className="font-mono text-[10px] uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded">
             {revisesLogged} Revises Logged

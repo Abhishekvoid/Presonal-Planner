@@ -669,7 +669,7 @@ export function NotesGraph({
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 font-mono text-xs font-bold text-black hover:from-amber-400 hover:to-amber-500 shadow-lg transition-all active:scale-95"
                 >
                   <Brain size={16} weight="fill" />
-                  <span>⚡ Lock Topic & Drill in AI Mentor</span>
+                  <span>Lock Topic & Drill in AI Mentor</span>
                 </button>
 
                 {selectedNode.noteId ? (
