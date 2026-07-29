@@ -24,6 +24,16 @@ import {
 import { useMentorStore } from "@/lib/mentorStore";
 import { MentorMode } from "@/lib/ai/prompt";
 import { CodeReviewDrawer } from "./system/CodeReviewDrawer";
+import { renderMarkdown } from "@/lib/markdown";
+
+import Prism from "prismjs";
+import "prismjs/components/prism-python";
+import "prismjs/components/prism-typescript";
+import "prismjs/components/prism-sql";
+import "prismjs/components/prism-go";
+import "prismjs/components/prism-java";
+import "prismjs/components/prism-cpp";
+import "prismjs/components/prism-bash";
 
 const STRUCTURE_STEPS = [
   { id: 1, label: "Problem Statement", short: "1. Problem" },
@@ -92,6 +102,13 @@ export function MentorView() {
 
   useEffect(() => {
     scrollToBottom();
+  }, [currentMessages, isStreaming]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      Prism.highlightAll();
+    }, 20);
+    return () => clearTimeout(timer);
   }, [currentMessages, isStreaming]);
 
   // GSAP animation for 13-step stepper bar track
@@ -476,7 +493,10 @@ export function MentorView() {
                 </div>
               )}
 
-              <div className="whitespace-pre-wrap font-sans leading-relaxed">{msg.content}</div>
+              <div
+                className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-espresso dark:text-cream/90 font-sans"
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}
+              />
 
               <div className="mt-3 font-mono text-[10px] text-coffee dark:text-cream/30">
                 {new Date(msg.timestamp).toLocaleTimeString([], {
