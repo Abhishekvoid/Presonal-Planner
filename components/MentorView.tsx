@@ -8,22 +8,17 @@ import {
   PaperPlaneTilt,
   Code,
   Gear,
-  Key,
-  Flame,
   Trash,
-  Stack,
-  TerminalWindow,
-  ArrowsClockwise,
   ArrowUpRight,
-  Sparkle,
-  Copy,
-  Check,
-  Lightning,
   CheckCircle,
+  CaretDown,
+  Lock,
+  Trophy,
 } from "@phosphor-icons/react";
-import { useMentorStore } from "@/lib/mentorStore";
+import { useMentorStore, ChatMessageItem } from "@/lib/mentorStore";
 import { MentorMode } from "@/lib/ai/prompt";
 import { CodeReviewDrawer } from "./system/CodeReviewDrawer";
+import { MermaidRenderer } from "./system/MermaidRenderer";
 import { renderMarkdown } from "@/lib/markdown";
 
 import Prism from "prismjs";
@@ -52,62 +47,60 @@ const STRUCTURE_STEPS = [
 ];
 
 const PRESET_TOPICS = [
-  { id: "general-backend", title: "General Backend & Systems Design", day: 1 },
-  { id: "fde-01", title: "DB Internals & Indexing (B-Trees vs LSM)", day: 2 },
-  { id: "fde-02", title: "Distributed Consensus (Raft & Paxos)", day: 3 },
-  { id: "fde-03", title: "Caching & Consistency (Write-Through vs Write-Back)", day: 4 },
-  { id: "fde-04", title: "Message Queues & Event Streaming (Kafka vs RabbitMQ)", day: 5 },
-  { id: "fde-05", title: "Rate Limiting & Token Buckets at Scale", day: 6 },
-  { id: "fde-06", title: "WAL & Crash Recovery Mechanisms", day: 7 },
-  { id: "fde-07", title: "Memory Allocation & GC Profiling", day: 8 },
-  { id: "fde-08", title: "Load Balancing & Consistency Hashing", day: 9 },
-  { id: "fde-09", title: "AI Systems Infrastructure & Vector Search", day: 10 },
+  { id: "day-1-django-orm", title: "Day 1: Django ORM & N+1 Optimization", day: 1 },
+  { id: "day-2-postgres-indexing", title: "Day 2: PostgreSQL Indexing & EXPLAIN ANALYZE", day: 2 },
+  { id: "day-3-redis-rate-limiter", title: "Day 3: Redis Cache Aside & Rate Limiters", day: 3 },
+  { id: "day-4-celery-async-reliability", title: "Day 4: Celery Task Queues & DLQ Reliability", day: 4 },
+  { id: "day-5-payment-system-design", title: "Day 5: Payment System Idempotency & Webhooks", day: 5 },
+  { id: "day-6-rag-architecture", title: "Day 6: RAG Qdrant Vector Search & Cross-Encoders", day: 6 },
+  { id: "day-7-notification-fanout", title: "Day 7: Notification Service Fan-Out Architecture", day: 7 },
+  { id: "day-8-prometheus-llm-gateway", title: "Day 8: Prometheus Metrics & LLM Gateway Middleware", day: 8 },
+  { id: "day-9-mock-interview-marathon", title: "Day 9: Full L6 Mock Interview Sprint", day: 9 },
+];
+
+const AVAILABLE_MODELS = [
+  { id: "deepseek/deepseek-v4-flash", name: "DeepSeek V4 Flash", desc: "Socratic Reasoning & Systems Architecture" },
+  { id: "nvidia/nemotron-3-ultra-550b-a55b:free", name: "Nemotron 3 550B", desc: "Code Review & Concurrency Intelligence" },
 ];
 
 export function MentorView() {
   const {
+    activeMode,
     activeTopicId,
     activeTopicContext,
-    activeMode,
-    threads,
-    customApiKey,
-    provider,
     selectedModel,
+    provider,
+    customApiKey,
+    threads,
     isStreaming,
-    setActiveTopic,
     setMode,
-    setCustomApiKey,
-    setProvider,
+    setActiveTopic,
     setSelectedModel,
     addMessage,
-    appendToLastMessage,
     setLastMessageContent,
-    setStreaming,
-    toggleCodeDrawer,
     clearCurrentThread,
+    toggleCodeDrawer,
+    setStreaming,
   } = useMentorStore();
 
   const [input, setInput] = useState("");
-  const [showSettings, setShowSettings] = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState(customApiKey);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
+
+  const chatBottomRef = useRef<HTMLDivElement>(null);
   const stepperRef = useRef<HTMLDivElement>(null);
 
-  const currentMessages = threads[activeTopicId] || [];
+  const currentMessages: ChatMessageItem[] = threads[activeTopicId] || [];
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  // Scroll to bottom when messages update
   useEffect(() => {
-    scrollToBottom();
+    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [currentMessages, isStreaming]);
 
+  // Syntax highlighting trigger
   useEffect(() => {
     const timer = setTimeout(() => {
       Prism.highlightAll();
-    }, 20);
+    }, 30);
     return () => clearTimeout(timer);
   }, [currentMessages, isStreaming]);
 
@@ -117,13 +110,14 @@ export function MentorView() {
     const ctx = gsap.context(() => {
       gsap.fromTo(
         ".stepper-node",
-        { opacity: 0, y: 8 },
-        { opacity: 1, y: 0, duration: 0.4, stagger: 0.03, ease: "power2.out" }
+        { opacity: 0, x: -10 },
+        { opacity: 1, x: 0, duration: 0.3, stagger: 0.02, ease: "power2.out" }
       );
     }, stepperRef);
     return () => ctx.revert();
   }, [activeTopicId]);
 
+  // Listen for single-click topic locking events
   useEffect(() => {
     const handleLockTopicEvent = (e: Event) => {
       const customEv = e as CustomEvent<{ topicTitle: string; prompt: string }>;
@@ -150,7 +144,7 @@ export function MentorView() {
     setStreaming(true);
 
     try {
-      const payloadMessages = [...currentMessages, { role: "user", content: query }].map((m) => ({
+      const payloadMessages = [...currentMessages, { id: "temp-user", role: "user" as const, content: query, timestamp: Date.now() }].map((m) => ({
         role: m.role,
         content: m.content,
       }));
@@ -170,433 +164,363 @@ export function MentorView() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        if (errorData.error === "NO_API_KEY") {
-          setLastMessageContent(
-            "⚠️ **API Key Required**: No API key was found in environment or local settings.\n\nPlease click the **Settings ⚙️** icon in the top right to configure your OpenRouter key."
-          );
-        } else {
-          setLastMessageContent(
-            `⚠️ **API Error (${res.status})**: ${errorData.message || "Failed to reach AI service."}`
-          );
-        }
+        setLastMessageContent(
+          `⚠️ **API Error (${res.status})**: ${errorData?.error || "Failed to reach AI Mentor endpoint."}`
+        );
         setStreaming(false);
         return;
       }
 
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("No response body reader");
+      if (!res.body) {
+        setStreaming(false);
+        return;
+      }
 
-      const decoder = new TextDecoder("utf-8");
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
       let done = false;
-      let fullText = "";
+      let accumulated = "";
 
       while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
         if (value) {
-          const chunkStr = decoder.decode(value, { stream: true });
-          const lines = chunkStr.split("\n");
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6);
-              if (data === "[DONE]") continue;
-              try {
-                const parsed = JSON.parse(data);
-                const contentChunk = parsed.choices?.[0]?.delta?.content || "";
-                if (contentChunk) {
-                  fullText += contentChunk;
-                  appendToLastMessage(contentChunk);
-                }
-              } catch {
-                // Ignore parse errors for raw stream fragments
-              }
-            }
-          }
+          const chunk = decoder.decode(value, { stream: true });
+          accumulated += chunk;
+          setLastMessageContent(accumulated);
         }
       }
-
-      if (!fullText) {
-        setLastMessageContent(
-          "I have processed your query. Let's analyze the first principles of this problem."
-        );
-      }
     } catch (err: any) {
-      setLastMessageContent(`⚠️ Connection error: ${err.message}`);
+      setLastMessageContent(`⚠️ **Connection Error**: ${err.message || "Network request failed."}`);
     } finally {
       setStreaming(false);
     }
   };
 
-  const handleCopyMessage = (id: string, text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const handleSaveSettings = () => {
-    setCustomApiKey(apiKeyInput.trim());
-    setShowSettings(false);
+  const currentTopicObj = PRESET_TOPICS.find((t) => t.id === activeTopicId) || {
+    id: activeTopicId,
+    title: activeTopicContext?.title || activeTopicId,
+    day: activeTopicContext?.sprintDay || 1,
   };
 
   return (
-    <div className="relative flex h-[calc(100vh-90px)] w-full flex-col overflow-hidden rounded-[1.75rem] border border-hair bg-cream-raised dark:bg-[#0A0C10] text-espresso dark:text-cream font-sans shadow-2xl backdrop-blur-2xl">
-      {/* Ambient Mesh Orbs Glow Background */}
-      <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-amber-500/10 blur-[120px] pointer-events-none animate-ambient-orb" />
-      <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-cyan-500/10 blur-[120px] pointer-events-none animate-ambient-orb" />
-
-      <CodeReviewDrawer />
-
-      {/* TOP HEADER */}
-      <header className="relative z-10 flex items-center justify-between border-b border-hair bg-cream-base/90 dark:bg-[#0e0f14]/80 px-6 py-3.5 backdrop-blur-2xl">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 text-amber-500 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
-            <Brain size={24} weight="fill" />
-          </div>
+    <div className="flex h-[calc(100vh-6rem)] w-full gap-5 overflow-hidden rounded-3xl border border-hair bg-cream-base/90 dark:bg-[#0A0C10]/95 p-4 shadow-2xl backdrop-blur-2xl">
+      {/* ==================================================================== */}
+      {/* LEFT PANEL: TOPIC CONTEXT, STEPPER & Socratic CONTROL CENTER        */}
+      {/* ==================================================================== */}
+      <div className="flex w-80 flex-col justify-between rounded-2xl border border-hair bg-cream-raised dark:bg-[#12151E] p-4 shadow-md overflow-y-auto">
+        <div className="space-y-5">
+          {/* Header & Topic Lock Banner */}
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold tracking-tight text-espresso dark:text-cream">
-                Senior Backend Engineering Mentor
-              </h1>
-              <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-sm">
-                10-Day Sprint
+            <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-coffee dark:text-cream/60">
+              <span className="flex items-center gap-1.5 font-bold text-amber-500">
+                <Brain size={16} weight="fill" /> AI Senior Mentor
+              </span>
+              <span className="flex items-center gap-1 text-emerald-500 font-bold">
+                <Lock size={12} weight="fill" /> Topic Locked
               </span>
             </div>
-            <p className="text-xs text-coffee dark:text-cream/60">
-              Socratic learning • First Principles • Production Code Reviews • Mock Interviews
-            </p>
+
+            {/* Active Topic Dropdown Lock */}
+            <div className="relative mt-2">
+              <button
+                onClick={() => setTopicDropdownOpen(!topicDropdownOpen)}
+                className="w-full flex items-center justify-between gap-2 rounded-xl border border-hair bg-cream-deep/80 dark:bg-black/40 px-3 py-2 text-left transition-all hover:border-amber-500/50"
+              >
+                <div className="truncate">
+                  <div className="font-mono text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400">
+                    Sprint Day {currentTopicObj.day}
+                  </div>
+                  <div className="truncate font-sans text-xs font-bold text-espresso dark:text-cream">
+                    {currentTopicObj.title}
+                  </div>
+                </div>
+                <CaretDown size={14} className="text-coffee flex-shrink-0" />
+              </button>
+
+              {/* Topic Selector Dropdown */}
+              <AnimatePresence>
+                {topicDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="absolute left-0 right-0 top-full z-30 mt-1 max-h-60 overflow-y-auto rounded-xl border border-hair bg-cream-raised dark:bg-[#181C27] p-1.5 shadow-2xl backdrop-blur-xl"
+                  >
+                    {PRESET_TOPICS.map((topic) => (
+                      <button
+                        key={topic.id}
+                        onClick={() => {
+                          setActiveTopic(topic.id, {
+                            id: topic.id,
+                            title: topic.title,
+                            sprintDay: topic.day,
+                          });
+                          setTopicDropdownOpen(false);
+                        }}
+                        className={`w-full rounded-lg px-3 py-2 text-left font-sans text-xs transition-all ${
+                          activeTopicId === topic.id
+                            ? "bg-amber-500/20 font-bold text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                            : "text-coffee hover:bg-black/5 dark:hover:bg-white/5 hover:text-espresso"
+                        }`}
+                      >
+                        <div className="font-mono text-[9px] uppercase">Day {topic.day}</div>
+                        <div className="truncate">{topic.title}</div>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
-        </div>
 
-        {/* MODE TOGGLES WITH FRAMER MOTION SPRING PILL MORPHING */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex items-center rounded-2xl border border-hair bg-cream-deep dark:bg-black/60 p-1 shadow-inner backdrop-blur-md">
-            {(["grill", "code-review", "mock-interview"] as MentorMode[]).map((modeKey) => {
-              const isActive = activeMode === modeKey;
-              const modeLabel =
-                modeKey === "grill"
-                  ? "Socratic Grill"
-                  : modeKey === "code-review"
-                  ? "Code Review"
-                  : "Mock Interview";
-              const ModeIcon =
-                modeKey === "grill"
-                  ? Flame
-                  : modeKey === "code-review"
-                  ? Code
-                  : TerminalWindow;
-
-              return (
+          {/* Socratic Mode Switcher Pills */}
+          <div>
+            <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-coffee font-bold">
+              Select Interaction Mode
+            </div>
+            <div className="grid grid-cols-3 gap-1.5 rounded-xl border border-hair bg-cream-deep/60 dark:bg-black/40 p-1">
+              {(["grill", "code-review", "mock-interview"] as MentorMode[]).map((mode) => (
                 <button
-                  key={modeKey}
-                  onClick={() => setMode(modeKey)}
-                  className={`relative z-10 flex items-center gap-2 rounded-xl px-3.5 py-1.5 font-mono text-xs font-semibold transition-colors ${
-                    isActive ? "text-black" : "text-coffee dark:text-cream/70 hover:text-espresso dark:hover:text-cream"
+                  key={mode}
+                  onClick={() => setMode(mode)}
+                  className={`rounded-lg py-1.5 text-center font-mono text-[10px] font-bold uppercase transition-all ${
+                    activeMode === mode
+                      ? "bg-amber-500 text-black shadow-md"
+                      : "text-coffee hover:text-espresso hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
                 >
-                  {isActive && (
-                    <motion.div
-                      layoutId="active-mentor-mode-pill"
-                      className="absolute inset-0 z-[-1] rounded-xl bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.4)]"
-                      transition={{ type: "spring", stiffness: 450, damping: 35 }}
-                    />
-                  )}
-                  <ModeIcon size={14} weight={isActive ? "bold" : "regular"} />
-                  <span>{modeLabel}</span>
+                  {mode === "grill" ? "Grill" : mode === "code-review" ? "Review" : "Mock"}
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
 
-          <button
-            onClick={() => toggleCodeDrawer(true)}
-            className="group flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3.5 py-2 font-mono text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm"
-          >
-            <Code size={15} />
-            <span>Code Workbench</span>
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-300 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
-              <ArrowUpRight size={10} weight="bold" />
-            </span>
-          </button>
+          {/* Model Selector */}
+          <div>
+            <div className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-coffee font-bold">
+              Active Intelligence Model
+            </div>
+            <div className="space-y-1.5">
+              {AVAILABLE_MODELS.map((model) => (
+                <button
+                  key={model.id}
+                  onClick={() => setSelectedModel(model.id)}
+                  className={`w-full flex items-center justify-between rounded-xl border px-3 py-2 text-left transition-all ${
+                    selectedModel === model.id
+                      ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
+                      : "border-hair bg-cream-deep/40 dark:bg-black/20 text-coffee hover:text-espresso"
+                  }`}
+                >
+                  <div>
+                    <div className="font-mono text-xs">{model.name}</div>
+                    <div className="font-sans text-[10px] font-normal opacity-80">{model.desc}</div>
+                  </div>
+                  {selectedModel === model.id && <CheckCircle size={14} className="text-emerald-500" />}
+                </button>
+              ))}
+            </div>
+          </div>
 
-          <button
-            onClick={() => setShowSettings(true)}
-            className="rounded-xl border border-hair bg-cream-deep dark:bg-white/5 p-2 text-coffee dark:text-cream/70 hover:bg-black/5 dark:hover:bg-white/10 hover:text-espresso dark:hover:text-cream transition-colors"
-            title="Configure API Key & Models"
-          >
-            <Gear size={18} />
-          </button>
-
-          <button
-            onClick={clearCurrentThread}
-            className="rounded-xl border border-hair bg-cream-deep dark:bg-white/5 p-2 text-coffee dark:text-cream/50 hover:bg-red-500/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-            title="Clear Chat Thread"
-          >
-            <Trash size={18} />
-          </button>
-        </div>
-      </header>
-
-      {/* SUB-BAR: TOPIC CONTEXT & 13-STEP INTERACTIVE GSAP STEPPER */}
-      <div className="relative z-10 flex flex-wrap items-center justify-between border-b border-hair bg-cream-base/70 dark:bg-[#0b0c10]/90 px-6 py-2.5 gap-3">
-        <div className="flex items-center gap-2">
-          <Stack size={16} className="text-amber-500" />
-          <span className="font-mono text-xs font-semibold text-coffee dark:text-cream/60">Active Topic:</span>
-          <select
-            value={activeTopicId}
-            onChange={(e) => {
-              const selected = PRESET_TOPICS.find((t) => t.id === e.target.value);
-              if (selected) {
-                setActiveTopic(selected.id, {
-                  id: selected.id,
-                  title: selected.title,
-                  sprintDay: selected.day,
-                });
-              }
-            }}
-            className="rounded-lg border border-hair bg-cream-deep dark:bg-black/60 px-3 py-1 font-mono text-xs text-espresso dark:text-cream focus:border-amber-500 focus:outline-none"
-          >
-            {PRESET_TOPICS.map((t) => (
-              <option key={t.id} value={t.id}>
-                Day {t.day}: {t.title}
-              </option>
-            ))}
-          </select>
+          {/* 13-Step Stepper Progress Track */}
+          <div>
+            <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-coffee font-bold flex justify-between items-center">
+              <span>Socratic 13-Step Track</span>
+              <span className="text-amber-500 font-bold">13/13</span>
+            </div>
+            <div ref={stepperRef} className="space-y-1 max-h-56 overflow-y-auto pr-1">
+              {STRUCTURE_STEPS.map((step) => (
+                <button
+                  key={step.id}
+                  onClick={() => {
+                    handleSendMessage(
+                      `Mentor, let's focus specifically on Step ${step.id}: ${step.label} for ${currentTopicObj.title}.`
+                    );
+                  }}
+                  className="stepper-node w-full flex items-center justify-between rounded-lg border border-hair/50 bg-cream-deep/30 dark:bg-black/20 px-2.5 py-1.5 font-mono text-[11px] text-coffee hover:bg-amber-500/10 hover:text-espresso transition-all text-left group"
+                >
+                  <span className="truncate group-hover:text-amber-500">{step.short}</span>
+                  <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-amber-500" />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* 13-STEP INTERACTIVE STEPPER TRACK */}
-        <div ref={stepperRef} className="flex items-center gap-1.5 overflow-x-auto mentor-scrollbar py-1">
-          {STRUCTURE_STEPS.map((step) => (
-            <button
-              key={step.id}
-              onClick={() =>
-                handleSendMessage(
-                  `Mentor, guide me step-by-step through Step ${step.id} (${step.label}) for this topic.`
-                )
-              }
-              className="stepper-node group flex items-center gap-1 rounded-lg border border-hair bg-cream-deep dark:bg-white/[0.04] px-2.5 py-1 font-mono text-[10.5px] text-coffee dark:text-cream/60 hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-300 transition-all whitespace-nowrap"
-              title={`Direct Mentor to ${step.label}`}
-            >
-              <span>{step.short}</span>
-              <ArrowUpRight size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-          ))}
+        {/* Bottom Candidate Brief Quick Target */}
+        <div className="mt-4 rounded-xl border border-hair bg-cream-deep/80 dark:bg-black/40 p-3 font-mono text-[10px] text-coffee space-y-1">
+          <div className="flex items-center gap-1 text-espresso dark:text-cream font-bold">
+            <Trophy size={13} className="text-amber-500" />
+            <span>Target: ₹15–20 LPA / $55–70k</span>
+          </div>
+          <p className="opacity-80">Sarvam AI · Krutrim · Observe.AI · Ripik.AI</p>
         </div>
       </div>
 
-      {/* SETTINGS MODAL OVERLAY */}
-      <AnimatePresence>
-        {showSettings && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md rounded-2xl border border-hair bg-cream-raised dark:bg-[#12141a] p-6 text-espresso dark:text-cream shadow-2xl"
-            >
-              <div className="flex items-center gap-3 border-b border-hair pb-4">
-                <Key size={22} className="text-amber-500" />
-                <h3 className="text-lg font-bold">AI Mentor Model Settings</h3>
-              </div>
-              <div className="mt-4 space-y-4">
-                <div>
-                  <label className="font-mono text-xs font-semibold text-coffee dark:text-cream/70">Provider</label>
-                  <select
-                    value={provider}
-                    onChange={(e) => setProvider(e.target.value as any)}
-                    className="mt-1 w-full rounded-lg border border-hair bg-cream-deep dark:bg-black/60 px-3 py-2 font-mono text-xs text-espresso dark:text-cream"
-                  >
-                    <option value="openrouter">OpenRouter (DeepSeek V4 Flash / Nemotron 3 550B)</option>
-                    <option value="gemini">Google Gemini (gemini-1.5-pro / 2.0-flash)</option>
-                    <option value="groq">Groq (llama-3.3-70b-versatile)</option>
-                    <option value="openai">OpenAI (gpt-4o-mini / gpt-4o)</option>
-                  </select>
-                </div>
-
-                {provider === "openrouter" && (
-                  <div>
-                    <label className="font-mono text-xs font-semibold text-coffee dark:text-cream/70">Model Assignment</label>
-                    <select
-                      value={selectedModel || "auto"}
-                      onChange={(e) => setSelectedModel(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-hair bg-cream-deep dark:bg-black/60 px-3 py-2 font-mono text-xs text-espresso dark:text-cream"
-                    >
-                      <option value="auto">⚡ Auto-Switch (DeepSeek v4 Flash for Reasoning, Nemotron 3 550B for Coding)</option>
-                      <option value="deepseek/deepseek-v4-flash">deepseek/deepseek-v4-flash (Reasoning & Systems Grill)</option>
-                      <option value="nvidia/nemotron-3-ultra-550b-a55b:free">nvidia/nemotron-3-ultra-550b-a55b:free (Coding & Intelligence)</option>
-                    </select>
-                  </div>
-                )}
-
-                <div>
-                  <label className="font-mono text-xs font-semibold text-coffee dark:text-cream/70">Custom API Key</label>
-                  <input
-                    type="password"
-                    value={apiKeyInput}
-                    onChange={(e) => setApiKeyInput(e.target.value)}
-                    placeholder="sk-or-v1-... or gsk_..."
-                    className="mt-1 w-full rounded-lg border border-hair bg-cream-deep dark:bg-black/60 px-3 py-2 font-mono text-xs text-espresso dark:text-cream placeholder-coffee dark:placeholder-cream/30 focus:border-amber-500 focus:outline-none"
-                  />
-                  <p className="mt-1 font-mono text-[11px] text-coffee dark:text-cream/40">
-                    Optional: Reads from your `.env` file (`OPENROUTER_API_KEY`) if left blank.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end gap-3">
-                <button
-                  onClick={() => setShowSettings(false)}
-                  className="rounded-xl px-4 py-2 font-mono text-xs text-coffee dark:text-cream/70 hover:bg-black/5 dark:hover:bg-white/10"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveSettings}
-                  className="rounded-xl bg-amber-500 px-5 py-2 font-mono text-xs font-bold text-black hover:bg-amber-400 shadow-lg"
-                >
-                  Save Settings
-                </button>
-              </div>
-            </motion.div>
+      {/* ==================================================================== */}
+      {/* RIGHT PANEL: INTERACTIVE CHAT STUDIO CANVAS WITH MERMAID & HIGH-LIGHT */}
+      {/* ==================================================================== */}
+      <div className="flex flex-1 flex-col justify-between rounded-2xl border border-hair bg-cream-raised dark:bg-[#12151E] shadow-md overflow-hidden">
+        {/* Studio Top Control Bar */}
+        <div className="flex items-center justify-between border-b border-hair bg-cream-deep/50 dark:bg-black/40 px-5 py-3">
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-mono text-xs font-bold text-espresso dark:text-cream">
+              {activeMode === "grill"
+                ? "🔥 Socratic First-Principles Drill"
+                : activeMode === "code-review"
+                ? "🔍 Senior Production Code Review"
+                : "🏆 Staff Level Mock Interview"}
+            </span>
           </div>
-        )}
-      </AnimatePresence>
 
-      {/* CHAT MESSAGES STREAM THREAD */}
-      <div className="relative z-10 flex-1 overflow-y-auto px-6 py-6 space-y-6 mentor-scrollbar">
-        {currentMessages.map((msg) => (
-          <motion.div
-            key={msg.id}
-            initial={{ opacity: 0, y: 16, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className={`flex gap-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            {msg.role === "assistant" && (
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/25 shadow-md">
-                <Brain size={20} weight="fill" />
-              </div>
-            )}
-
-            <div
-              className={`relative max-w-3xl rounded-2xl p-5 text-sm leading-relaxed ${
-                msg.role === "user"
-                  ? "bg-amber-500/15 border border-amber-500/35 text-espresso dark:text-cream shadow-md"
-                  : "bg-cream-deep dark:bg-[#11131a]/95 border border-hair dark:border-white/10 text-espresso dark:text-cream/90 shadow-xl backdrop-blur-md"
-              }`}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => toggleCodeDrawer(true)}
+              className="flex items-center gap-1.5 rounded-xl border border-hair bg-cream-deep px-3 py-1.5 font-mono text-xs font-bold text-espresso hover:bg-black/5 dark:hover:bg-white/10 transition-all"
             >
-              {msg.mode && (
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase font-bold tracking-widest text-amber-600 dark:text-amber-400/90">
-                    {msg.mode === "code-review" && <Code size={13} weight="bold" />}
-                    {msg.mode === "mock-interview" && <TerminalWindow size={13} weight="bold" />}
-                    {msg.mode === "grill" && <Flame size={13} weight="bold" />}
-                    <span>{msg.mode} mode</span>
-                  </div>
+              <Code size={14} />
+              <span>Submit Code</span>
+            </button>
+            <button
+              onClick={() => clearCurrentThread()}
+              className="rounded-xl border border-hair bg-cream-deep p-1.5 text-coffee hover:text-rose-500 transition-all"
+              title="Clear Session History"
+            >
+              <Trash size={16} />
+            </button>
+          </div>
+        </div>
 
-                  {msg.role === "assistant" && (
-                    <button
-                      onClick={() => handleCopyMessage(msg.id, msg.content)}
-                      className="text-coffee dark:text-cream/40 hover:text-espresso dark:hover:text-cream/90 transition-colors p-1"
-                      title="Copy response"
-                    >
-                      {copiedId === msg.id ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                    </button>
-                  )}
-                </div>
-              )}
-
-              <div
-                className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-espresso dark:text-cream/90 font-sans"
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}
-              />
-
-              <div className="mt-3 font-mono text-[10px] text-coffee dark:text-cream/30">
-                {new Date(msg.timestamp).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+        {/* Messages Stream Container */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-6">
+          {currentMessages.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center text-center p-8 space-y-4">
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-500">
+                <Brain size={36} weight="fill" />
+              </div>
+              <h3 className="text-lg font-bold text-espresso dark:text-cream">
+                AI Senior Mentor Studio Ready
+              </h3>
+              <p className="max-w-md font-mono text-xs text-coffee leading-relaxed">
+                Topic locked to <strong className="text-amber-500">{currentTopicObj.title}</strong>. Click any prompt below or type your question to start Socratic grilling.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 pt-2">
+                {[
+                  `Mentor, let's drill on ${currentTopicObj.title}`,
+                  "Guide me through Step 5: Visual Mental Model",
+                  "Grill me on PostgreSQL EXPLAIN ANALYZE vs B-Trees",
+                  "Run an L6 Mock Interview scenario",
+                ].map((preset, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSendMessage(preset)}
+                    className="rounded-xl border border-hair bg-cream-deep px-3 py-2 font-mono text-xs text-espresso hover:bg-amber-500/20 hover:border-amber-500/40 transition-all"
+                  >
+                    ⚡ {preset}
+                  </button>
+                ))}
               </div>
             </div>
+          ) : (
+            currentMessages.map((msg: ChatMessageItem, idx: number) => (
+              <motion.div
+                key={msg.id || idx}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
+              >
+                <div
+                  className={`max-w-3xl rounded-2xl p-4 text-xs font-sans leading-relaxed shadow-sm ${
+                    msg.role === "user"
+                      ? "bg-amber-500 text-black font-medium"
+                      : "bg-cream-deep/90 dark:bg-[#181C27] border border-hair text-espresso dark:text-cream"
+                  }`}
+                >
+                  {msg.role === "assistant" ? (
+                    <RenderMentorMessage content={msg.content} />
+                  ) : (
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                  )}
+                </div>
+              </motion.div>
+            ))
+          )}
+          <div ref={chatBottomRef} />
+        </div>
 
-            {msg.role === "user" && (
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-cream-deep dark:bg-white/10 text-espresso dark:text-cream border border-hair dark:border-white/20 font-bold font-mono text-xs shadow-md">
-                You
-              </div>
-            )}
-          </motion.div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* QUICK PROMPT CHIPS WITH NESTED TRAILING ICON SHIFT */}
-      <div className="relative z-10 flex flex-wrap items-center gap-2 border-t border-hair bg-cream-base/80 dark:bg-[#0a0b0e]/95 px-6 py-2.5">
-        <span className="font-mono text-[11px] font-semibold text-coffee dark:text-cream/40">Quick Action:</span>
-        <button
-          onClick={() => handleSendMessage("Give me a subtle hint to solve this, don't reveal the code yet.")}
-          className="group inline-flex items-center gap-1.5 rounded-full border border-hair bg-cream-deep dark:bg-white/5 px-3.5 py-1.5 font-mono text-xs text-coffee dark:text-cream/80 hover:border-amber-500/40 hover:bg-amber-500/15 hover:text-amber-600 dark:hover:text-amber-300 transition-all"
-        >
-          <span>💡 Ask for Hint</span>
-          <ArrowUpRight size={12} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-        </button>
-        <button
-          onClick={() => handleSendMessage("What are the core computer science First Principles behind this topic?")}
-          className="group inline-flex items-center gap-1.5 rounded-full border border-hair bg-cream-deep dark:bg-white/5 px-3.5 py-1.5 font-mono text-xs text-coffee dark:text-cream/80 hover:border-amber-500/40 hover:bg-amber-500/15 hover:text-amber-600 dark:hover:text-amber-300 transition-all"
-        >
-          <span>🔬 First Principles</span>
-          <ArrowUpRight size={12} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-        </button>
-        <button
-          onClick={() => handleSendMessage("Give me an L6 Senior Backend interview question on this topic.")}
-          className="group inline-flex items-center gap-1.5 rounded-full border border-hair bg-cream-deep dark:bg-white/5 px-3.5 py-1.5 font-mono text-xs text-coffee dark:text-cream/80 hover:border-amber-500/40 hover:bg-amber-500/15 hover:text-amber-600 dark:hover:text-amber-300 transition-all"
-        >
-          <span>🎯 L6 Interview Question</span>
-          <ArrowUpRight size={12} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-        </button>
-        <button
-          onClick={() => handleSendMessage("What are the production trade-offs (latency vs memory vs throughput)?")}
-          className="group inline-flex items-center gap-1.5 rounded-full border border-hair bg-cream-deep dark:bg-white/5 px-3.5 py-1.5 font-mono text-xs text-coffee dark:text-cream/80 hover:border-amber-500/40 hover:bg-amber-500/15 hover:text-amber-600 dark:hover:text-amber-300 transition-all"
-        >
-          <span>⚖️ Production Trade-offs</span>
-          <ArrowUpRight size={12} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-        </button>
-      </div>
-
-      {/* INPUT AREA */}
-      <div className="relative z-10 border-t border-hair bg-cream-base/95 dark:bg-[#0e0f14]/95 p-4">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSendMessage();
-          }}
-          className="relative flex items-center"
-        >
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            disabled={isStreaming}
-            placeholder={
-              activeMode === "code-review"
-                ? "Ask about code optimizations, memory leaks, or open Code Workbench..."
-                : activeMode === "mock-interview"
-                ? "Answer the interviewer or ask a clarifying system question..."
-                : "Ask or answer a first-principles question (e.g. 'How does WAL guarantee crash recovery?')"
-            }
-            className="w-full rounded-2xl border border-hair bg-cream-deep dark:bg-black/70 py-3.5 pl-5 pr-14 font-sans text-sm text-espresso dark:text-cream placeholder-coffee dark:placeholder-cream/30 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isStreaming}
-            className="absolute right-2 flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500 text-black hover:bg-amber-400 disabled:opacity-40 transition-all shadow-lg active:scale-95"
-          >
-            {isStreaming ? (
-              <ArrowsClockwise size={18} className="animate-spin" />
-            ) : (
+        {/* Floating Input Control Bar */}
+        <div className="border-t border-hair bg-cream-deep/40 dark:bg-black/30 p-4">
+          <div className="flex gap-2">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder={`Ask AI Mentor on ${currentTopicObj.title}... (⌘ + Enter to send)`}
+              rows={2}
+              className="flex-1 resize-none rounded-xl border border-hair bg-cream-raised dark:bg-[#0A0C10] p-3 text-xs font-sans text-espresso dark:text-cream placeholder-coffee focus:border-amber-500 focus:outline-none transition-all"
+            />
+            <button
+              onClick={() => handleSendMessage()}
+              disabled={!input.trim() || isStreaming}
+              className="flex items-center justify-center rounded-xl bg-amber-500 px-5 font-mono text-xs font-bold text-black hover:bg-amber-400 disabled:opacity-50 transition-all shadow-md active:scale-95"
+            >
               <PaperPlaneTilt size={18} weight="fill" />
-            )}
-          </button>
-        </form>
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* Code Review Slide-Over Drawer */}
+      <CodeReviewDrawer />
+    </div>
+  );
+}
+
+/**
+ * Message Content Parser:
+ * Dynamically detects Mermaid ```mermaid ``` blocks and renders them with <MermaidRenderer />!
+ */
+function RenderMentorMessage({ content }: { content: string }) {
+  const mermaidRegex = /```mermaid\s*([\s\S]*?)```/g;
+
+  // Split content by mermaid blocks
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = mermaidRegex.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: "text", value: content.substring(lastIndex, match.index) });
+    }
+    parts.push({ type: "mermaid", value: match[1] });
+    lastIndex = mermaidRegex.lastIndex;
+  }
+
+  if (lastIndex < content.length) {
+    parts.push({ type: "text", value: content.substring(lastIndex) });
+  }
+
+  return (
+    <div className="space-y-2">
+      {parts.map((part, idx) => {
+        if (part.type === "mermaid") {
+          return <MermaidRenderer key={idx} chart={part.value} />;
+        }
+        return (
+          <div
+            key={idx}
+            className="prose dark:prose-invert prose-xs max-w-none text-espresso dark:text-cream leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(part.value) }}
+          />
+        );
+      })}
     </div>
   );
 }
