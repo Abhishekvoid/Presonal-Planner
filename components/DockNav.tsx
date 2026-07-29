@@ -95,7 +95,7 @@ export function DockNav({ view, setView }: { view: View; setView: (v: View) => v
             transition={{ type: "spring", stiffness: 340, damping: 30, mass: 0.8 }}
             onMouseMove={(e) => !alwaysOn && mouseX.set(e.clientX)}
             onMouseLeave={() => mouseX.set(Infinity)}
-            className="pointer-events-auto flex items-end gap-1.5 rounded-full border border-white/15 bg-[#050505]/90 px-3 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.8)] backdrop-blur-2xl"
+            className="pointer-events-auto flex items-end gap-1.5 rounded-full border border-hair bg-cream-raised/95 dark:bg-[#050505]/90 px-3 py-2 shadow-2xl backdrop-blur-2xl"
           >
             {ENTRIES.map((e) => (
               <DockItem

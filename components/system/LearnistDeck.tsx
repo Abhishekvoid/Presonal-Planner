@@ -54,18 +54,18 @@ export function ActivityHeatmap({
   const activeDaysCount = days.filter((d) => d.minutes > 0 || d.count > 0).length;
 
   return (
-    <div className="rounded-lg border border-white/10 bg-[#0A0A0E] p-4 text-slate-200">
-      <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
+    <div className="rounded-lg border border-hair bg-cream-raised dark:bg-[#0A0A0E] p-4 text-espresso dark:text-slate-200 shadow-sm">
+      <div className="flex items-center justify-between border-b border-hair pb-3 mb-3">
         <div>
-          <h3 className="font-mono text-xs uppercase tracking-widest text-zinc-400">
+          <h3 className="font-mono text-xs uppercase tracking-widest text-coffee dark:text-zinc-400">
             Activity Heatmap & Proof Log
           </h3>
-          <p className="font-mono text-[11px] text-zinc-300 mt-0.5">
-            <span className="text-emerald-400 font-bold">{activeDaysCount} Days Active</span> •{" "}
-            <span className="text-slate-200 font-bold">{totalMinutes} Mins Logged</span>
+          <p className="font-mono text-[11px] text-coffee dark:text-zinc-300 mt-0.5">
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold">{activeDaysCount} Days Active</span> •{" "}
+            <span className="text-espresso font-bold">{totalMinutes} Mins Logged</span>
           </p>
         </div>
-        <span className="font-mono text-[10px] uppercase text-zinc-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded">
+        <span className="font-mono text-[10px] uppercase text-coffee dark:text-zinc-400 bg-black/5 dark:bg-white/5 border border-hair px-2 py-0.5 rounded">
           Proof Stream
         </span>
       </div>
@@ -73,13 +73,13 @@ export function ActivityHeatmap({
       {/* Grid of 28 day cells */}
       <div className="grid grid-cols-7 gap-1.5 pt-1">
         {days.map((day) => {
-          let levelClass = "bg-white/[0.03] border-white/5";
+          let levelClass = "bg-cream-deep dark:bg-white/[0.03] border-hair text-coffee";
           if (day.minutes > 60 || day.count > 3) {
             levelClass = "bg-emerald-500 border-emerald-400 text-black font-bold shadow-[0_0_8px_rgba(16,185,129,0.4)]";
           } else if (day.minutes > 30 || day.count > 1) {
-            levelClass = "bg-emerald-700/80 border-emerald-500 text-emerald-100";
+            levelClass = "bg-emerald-600 dark:bg-emerald-700/80 border-emerald-500 text-white dark:text-emerald-100 font-semibold";
           } else if (day.minutes > 0 || day.count > 0) {
-            levelClass = "bg-emerald-950/80 border-emerald-800/80 text-emerald-300";
+            levelClass = "bg-emerald-100 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-800/80 text-emerald-800 dark:text-emerald-300";
           }
 
           return (
@@ -141,32 +141,32 @@ export function CodeLabValidator() {
   };
 
   return (
-    <div className="rounded-lg border border-white/10 bg-[#0E0E12] p-4 text-slate-200">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3 mb-3">
+    <div className="rounded-lg border border-hair bg-cream-raised dark:bg-[#0E0E12] p-4 text-espresso dark:text-slate-200 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hair pb-3 mb-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs text-rose-400 font-bold uppercase tracking-wider">
+            <span className="font-mono text-xs text-rose-500 dark:text-rose-400 font-bold uppercase tracking-wider">
               [Lab #04]
             </span>
-            <h3 className="font-mono text-sm font-semibold text-slate-200">
+            <h3 className="font-mono text-sm font-semibold text-espresso dark:text-slate-200">
               Debouncing 3 Ways (Punish Lazy Code)
             </h3>
           </div>
-          <p className="font-mono text-[11px] text-zinc-400 mt-0.5">
+          <p className="font-mono text-[11px] text-coffee dark:text-zinc-400 mt-0.5">
             Write & validate: Naive → Optimized → Advanced (Trailing, Leading, Cancelable)
           </p>
         </div>
 
         {/* Tier Selector */}
-        <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded border border-white/10">
+        <div className="flex items-center gap-1 bg-cream-deep dark:bg-zinc-950 p-1 rounded border border-hair">
           {(["naive", "optimized", "advanced"] as const).map((t) => (
             <button
               key={t}
               onClick={() => handleSelectTier(t)}
               className={`px-2.5 py-0.5 rounded font-mono text-[10px] uppercase transition-all ${
                 tier === t
-                  ? "bg-slate-200 text-black font-bold shadow"
-                  : "text-zinc-400 hover:text-slate-200"
+                  ? "bg-espresso text-cream-base dark:bg-slate-200 dark:text-black font-bold shadow"
+                  : "text-coffee hover:text-espresso dark:text-zinc-400 dark:hover:text-slate-200"
               }`}
             >
               {t}
@@ -176,12 +176,12 @@ export function CodeLabValidator() {
       </div>
 
       {/* Code Editor Preview */}
-      <div className="relative font-mono text-xs bg-[#050505] border border-white/10 rounded p-3 text-emerald-300">
+      <div className="relative font-mono text-xs bg-[#0a0b0e] border border-hair rounded p-3 text-emerald-400">
         <textarea
           value={code}
           onChange={(e) => setCode(e.target.value)}
           rows={7}
-          className="w-full bg-transparent resize-none outline-none font-mono text-xs text-emerald-300 leading-relaxed"
+          className="w-full bg-transparent resize-none outline-none font-mono text-xs text-emerald-400 leading-relaxed"
           spellCheck={false}
         />
         <div className="absolute top-2 right-3 font-mono text-[9px] text-zinc-500 uppercase">

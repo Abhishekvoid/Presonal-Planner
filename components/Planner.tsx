@@ -179,14 +179,14 @@ function Header({
   replayIntro?: () => void;
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-white/10 bg-[#050505]/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-hair bg-cream-base/90 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-6xl items-center gap-2 md:gap-4 px-4 sm:px-8 py-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 rounded">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>LEARNIST // ACTIVE</span>
           </div>
-          <span className="font-mono text-xs font-semibold tracking-wider text-slate-200 hidden sm:inline-block">
+          <span className="font-mono text-xs font-semibold tracking-wider text-espresso hidden sm:inline-block">
             CODEX_ENGINEER
           </span>
         </div>
@@ -195,14 +195,14 @@ function Header({
           <button
             onClick={onCommand}
             aria-label="Open command palette"
-            className="group flex items-center gap-2 rounded border border-white/15 bg-white/[0.04] px-2.5 py-1 text-slate-300 transition-all hover:border-white/30 hover:bg-white/[0.08]"
+            className="group flex items-center gap-2 rounded border border-hair bg-cream-raised px-2.5 py-1 text-espresso transition-all hover:border-olive/30 shadow-sm"
           >
-            <span className="text-[11px] font-mono text-zinc-400 group-hover:text-slate-200">Search Deck</span>
-            <kbd className="rounded border border-white/20 bg-zinc-900 px-1.5 py-[1px] font-mono text-[10px] text-zinc-300 group-hover:text-white">⌘K</kbd>
+            <span className="text-[11px] font-mono text-coffee group-hover:text-espresso">Search Deck</span>
+            <kbd className="rounded border border-hair bg-cream-deep px-1.5 py-[1px] font-mono text-[10px] text-coffee">⌘K</kbd>
           </button>
           <button
             onClick={onBackup}
-            className="font-mono text-[11px] text-zinc-400 hover:text-slate-200 transition-colors hidden md:inline-block px-2 py-1 rounded hover:bg-white/5"
+            className="font-mono text-[11px] text-coffee hover:text-espresso transition-colors hidden md:inline-block px-2 py-1 rounded hover:bg-black/5 dark:hover:bg-white/5"
           >
             [Backup]
           </button>
