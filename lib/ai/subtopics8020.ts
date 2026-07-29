@@ -7,11 +7,18 @@ export interface Subtopic8020 {
   done: boolean;
 }
 
+export interface DsaProblemItem {
+  title: string;
+  difficulty: "easy" | "med" | "hard";
+  tip: string;
+}
+
 export interface Topic8020Plan {
   topicId: string;
   topicTitle: string;
   sprintDay: number;
   subtopics: Subtopic8020[];
+  dsaProblems: DsaProblemItem[];
   whatToSkip: string[];
 }
 
@@ -61,6 +68,11 @@ export const DEFAULT_8020_PLANS: Record<string, Topic8020Plan> = {
         practiceDrill: "Run API endpoint profiler to verify zero duplicate queries on 500 nested records.",
         done: false,
       },
+    ],
+    dsaProblems: [
+      { title: "Two Sum (LC #1)", difficulty: "easy", tip: "HashMap: value → index. One pass O(N)." },
+      { title: "Move Zeroes (LC #283)", difficulty: "easy", tip: "Two pointer: slow tracks insertion point." },
+      { title: "3Sum (LC #15)", difficulty: "med", tip: "Sort + two pointer. Skip duplicates carefully." },
     ],
     whatToSkip: [
       "Obscure third-party ORM mixins",
@@ -114,6 +126,11 @@ export const DEFAULT_8020_PLANS: Record<string, Topic8020Plan> = {
         done: false,
       },
     ],
+    dsaProblems: [
+      { title: "Binary Search (LC #704)", difficulty: "easy", tip: "left, right, mid=(l+r)//2. Off-by-one check." },
+      { title: "Search Insert Position (LC #35)", difficulty: "easy", tip: "Binary search — return left at the end." },
+      { title: "Search in Rotated Sorted Array (LC #33)", difficulty: "med", tip: "Determine which half is sorted, binary search." },
+    ],
     whatToSkip: [
       "Manual C-extension Postgres plugin development",
       "Obscure spatial R-Tree algorithms (focus on B-Tree and GIN)",
@@ -156,6 +173,11 @@ export const DEFAULT_8020_PLANS: Record<string, Topic8020Plan> = {
         practiceDrill: "Explain trade-offs between allkeys-lru vs volatile-lfu for API caching.",
         done: false,
       },
+    ],
+    dsaProblems: [
+      { title: "Longest Substring Without Repeating (LC #3)", difficulty: "med", tip: "Sliding window + set. Expand right, shrink left." },
+      { title: "Permutation in String (LC #567)", difficulty: "med", tip: "Fixed-size window, Counter frequency match." },
+      { title: "Minimum Size Subarray Sum (LC #209)", difficulty: "med", tip: "Variable sliding window — shrink left on sum >= target." },
     ],
     whatToSkip: [
       "Compiling Redis C source from scratch",
@@ -200,6 +222,11 @@ export const DEFAULT_8020_PLANS: Record<string, Topic8020Plan> = {
         done: false,
       },
     ],
+    dsaProblems: [
+      { title: "Number of Islands (LC #200)", difficulty: "med", tip: "BFS or DFS grid traversal. Mark visited in-place." },
+      { title: "Clone Graph (LC #133)", difficulty: "med", tip: "BFS + hashmap mapping old node → cloned node." },
+      { title: "Course Schedule (LC #207)", difficulty: "med", tip: "DFS cycle detection on directed graph (3-state)." },
+    ],
     whatToSkip: [
       "Custom Celery flower dashboard extensions",
       "Obscure AMQP protocol internals beyond basic queue routing",
@@ -243,6 +270,11 @@ export const DEFAULT_8020_PLANS: Record<string, Topic8020Plan> = {
         done: false,
       },
     ],
+    dsaProblems: [
+      { title: "Top K Frequent Elements (LC #347)", difficulty: "med", tip: "Counter + heapq.nlargest or bucket sort." },
+      { title: "Course Schedule II (LC #210)", difficulty: "med", tip: "Topological sort — BFS Kahn's algorithm." },
+      { title: "Task Scheduler (LC #621)", difficulty: "med", tip: "Heap + greedy. Execute most frequent task first." },
+    ],
     whatToSkip: [
       "PCI-DSS compliance hardware HSM integration (focus on tokenized architecture)",
       "Legacy card swipe protocol details",
@@ -285,6 +317,10 @@ export const DEFAULT_8020_PLANS: Record<string, Topic8020Plan> = {
         practiceDrill: "Compute Faithfulness and Context Recall metrics across 20 test query benchmarks.",
         done: false,
       },
+    ],
+    dsaProblems: [
+      { title: "Pacific Atlantic Water Flow (LC #417)", difficulty: "med", tip: "BFS from both ocean coasts inward. Find intersection." },
+      { title: "Word Ladder (LC #127)", difficulty: "hard", tip: "BFS graph traversal. Level = shortest transformation steps." },
     ],
     whatToSkip: [
       "Training transformer embedding models from scratch",
@@ -337,6 +373,11 @@ export function get8020PlanForTopic(topicId: string, topicTitle?: string): Topic
         practiceDrill: "Answer 3 senior interview probing questions without notes.",
         done: false,
       },
+    ],
+    dsaProblems: [
+      { title: "Two Sum (LC #1)", difficulty: "easy", tip: "HashMap O(N) lookup." },
+      { title: "Binary Search (LC #704)", difficulty: "easy", tip: "O(log N) divide and conquer." },
+      { title: "LRU Cache (LC #146)", difficulty: "med", tip: "HashMap + Doubly LinkedList O(1) ops." },
     ],
     whatToSkip: [
       "Low-ROI boilerplate code",

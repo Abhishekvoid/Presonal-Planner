@@ -380,49 +380,91 @@ export function MentorView() {
 
           {/* TAB 1: 80/20 HIGH-ROI FOCUS CHECKLIST */}
           {sidebarTab === "plan8020" && (
-            <div className="space-y-3 max-h-64 overflow-y-auto pr-1 text-xs">
-              <div className="font-mono text-[9px] uppercase tracking-wider text-amber-600 dark:text-amber-400 font-bold">
-                Top 20% High-ROI Concepts (80% Mastery)
-              </div>
-              <div className="space-y-2">
-                {plan8020.subtopics.map((subtopic) => {
-                  const isChecked = !!currentProgress.subtopicsDone[subtopic.id];
-                  return (
-                    <div
-                      key={subtopic.id}
-                      className="border-b border-hair/60 pb-2 space-y-1 transition-colors"
-                    >
-                      <div className="flex items-start gap-2">
-                        <button
-                          onClick={() => toggleSubtopicDone(activeTopicId, subtopic.id)}
-                          className="mt-0.5 text-coffee hover:text-amber-500 transition-colors"
-                        >
-                          {isChecked ? (
-                            <CheckSquare size={15} className="text-emerald-500" />
-                          ) : (
-                            <Square size={15} />
-                          )}
-                        </button>
-                        <div className="flex-1">
-                          <div className={`font-semibold ${isChecked ? "line-through text-coffee opacity-60" : "text-espresso dark:text-cream"}`}>
-                            {subtopic.title}
-                          </div>
-                          <p className="text-[11px] text-coffee leading-normal mt-0.5">
-                            {subtopic.description}
-                          </p>
+            <div className="space-y-4 max-h-64 overflow-y-auto pr-1 text-xs">
+              {/* Architecture Concepts */}
+              <div>
+                <div className="font-mono text-[9px] uppercase tracking-wider text-amber-600 dark:text-amber-400 font-bold mb-2">
+                  Top 20% High-ROI Architecture Concepts
+                </div>
+                <div className="space-y-2">
+                  {plan8020.subtopics.map((subtopic) => {
+                    const isChecked = !!currentProgress.subtopicsDone[subtopic.id];
+                    return (
+                      <div
+                        key={subtopic.id}
+                        className="border-b border-hair/60 pb-2 space-y-1 transition-colors"
+                      >
+                        <div className="flex items-start gap-2">
                           <button
-                            onClick={() => handleSendMessage(`Mentor, let's drill on subtopic: ${subtopic.title}. ${subtopic.practiceDrill}`)}
-                            className="mt-1 inline-flex items-center gap-1 font-mono text-[10px] text-amber-600 dark:text-amber-400 font-semibold hover:underline"
+                            onClick={() => toggleSubtopicDone(activeTopicId, subtopic.id)}
+                            className="mt-0.5 text-coffee hover:text-amber-500 transition-colors"
                           >
-                            <span>⚡ Start Practice Drill</span>
-                            <ArrowUpRight size={10} />
+                            {isChecked ? (
+                              <CheckSquare size={15} className="text-emerald-500" />
+                            ) : (
+                              <Square size={15} />
+                            )}
                           </button>
+                          <div className="flex-1">
+                            <div className={`font-semibold ${isChecked ? "line-through text-coffee opacity-60" : "text-espresso dark:text-cream"}`}>
+                              {subtopic.title}
+                            </div>
+                            <p className="text-[11px] text-coffee leading-normal mt-0.5">
+                              {subtopic.description}
+                            </p>
+                            <button
+                              onClick={() => handleSendMessage(`Mentor, let's drill on subtopic: ${subtopic.title}. ${subtopic.practiceDrill}`)}
+                              className="mt-1 inline-flex items-center gap-1 font-mono text-[10px] text-amber-600 dark:text-amber-400 font-semibold hover:underline"
+                            >
+                              <span>⚡ Start Practice Drill</span>
+                              <ArrowUpRight size={10} />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
+
+              {/* 45 Stored DSA Problems */}
+              {plan8020.dsaProblems && plan8020.dsaProblems.length > 0 && (
+                <div className="pt-2 border-t border-hair">
+                  <div className="font-mono text-[9px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-bold mb-2 flex items-center justify-between">
+                    <span>💡 80/20 DSA Drills (45 Stored)</span>
+                    <span className="text-[8px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">LeetCode</span>
+                  </div>
+                  <div className="space-y-2">
+                    {plan8020.dsaProblems.map((prob, idx) => (
+                      <div key={idx} className="border-b border-hair/50 pb-2 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-espresso dark:text-cream">{prob.title}</span>
+                          <span className={`font-mono text-[8px] uppercase font-bold px-1.5 py-0.5 rounded border ${
+                            prob.difficulty === "easy"
+                              ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/30"
+                              : prob.difficulty === "med"
+                              ? "text-amber-500 bg-amber-500/10 border-amber-500/30"
+                              : "text-rose-500 bg-rose-500/10 border-rose-500/30"
+                          }`}>
+                            {prob.difficulty}
+                          </span>
+                        </div>
+                        <p className="text-[10px] font-mono text-coffee">{prob.tip}</p>
+                        <button
+                          onClick={() => {
+                            setMode("mock-interview");
+                            handleSendMessage(`Mentor, let's drill on DSA problem ${prob.title}. Guide me through optimal O(N) approach, edge cases, and code implementation.`);
+                          }}
+                          className="inline-flex items-center gap-1 font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline"
+                        >
+                          <span>⚡ Drill DSA Problem</span>
+                          <ArrowUpRight size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
