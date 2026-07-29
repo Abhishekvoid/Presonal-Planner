@@ -20,34 +20,33 @@
 */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   --font-display: 'Satoshi', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Surfaces — Vantablack & Dark Charcoal Hardware Palette */
-  --cream-base-rgb: 5 5 5; /* #050505 Vantablack page background */
-  --cream-raised-rgb: 14 14 18; /* #0E0E12 Raised card surface */
-  --cream-deep-rgb: 9 9 11; /* #09090B Recessed inner core surface */
+  /* Surfaces — Warm Editorial Light Palette */
+  --cream-base-rgb: 248 246 242; /* #F8F6F2 Warm paper background */
+  --cream-raised-rgb: 255 255 255; /* #FFFFFF Clean white raised card surface */
+  --cream-deep-rgb: 238 234 226; /* #EEEAE2 Recessed inner surface */
 
-  /* Typography — Pure Silver & High-Contrast Monochrome */
-  --espresso-rgb: 226 232 240; /* #E2E8F0 High-contrast silver primary text */
-  --coffee-rgb: 161 161 170; /* #A1A1AA Zinc secondary text */
-  --coffee-soft-rgb: 113 113 122; /* #71717A Muted code text */
+  /* Typography — Dark Espresso & Muted Coffee */
+  --espresso-rgb: 28 25 23; /* #1C1917 High-contrast dark primary text */
+  --coffee-rgb: 87 83 78; /* #57534E Coffee secondary text */
+  --coffee-soft-rgb: 120 113 108; /* #78716C Muted text */
 
-  /* Accents — Crisp Silver Highlight, Emerald Status, Slate Blue */
-  --olive-rgb: 226 232 240; /* Silver primary status */
-  --olive-deep-rgb: 255 255 255; /* Pure white active emphasis */
-  --olive-soft-rgb: 161 161 170; /* Metallic silver */
-  --clay-rgb: 244 63 94; /* High alert rose red */
-  --clay-deep-rgb: 225 29 72; /* Deep warning */
-  --slate-rgb: 148 163 184; /* Steel slate */
+  /* Accents — Olive, Clay, Slate */
+  --olive-rgb: 87 101 74; /* Warm olive */
+  --olive-deep-rgb: 43 51 37;
+  --olive-soft-rgb: 120 135 106;
+  --clay-rgb: 217 83 79;
+  --clay-deep-rgb: 180 50 40;
+  --slate-rgb: 100 116 139;
 
   /* Hairline rule + modal scrim */
-  --hair: rgba(255, 255, 255, 0.12);
-  --scrim-rgb: 3 3 4;
-  --grain-opacity: 0.04;
-
-  --frame-glow: rgba(255, 255, 255, 0.15);
+  --hair: rgba(28, 25, 23, 0.08);
+  --scrim-rgb: 28 25 23;
+  --grain-opacity: 0.03;
+  --frame-glow: rgba(0, 0, 0, 0.06);
 
   /* Derived full-color vars */
   --cream-base: rgb(var(--cream-base-rgb));
@@ -62,7 +61,7 @@
   --clay: rgb(var(--clay-rgb));
   --clay-deep: rgb(var(--clay-deep-rgb));
   --slate: rgb(var(--slate-rgb));
-  --flow-rgb: 148 163 184;
+  --flow-rgb: 100 116 139;
   --flow: rgb(var(--flow-rgb));
 }
 
@@ -96,8 +95,8 @@
   html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    background-color: #050505;
-    color: #E2E8F0;
+    background-color: var(--cream-base);
+    color: var(--espresso);
   }
 
   body {
