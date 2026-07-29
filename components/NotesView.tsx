@@ -90,6 +90,20 @@ export function NotesView() {
     return notes.find((n) => n.id === activeId) ?? null;
   }, [notes, activeId]);
 
+  const handleOpenNoteFromGraph = (noteId: string) => {
+    setActiveId(noteId);
+    setActiveNoteId(noteId);
+    setViewMode("editor");
+  };
+
+  const handleCreateNoteFromGraph = (topicTitle: string) => {
+    const defaultContent = `# ${topicTitle}\n\nKey Architectural Concepts & First Principles:\n- \n\nImplementation Notes:\n\`\`\`ts\n// Code snippet\n\`\`\``;
+    const newNoteId = addNote(topicTitle, defaultContent, "Backend");
+    setActiveId(newNoteId);
+    setActiveNoteId(newNoteId);
+    setViewMode("editor");
+  };
+
   // Trigger Prism highlighting whenever notes preview tab is shown, content changes, or theme changes.
   useEffect(() => {
     if (editorTab === "preview") {
@@ -185,11 +199,7 @@ export function NotesView() {
     setActiveNoteId(id);
   };
 
-  // Opening a note from the graph flips back to the editor with it active.
-  const handleOpenNoteFromGraph = (id: string) => {
-    handleSetActiveNote(id);
-    setViewMode("editor");
-  };
+
 
   // Task-selection handler: auto-create or navigate to the note for the selected task
   const handleTaskSelect = (taskId: string) => {
@@ -515,6 +525,7 @@ export function NotesView() {
           tasks={tasks}
           days={days}
           onOpenNote={handleOpenNoteFromGraph}
+          onCreateNote={handleCreateNoteFromGraph}
         />
       ) : (
       <div className="flex items-stretch gap-0 min-h-[520px]">

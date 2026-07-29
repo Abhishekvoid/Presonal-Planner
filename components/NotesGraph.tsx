@@ -15,10 +15,12 @@ import {
   ArrowUpRight,
   CheckCircle,
   Brain,
+  Plus,
+  BookOpen,
 } from "@phosphor-icons/react";
 import { Note, Task, Day } from "@/lib/types";
 
-interface SpatialNode {
+export interface SpatialNode {
   id: string;
   type: "subject" | "chapter" | "concept";
   title: string;
@@ -30,18 +32,19 @@ interface SpatialNode {
   y: number;
   parentId?: string;
   content?: string;
+  noteId?: string; // Attached user Note ID
 }
 
-const INITIAL_SPATIAL_NODES: SpatialNode[] = [
+const BASE_SPATIAL_NODES: SpatialNode[] = [
   // Subject Root Node
   {
     id: "root-subject",
     type: "subject",
     title: "Senior Backend & Systems Engineering",
-    subtitle: "10 Sprint Chapters · 48 Core Systems Architecture Concepts",
+    subtitle: "10 Sprint Chapters · Core Architecture & Vault Notes",
     status: "10/10 READY",
     x: 80,
-    y: 220,
+    y: 260,
   },
   // Chapter Nodes
   {
@@ -103,7 +106,7 @@ const INITIAL_SPATIAL_NODES: SpatialNode[] = [
     title: "WAL & Crash Recovery Guarantee",
     subtitle: "How Write-Ahead Logging prevents data loss on power failure",
     x: 850,
-    y: 200,
+    y: 180,
     parentId: "ch-2",
     content: "Every modification is appended sequentially to the WAL disk file before page dirtying in RAM buffer pool.",
   },
@@ -113,7 +116,7 @@ const INITIAL_SPATIAL_NODES: SpatialNode[] = [
     title: "LSM Compaction & Bloom Filters",
     subtitle: "Optimizing write amplification in RocksDB/Cassandra",
     x: 850,
-    y: 320,
+    y: 300,
     parentId: "ch-2",
     content: "Size-tiered vs Leveled compaction algorithms. Bloom filters avoid unnecessary disk reads for non-existent keys.",
   },
@@ -123,7 +126,7 @@ const INITIAL_SPATIAL_NODES: SpatialNode[] = [
     title: "Raft Heartbeats & Term Numbers",
     subtitle: "Handling network partitions and stale leaders",
     x: 850,
-    y: 460,
+    y: 420,
     parentId: "ch-3",
     content: "Leader sends periodic AppendEntries heartbeats. Higher term numbers instantly step down stale leaders.",
   },
@@ -134,10 +137,93 @@ interface NotesGraphProps {
   tasks?: Task[];
   days?: Day[];
   onOpenNote?: (id: string) => void;
+  onCreateNote?: (title: string) => void;
 }
 
-export function NotesGraph({ notes = [], tasks = [], days = [], onOpenNote }: NotesGraphProps) {
-  const [nodes, setNodes] = useState<SpatialNode[]>(INITIAL_SPATIAL_NODES);
+export function NotesGraph({
+  notes = [],
+  tasks = [],
+  days = [],
+  onOpenNote,
+  onCreateNote,
+}: NotesGraphProps) {
+  // Dynamically compute spatial nodes by attaching user notes & adding vault nodes
+  const dynamicNodes = useMemo(() => {
+    const nodeMap = new Map<string, SpatialNode>();
+
+    // Copy base nodes
+    BASE_SPATIAL_NODES.forEach((n) => {
+      nodeMap.set(n.id, { ...n });
+    });
+
+    const usedNoteIds = new Set<string>();
+
+    // Match existing user notes to base nodes by title/keyword
+    nodeMap.forEach((node, key) => {
+      const match = notes.find((n) => {
+        if (usedNoteIds.has(n.id)) return false;
+        const noteTitle = n.title.toLowerCase();
+        const nodeTitle = node.title.toLowerCase();
+        return (
+          noteTitle.includes(nodeTitle) ||
+          nodeTitle.includes(noteTitle) ||
+          (node.subtitle && noteTitle.includes(node.subtitle.toLowerCase()))
+        );
+      });
+
+      if (match) {
+        node.noteId = match.id;
+        usedNoteIds.add(match.id);
+      }
+    });
+
+    // For any unlinked user notes, dynamically create concept nodes in a Vault Notes Cluster
+    const unlinkedNotes = notes.filter((n) => !usedNoteIds.has(n.id));
+
+    if (unlinkedNotes.length > 0) {
+      // Add Vault Chapter Node
+      const vaultChapterId = "ch-vault";
+      nodeMap.set(vaultChapterId, {
+        id: vaultChapterId,
+        type: "chapter",
+        title: "Vault Notes Cluster",
+        subtitle: `${unlinkedNotes.length} User Notes`,
+        sourcesCount: unlinkedNotes.length,
+        status: "ready",
+        chapterNumber: 99,
+        x: 480,
+        y: 800,
+        parentId: "root-subject",
+        content: "Custom notes created in your study vault.",
+      });
+
+      // Add concept nodes for each unlinked note
+      unlinkedNotes.forEach((n, idx) => {
+        const conceptId = `user-note-${n.id}`;
+        nodeMap.set(conceptId, {
+          id: conceptId,
+          type: "concept",
+          title: n.title,
+          subtitle: n.folder ? `Folder: ${n.folder}` : "Vault Note",
+          x: 850,
+          y: 600 + idx * 110,
+          parentId: vaultChapterId,
+          noteId: n.id,
+          content: n.content,
+        });
+      });
+    }
+
+    return Array.from(nodeMap.values());
+  }, [notes]);
+
+  const [nodes, setNodes] = useState<SpatialNode[]>(dynamicNodes);
+
+  // Synchronize when dynamicNodes updates (e.g. new note added)
+  useEffect(() => {
+    setNodes(dynamicNodes);
+  }, [dynamicNodes]);
+
   const [pan, setPan] = useState({ x: 40, y: 30 });
   const [zoom, setZoom] = useState(1);
   const [isPanning, setIsPanning] = useState(false);
@@ -154,7 +240,6 @@ export function NotesGraph({ notes = [], tasks = [], days = [], onOpenNote }: No
 
   // Handle Mouse Pan
   const handleMouseDown = (e: React.MouseEvent) => {
-    // If clicking directly on container background (not a card)
     if ((e.target as HTMLElement).classList.contains("canvas-bg")) {
       setIsPanning(true);
       isDraggingRef.current = true;
@@ -172,7 +257,6 @@ export function NotesGraph({ notes = [], tasks = [], days = [], onOpenNote }: No
         y: startPanRef.current.y + dy,
       });
     } else if (draggedNodeId) {
-      // Dragging a specific card node
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
       const mouseCanvasX = (e.clientX - rect.left - pan.x) / zoom;
@@ -216,13 +300,11 @@ export function NotesGraph({ notes = [], tasks = [], days = [], onOpenNote }: No
     });
   };
 
-  // Reset View Zoom/Pan
   const handleResetView = () => {
     setPan({ x: 40, y: 30 });
     setZoom(1);
   };
 
-  // Filter nodes by search query
   const filteredNodes = useMemo(() => {
     if (!searchQuery.trim()) return nodes;
     const q = searchQuery.toLowerCase();
@@ -255,13 +337,12 @@ export function NotesGraph({ notes = [], tasks = [], days = [], onOpenNote }: No
         }}
       >
         {/* SVG BEZIER CONNECTOR THREADS */}
-        <svg className="absolute inset-0 h-[3000px] w-[3000px] overflow-visible pointer-events-none">
+        <svg className="absolute inset-0 h-[4000px] w-[4000px] overflow-visible pointer-events-none">
           {nodes.map((node) => {
             if (!node.parentId) return null;
             const parent = nodes.find((p) => p.id === node.parentId);
             if (!parent) return null;
 
-            // Compute center connection coordinates
             const isHovered =
               hoveredNodeId === node.id || hoveredNodeId === parent.id;
             const isSelected =
@@ -270,9 +351,8 @@ export function NotesGraph({ notes = [], tasks = [], days = [], onOpenNote }: No
             const pX = parent.type === "subject" ? parent.x + 320 : parent.x + 260;
             const pY = parent.type === "subject" ? parent.y + 70 : parent.y + 45;
             const cX = node.x;
-            const cY = node.type === "concept" ? node.y + 40 : node.y + 45;
+            const cY = node.type === "concept" ? node.y + 45 : node.y + 45;
 
-            // Bezier Curve
             const controlOffsetX = Math.abs(cX - pX) * 0.5;
             const pathD = `M ${pX} ${pY} C ${pX + controlOffsetX} ${pY}, ${cX - controlOffsetX} ${cY}, ${cX} ${cY}`;
 
@@ -292,7 +372,6 @@ export function NotesGraph({ notes = [], tasks = [], days = [], onOpenNote }: No
                   strokeDasharray={node.type === "concept" ? "5,5" : "none"}
                   className="transition-all duration-300"
                 />
-                {/* Connector Endpoint Glowing Dot */}
                 <circle
                   cx={cX}
                   cy={cY}
@@ -309,6 +388,7 @@ export function NotesGraph({ notes = [], tasks = [], days = [], onOpenNote }: No
         {filteredNodes.map((node) => {
           const isSelected = selectedNode?.id === node.id;
           const isHovered = hoveredNodeId === node.id;
+          const hasNote = !!node.noteId;
 
           return (
             <div
@@ -329,7 +409,7 @@ export function NotesGraph({ notes = [], tasks = [], days = [], onOpenNote }: No
                   ? "w-80"
                   : node.type === "chapter"
                   ? "w-64"
-                  : "w-60"
+                  : "w-64"
               }`}
             >
               {/* SUBJECT ROOT NODE CARD */}
@@ -365,14 +445,44 @@ export function NotesGraph({ notes = [], tasks = [], days = [], onOpenNote }: No
                       : "border-hair bg-cream-raised dark:bg-[#12151E]/90 shadow-md hover:border-amber-500/40"
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-                    <h3 className="font-semibold text-xs tracking-tight text-espresso">
-                      {node.title}
-                    </h3>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                      <h3 className="font-semibold text-xs tracking-tight text-espresso">
+                        {node.title}
+                      </h3>
+                    </div>
                   </div>
-                  <div className="mt-2 flex items-center justify-between font-mono text-[10.5px] text-coffee">
-                    <span>{node.sourcesCount} sources · ready</span>
+
+                  <p className="mt-1 font-mono text-[11px] text-coffee">
+                    {node.subtitle}
+                  </p>
+
+                  <div className="mt-3 flex items-center justify-between border-t border-hair pt-2 font-mono text-[10.5px]">
+                    {hasNote ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (node.noteId && onOpenNote) onOpenNote(node.noteId);
+                        }}
+                        className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold hover:underline"
+                      >
+                        <BookOpen size={13} />
+                        <span>Open Note</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onCreateNote) onCreateNote(node.title);
+                        }}
+                        className="inline-flex items-center gap-1 text-amber-500 font-bold hover:underline"
+                      >
+                        <Plus size={13} />
+                        <span>Add Note</span>
+                      </button>
+                    )}
+
                     <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-amber-500" />
                   </div>
                 </div>
@@ -381,7 +491,7 @@ export function NotesGraph({ notes = [], tasks = [], days = [], onOpenNote }: No
               {/* CONCEPT NODE CARD */}
               {node.type === "concept" && (
                 <div
-                  className={`group relative overflow-hidden rounded-lg border p-3.5 transition-all ${
+                  className={`group relative overflow-hidden rounded-xl border p-4 transition-all ${
                     isSelected
                       ? "border-amber-500/80 bg-cream-raised dark:bg-[#1A2030] shadow-[0_0_15px_rgba(245,158,11,0.2)]"
                       : "border-hair bg-cream-raised dark:bg-[#141826]/85 shadow-sm hover:border-amber-500/40"
@@ -389,14 +499,47 @@ export function NotesGraph({ notes = [], tasks = [], days = [], onOpenNote }: No
                 >
                   <div className="flex items-center justify-between font-mono text-[9px] uppercase font-bold text-coffee">
                     <span>PINNED · CONCEPT</span>
-                    <span className="text-amber-500 font-semibold">V2</span>
+                    {hasNote ? (
+                      <span className="text-emerald-500 font-semibold flex items-center gap-1">
+                        <CheckCircle size={11} /> Note Linked
+                      </span>
+                    ) : (
+                      <span className="text-amber-500 font-semibold">Ready</span>
+                    )}
                   </div>
+
                   <h4 className="mt-1 font-semibold text-xs text-espresso leading-snug">
                     {node.title}
                   </h4>
                   <p className="mt-1 font-mono text-[10.5px] text-coffee line-clamp-2">
                     {node.subtitle}
                   </p>
+
+                  <div className="mt-3 flex items-center justify-between border-t border-hair pt-2 font-mono text-[10.5px]">
+                    {hasNote ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (node.noteId && onOpenNote) onOpenNote(node.noteId);
+                        }}
+                        className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold hover:underline"
+                      >
+                        <BookOpen size={13} />
+                        <span>Open Note</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onCreateNote) onCreateNote(node.title);
+                        }}
+                        className="inline-flex items-center gap-1 text-amber-500 font-bold hover:underline"
+                      >
+                        <Plus size={13} />
+                        <span>Add Note</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -453,8 +596,7 @@ export function NotesGraph({ notes = [], tasks = [], days = [], onOpenNote }: No
         <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-hair bg-cream-raised/90 dark:bg-[#12151E]/90 px-4 py-2 font-mono text-xs text-coffee shadow-xl backdrop-blur-md">
           <span className="font-bold text-espresso">drag</span> to pan ·{" "}
           <span className="font-bold text-espresso">scroll</span> to zoom ·{" "}
-          <span className="font-bold text-espresso">drag card</span> to arrange ·{" "}
-          <span className="font-bold text-espresso">click card</span> to inspect
+          <span className="font-bold text-espresso">click Open Note / + Add Note</span>
         </div>
 
         {/* Center Pill */}
@@ -512,12 +654,36 @@ export function NotesGraph({ notes = [], tasks = [], days = [], onOpenNote }: No
                   <p>{selectedNode.content}</p>
                 </div>
               )}
+
+              <div className="mt-6">
+                {selectedNode.noteId ? (
+                  <button
+                    onClick={() => {
+                      if (selectedNode.noteId && onOpenNote) onOpenNote(selectedNode.noteId);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 font-mono text-xs font-bold text-white hover:bg-emerald-500 shadow-md transition-all"
+                  >
+                    <BookOpen size={16} />
+                    <span>Open Attached Note</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (onCreateNote) onCreateNote(selectedNode.title);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 font-mono text-xs font-bold text-black hover:bg-amber-400 shadow-md transition-all"
+                  >
+                    <Plus size={16} />
+                    <span>Create Note for Topic</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="border-t border-hair pt-4 flex justify-end">
               <button
                 onClick={() => setSelectedNode(null)}
-                className="rounded-xl bg-amber-500 px-4 py-2 font-mono text-xs font-bold text-black hover:bg-amber-400 shadow-md"
+                className="rounded-xl px-4 py-2 font-mono text-xs text-coffee hover:text-espresso"
               >
                 Close Inspector
               </button>
