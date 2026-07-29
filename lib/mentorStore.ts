@@ -69,7 +69,7 @@ export const useMentorStore = create<MentorState>()(
       activeMode: "grill",
       customApiKey: "",
       provider: "openrouter",
-      selectedModel: "deepseek/deepseek-v4-flash:free",
+      selectedModel: "deepseek/deepseek-v4-flash",
 
       threads: {
         "general-backend": [

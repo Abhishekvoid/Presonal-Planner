@@ -392,7 +392,7 @@ export function MentorView() {
                       className="mt-1 w-full rounded-lg border border-hair bg-cream-deep dark:bg-black/60 px-3 py-2 font-mono text-xs text-espresso dark:text-cream"
                     >
                       <option value="auto">⚡ Auto-Switch (DeepSeek v4 Flash for Reasoning, Nemotron 3 550B for Coding)</option>
-                      <option value="deepseek/deepseek-v4-flash:free">deepseek/deepseek-v4-flash:free (Reasoning & Systems Grill)</option>
+                      <option value="deepseek/deepseek-v4-flash">deepseek/deepseek-v4-flash (Reasoning & Systems Grill)</option>
                       <option value="nvidia/nemotron-3-ultra-550b-a55b:free">nvidia/nemotron-3-ultra-550b-a55b:free (Coding & Intelligence)</option>
                     </select>
                   </div>
