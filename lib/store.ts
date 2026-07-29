@@ -64,6 +64,8 @@ interface PlannerStore extends PlannerState {
   addTask: (input: Omit<Task, "id" | "done" | "order">) => void;
   updateTask: (id: string, patch: Partial<Omit<Task, "id">>) => void;
   deleteTask: (id: string) => void;
+  markDayTasksDone: (sprintDay: number) => void;
+  markTaskDoneByTitle: (titleQuery: string) => void;
 
   // days
   addDay: (input: Omit<Day, "id" | "order">) => string;
@@ -166,6 +168,36 @@ export const usePlanner = create<PlannerStore>()(
 
       deleteTask: (id) =>
         set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
+
+      markDayTasksDone: (sprintDay: number) => {
+        set((s) => {
+          const dayObj = s.days.find(
+            (d) => d.order === sprintDay - 1 || d.title.toLowerCase().includes(`day ${sprintDay}`)
+          );
+          if (!dayObj) return {};
+
+          const nowIso = new Date().toISOString();
+          return {
+            tasks: s.tasks.map((t) =>
+              t.dayId === dayObj.id ? { ...t, done: true, doneAt: t.doneAt || nowIso } : t
+            ),
+          };
+        });
+      },
+
+      markTaskDoneByTitle: (titleQuery: string) => {
+        set((s) => {
+          const lower = titleQuery.toLowerCase();
+          const nowIso = new Date().toISOString();
+          return {
+            tasks: s.tasks.map((t) =>
+              t.text.toLowerCase().includes(lower) || lower.includes(t.text.toLowerCase())
+                ? { ...t, done: true, doneAt: t.doneAt || nowIso }
+                : t
+            ),
+          };
+        });
+      },
 
       addDay: (input) => {
         const id = uid("day");

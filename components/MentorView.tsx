@@ -312,6 +312,14 @@ export function MentorView() {
         if (meta.rank) {
           setCandidateRank(activeTopicId, meta.rank, meta.progressPct);
         }
+        if (meta.progressPct === 100 || (Array.isArray(meta.completedSteps) && meta.completedSteps.includes(13))) {
+          try {
+            const { usePlanner } = require("@/lib/store");
+            usePlanner.getState().markDayTasksDone(currentTopicObj.day);
+          } catch (e) {
+            // Ignore
+          }
+        }
       } catch (e) {
         // Silent fail on incomplete JSON chunk
       }

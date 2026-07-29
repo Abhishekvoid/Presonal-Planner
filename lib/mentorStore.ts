@@ -239,6 +239,20 @@ export const useMentorStore = create<MentorState>()(
           const nextCompleted = [...current.completedSteps, stepId].sort((a, b) => a - b);
           const nextScorePct = Math.round((nextCompleted.length / 13) * 100);
 
+          // AUTO-SYNC TO MAIN PLANNER STORE (Today View & Progress Area!)
+          if (nextCompleted.length >= 13 || stepId === 13) {
+            try {
+              const { usePlanner } = require("./store");
+              const dayMatch = topicId.match(/day-(\d+)/);
+              if (dayMatch && dayMatch[1]) {
+                const sprintDay = parseInt(dayMatch[1], 10);
+                usePlanner.getState().markDayTasksDone(sprintDay);
+              }
+            } catch (e) {
+              // Ignore
+            }
+          }
+
           return {
             topicProgress: {
               ...state.topicProgress,
@@ -266,6 +280,16 @@ export const useMentorStore = create<MentorState>()(
             ...current.subtopicsDone,
             [subtopicId]: !current.subtopicsDone[subtopicId],
           };
+
+          // AUTO-SYNC TO MAIN PLANNER STORE (Today View & Progress Area!)
+          if (nextSubtopics[subtopicId]) {
+            try {
+              const { usePlanner } = require("./store");
+              usePlanner.getState().markTaskDoneByTitle(subtopicId);
+            } catch (e) {
+              // Ignore
+            }
+          }
 
           return {
             topicProgress: {
