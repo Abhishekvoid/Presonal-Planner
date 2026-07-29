@@ -210,7 +210,7 @@ export function MentorView() {
   };
 
   return (
-    <div className="relative flex h-[calc(100vh-90px)] w-full flex-col overflow-hidden rounded-[1.75rem] border border-white/15 bg-[#07080b]/95 text-cream font-sans shadow-2xl backdrop-blur-2xl">
+    <div className="relative flex h-[calc(100vh-90px)] w-full flex-col overflow-hidden rounded-[1.75rem] border border-white/15 bg-[#0A0C10]/95 text-cream font-sans shadow-2xl backdrop-blur-2xl">
       {/* Ambient Mesh Orbs Glow Background */}
       <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-amber-500/10 blur-[120px] pointer-events-none animate-ambient-orb" />
       <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-cyan-500/10 blur-[120px] pointer-events-none animate-ambient-orb" />
