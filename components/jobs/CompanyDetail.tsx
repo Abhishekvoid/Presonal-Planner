@@ -6,6 +6,8 @@ import { useJobs } from "@/lib/jobs/store";
 import { fillTemplate } from "@/lib/jobs/templates";
 import { Button } from "@/components/primitives";
 import { StageDot, PriorityDot, ChannelTag, shortDate } from "./bits";
+import { OutreachPitchGeneratorModal } from "./OutreachPitchGeneratorModal";
+import { PaperPlaneTilt } from "@phosphor-icons/react";
 
 function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
   if (!children) return null;
@@ -48,6 +50,7 @@ export function CompanyDetail({
   const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pitchStyle, setPitchStyle] = useState("raw_founder");
+  const [outreachModalOpen, setOutreachModalOpen] = useState(false);
 
   // Update selected contact if active ID is not in new contacts list
   useEffect(() => {
@@ -213,6 +216,20 @@ export function CompanyDetail({
 
       {/* Draft + templates */}
       <div className="space-y-2">
+        <button
+          onClick={() => setOutreachModalOpen(true)}
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/30 px-3 py-2 font-mono text-xs font-bold text-amber-500 hover:bg-amber-500/20 transition-all shadow-xs"
+        >
+          <PaperPlaneTilt size={14} weight="fill" />
+          <span>Generate Tailored Technical Pitch with Proof Links</span>
+        </button>
+
+        <OutreachPitchGeneratorModal
+          company={company}
+          open={outreachModalOpen}
+          onClose={() => setOutreachModalOpen(false)}
+        />
+
         <div className="flex items-center justify-between gap-2">
           <div className="label text-olive-deep">Message draft</div>
           <button

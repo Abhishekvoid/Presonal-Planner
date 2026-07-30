@@ -16,6 +16,7 @@ import { Button } from "./primitives";
 import { buildHeatmap, computeStreak } from "@/lib/focus";
 import { lockTopicAndOpenMentor } from "@/lib/topicLocker";
 import { Brain } from "@phosphor-icons/react";
+import { ArchitectureArtifactGenerator } from "./system/ArchitectureArtifactGenerator";
 
 export function ProgressView() {
   const state = usePlanner();
@@ -103,6 +104,11 @@ export function ProgressView() {
       </div>
 
       <SectionDivider />
+
+      {/* Production Architecture Proof Artifact Generator */}
+      <div className="my-6">
+        <ArchitectureArtifactGenerator />
+      </div>
 
       {/* Dashboard Bento Row */}
       <div className="mt-6 grid grid-cols-12 gap-4">

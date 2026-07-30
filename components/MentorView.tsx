@@ -25,6 +25,8 @@ import {
   Lightbulb,
 } from "@phosphor-icons/react";
 import { useMentorStore, ChatMessageItem } from "@/lib/mentorStore";
+import { lockTopicAndOpenMentor } from "@/lib/topicLocker";
+import { InterviewSimulatorModal } from "./system/InterviewSimulatorModal";
 import { MentorMode } from "@/lib/ai/prompt";
 import { CodeReviewDrawer } from "./system/CodeReviewDrawer";
 import { MermaidRenderer } from "./system/MermaidRenderer";
@@ -102,6 +104,7 @@ export function MentorView() {
   const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<"plan8020" | "steps" | "rank">("plan8020");
+  const [simulatorOpen, setSimulatorOpen] = useState(false);
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const stepperRef = useRef<HTMLDivElement>(null);
@@ -679,7 +682,14 @@ export function MentorView() {
           </div>
 
           {/* Model & Drawer Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={() => setSimulatorOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 font-mono text-xs font-bold text-amber-500 hover:bg-amber-500/20 transition-all shadow-xs"
+            >
+              <Trophy size={14} weight="bold" />
+              <span className="hidden sm:inline">Timed L6 Simulator</span>
+            </button>
             {/* Integrated Model Picker */}
             <div className="relative">
               <button
@@ -823,6 +833,9 @@ export function MentorView() {
 
       {/* Code Review Slide-Over Drawer */}
       <CodeReviewDrawer />
+
+      {/* L6 Staff Timed Interview Simulator Modal */}
+      <InterviewSimulatorModal open={simulatorOpen} onClose={() => setSimulatorOpen(false)} />
     </div>
   );
 }
