@@ -26,7 +26,7 @@ export function OutreachPitchGeneratorModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const touchCompany = useJobs((s) => s.touchCompany);
+  const updateCompany = useJobs((s) => s.updateCompany);
   const [copied, setCopied] = useState(false);
 
   // Determine tailored pitch template based on company name
@@ -92,7 +92,10 @@ Abhishek Rajput`;
     // Set 3-day follow-up automatic reminder
     const followUpDate = new Date();
     followUpDate.setDate(followUpDate.getDate() + 3);
-    touchCompany(company.id, followUpDate.toISOString().slice(0, 10));
+    updateCompany(company.id, {
+      followUpAt: followUpDate.toISOString().slice(0, 10),
+      stage: "contacted",
+    });
     setTimeout(() => {
       setCopied(false);
       onClose();

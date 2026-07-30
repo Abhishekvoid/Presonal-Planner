@@ -71,7 +71,7 @@ export function normalizeCompany(raw: Partial<Company>): Company {
   };
 }
 
-export type JobsView = "list" | "board";
+export type JobsView = "list" | "board" | "feed";
 
 interface JobsStore extends JobsState {
   hasHydrated: boolean;

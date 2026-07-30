@@ -15,7 +15,7 @@ import {
   ArrowUpRight,
   Brain,
   ShieldCheck,
-  Layers,
+  Stack,
 } from "@phosphor-icons/react";
 import { MermaidRenderer } from "./MermaidRenderer";
 
@@ -153,7 +153,7 @@ export function ArchitectureArtifactGenerator() {
         <div>
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/30">
-              <Layers size={16} weight="bold" />
+              <Stack size={16} weight="bold" />
             </span>
             <h2 className="text-base font-bold text-espresso leading-tight">
               System Architecture Proof Artifact Generator

@@ -51,21 +51,31 @@ export function AutomatedJobFeed({
   };
 
   const handleImportToPipeline = (job: AggregatedJob) => {
+    const firstContact = job.contacts[0];
     const newCompany: Company = {
       id: `imported-${job.id}`,
       name: job.companyName,
       role: job.roleTitle,
-      stage: "contact_found",
-      priority: "high",
+      stage: "to_contact",
+      priority: "hot",
       channel: "email",
+      contactName: firstContact?.name || "Hiring Team",
+      contactRole: firstContact?.role || "Engineering Manager",
+      contactLink: firstContact?.email || "",
+      draft: `Hi ${firstContact?.name || "Engineering Team"}, I'm an AI & Backend Engineer (1.5s RAG, 60k/s Celery queue)...`,
       contacts: job.contacts.map((c) => ({
         id: c.id,
         name: c.name,
         role: c.role,
-        email: c.email,
-        linkedin: c.linkedinUrl,
+        channel: "email",
+        link: c.email,
+        draft: `Hi ${c.name}, I'm an AI & Backend Engineer (1.5s RAG, 60k/s Celery queue)...`,
       })),
       notes: `Imported from ${job.portal}. Resume Match Score: ${job.matchResult.score}%. Location: ${job.location}. Salary: ${job.salaryRange}`,
+      source: job.portal,
+      tags: [job.portal, "AI", "Backend"],
+      createdAt: new Date().toISOString(),
+      order: 0,
     };
 
     addCompany(newCompany);
