@@ -6,18 +6,25 @@
 export interface CandidateProfile {
   name: string;
   location: string;
+  city: string;
+  state: string;
+  isRemote: boolean;
   title: string;
   yearsExperience: number;
   skills: string[];
   metrics: string[];
   targetSalary: string;
   resumeText: string;
+  fileName?: string;
   updatedAt: string;
 }
 
 export const DEFAULT_CANDIDATE_PROFILE: CandidateProfile = {
   name: "Abhishek Rajput",
-  location: "Ahmedabad, Gujarat (Open to Remote / On-Site)",
+  location: "Ahmedabad, Gujarat",
+  city: "Ahmedabad",
+  state: "Gujarat",
+  isRemote: true,
   title: "AI + Robotics Backend Engineer",
   yearsExperience: 1.5,
   skills: [
@@ -43,9 +50,9 @@ export const DEFAULT_CANDIDATE_PROFILE: CandidateProfile = {
     "1.5s P99 RAG context retrieval pipeline",
     "Zero double charges payment idempotency key ledger",
   ],
-  targetSalary: "₹15–20 LPA (India) / $55–70k (Global Remote)",
+  targetSalary: "Competitive Market Pay",
   resumeText: `Abhishek Rajput — AI & Robotics Backend Engineer (1.5 Yrs Exp)
-Specializing in High-Throughput Python Backends (Django, Celery, Redis, PostgreSQL), RAG Systems (Qdrant, HNSW, Cross-Encoder), and Distributed Systems. Reduced robotics latency from 500ms to 150ms and built Celery queues processing 60,000 industrial tags/sec. Target Salary: ₹15-20 LPA / $55-70k.`,
+Specializing in High-Throughput Python Backends (Django, Celery, Redis, PostgreSQL), RAG Systems (Qdrant, HNSW, Cross-Encoder), and Distributed Systems. Reduced robotics latency from 500ms to 150ms and built Celery queues processing 60,000 industrial tags/sec.`,
   updatedAt: new Date().toISOString(),
 };
 

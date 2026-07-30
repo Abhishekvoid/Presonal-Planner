@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Lightning,
@@ -16,9 +16,12 @@ import {
   Funnel,
   FileText,
   PaperPlaneTilt,
+  MapPin,
+  Globe,
+  CircleNotch,
 } from "@phosphor-icons/react";
-import { getAggregatedJobs, AggregatedJob, EmployeeContact } from "@/lib/jobs/jobAggregator";
-import { CandidateProfile, DEFAULT_CANDIDATE_PROFILE } from "@/lib/jobs/resumeParser";
+import { AggregatedJob, getAggregatedJobs } from "@/lib/jobs/jobAggregator";
+import { CandidateProfile, DEFAULT_CANDIDATE_PROFILE, computeResumeMatchScore } from "@/lib/jobs/resumeParser";
 import { useJobs } from "@/lib/jobs/store";
 import { OutreachPitchGeneratorModal } from "./OutreachPitchGeneratorModal";
 import { Company } from "@/lib/jobs/types";
@@ -38,9 +41,60 @@ export function AutomatedJobFeed({
   const [importedJobId, setImportedJobId] = useState<string | null>(null);
   const [outreachModalCompany, setOutreachModalCompany] = useState<Company | null>(null);
 
-  const jobs = getAggregatedJobs(activeProfile.skills);
+  const [liveJobs, setLiveJobs] = useState<AggregatedJob[]>([]);
+  const [isScanning, setIsScanning] = useState<boolean>(false);
 
-  const filteredJobs = jobs.filter(
+  // Run live web scan via API route /api/jobs/search
+  const runLiveWebScan = async () => {
+    setIsScanning(true);
+    try {
+      const res = await fetch("/api/jobs/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          skills: activeProfile.skills,
+          city: activeProfile.city || "Ahmedabad",
+          state: activeProfile.state || "Gujarat",
+          isRemote: activeProfile.isRemote ?? true,
+          resumeText: activeProfile.resumeText,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const rawJobs = data.jobs || [];
+
+        // Score jobs dynamically against candidate profile
+        const scoredJobs: AggregatedJob[] = rawJobs.map((j: any) => ({
+          ...j,
+          matchResult: computeResumeMatchScore(
+            activeProfile.skills,
+            j.roleTitle || j.title || "Software Engineer",
+            j.description || ""
+          ),
+        }));
+
+        scoredJobs.sort((a, b) => b.matchResult.score - a.matchResult.score);
+        setLiveJobs(scoredJobs);
+      } else {
+        // Fallback to initial seed if API route fails
+        setLiveJobs(getAggregatedJobs(activeProfile.skills));
+      }
+    } catch (e) {
+      setLiveJobs(getAggregatedJobs(activeProfile.skills));
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  // Run scan when active profile changes
+  useEffect(() => {
+    runLiveWebScan();
+  }, [activeProfile.city, activeProfile.state, activeProfile.isRemote, activeProfile.skills.length]);
+
+  const jobsToDisplay = liveJobs.length > 0 ? liveJobs : getAggregatedJobs(activeProfile.skills);
+
+  const filteredJobs = jobsToDisplay.filter(
     (j) => portalFilter === "All" || j.portal === portalFilter
   );
 
@@ -85,29 +139,56 @@ export function AutomatedJobFeed({
 
   return (
     <div className="space-y-6">
-      {/* Top Banner & Resume Match Status Strip */}
+      {/* Top Banner & Location Match Strip */}
       <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-cream-raised to-cream-base dark:from-amber-500/10 dark:via-[#12151E] dark:to-[#0A0C10] p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500 text-black font-bold text-xs">
               <Lightning size={14} weight="fill" />
             </span>
             <h2 className="text-sm sm:text-base font-bold text-espresso">
-              Multi-Portal Automated Job Feed & Employee Finder
+              Real-Time AI Web Job Scan & Employee Finder
             </h2>
           </div>
-          <p className="font-mono text-xs text-coffee">
-            Aggregated across <strong>Naukri, Wellfound, WeWorkRemotely, LinkedIn & YC Jobs</strong>. Filtered for genuine postings and ranked by 0–100% Resume Match.
-          </p>
+
+          <div className="flex flex-wrap items-center gap-2 font-mono text-xs text-coffee">
+            <span className="inline-flex items-center gap-1 font-bold text-espresso bg-cream-base dark:bg-[#12151E] px-2.5 py-0.5 rounded-lg border border-hair">
+              <MapPin size={13} className="text-amber-500" />
+              <span>Target: {activeProfile.city || "Ahmedabad"}, {activeProfile.state || "Gujarat"}</span>
+            </span>
+
+            {activeProfile.isRemote && (
+              <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/30">
+                <Globe size={13} />
+                <span>Remote / Hybrid Enabled</span>
+              </span>
+            )}
+          </div>
         </div>
 
-        <button
-          onClick={onOpenResumeModal}
-          className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 font-mono text-xs font-bold text-black hover:bg-amber-400 shadow-md transition-all shrink-0 active:scale-95"
-        >
-          <FileText size={16} />
-          <span>Edit Candidate Match Profile ({activeProfile.skills.length} Skills)</span>
-        </button>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={runLiveWebScan}
+            disabled={isScanning}
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 font-mono text-xs font-bold text-black hover:bg-amber-400 shadow-md transition-all active:scale-95 disabled:opacity-50"
+          >
+            {isScanning ? (
+              <CircleNotch size={16} className="animate-spin" />
+            ) : (
+              <Sparkle size={16} weight="fill" />
+            )}
+            <span>{isScanning ? "Scanning Web & Portals..." : "Run Live Web Job Scan"}</span>
+          </button>
+
+          <button
+            onClick={onOpenResumeModal}
+            className="flex items-center gap-1.5 rounded-xl border border-hair bg-cream-base dark:bg-[#12151E] px-3 py-2.5 font-mono text-xs font-bold text-espresso hover:bg-coffee/10"
+            title="Edit Resume & Location"
+          >
+            <FileText size={16} />
+            <span className="hidden sm:inline">Resume & Location</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter Tabs */}
@@ -123,7 +204,7 @@ export function AutomatedJobFeed({
                 : "border-hair bg-cream-raised dark:bg-[#12151E] text-coffee hover:text-espresso"
             }`}
           >
-            {portal === "All" ? "All Portals (5)" : portal}
+            {portal === "All" ? `All Portals (${filteredJobs.length})` : portal}
           </button>
         ))}
       </div>

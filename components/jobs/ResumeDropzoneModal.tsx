@@ -13,6 +13,8 @@ import {
   ShieldCheck,
   Code,
   Tag,
+  MapPin,
+  Globe,
 } from "@phosphor-icons/react";
 import { CandidateProfile, DEFAULT_CANDIDATE_PROFILE } from "@/lib/jobs/resumeParser";
 
@@ -30,21 +32,56 @@ export function ResumeDropzoneModal({
   const [saved, setSaved] = useState(false);
 
   const handleTextChange = (text: string) => {
-    // Simple dynamic skill extraction from text
+    // Dynamic skill extraction from resume text
     const extractedSkills = new Set(profile.skills);
-    const keywords = ["Django", "FastAPI", "Python", "Celery", "Redis", "Postgres", "Qdrant", "RAG", "Docker", "ROS2", "GraphQL"];
+    const keywords = [
+      "Django",
+      "FastAPI",
+      "Python",
+      "Celery",
+      "Redis",
+      "Postgres",
+      "PostgreSQL",
+      "Qdrant",
+      "RAG",
+      "Docker",
+      "ROS2",
+      "GraphQL",
+      "RabbitMQ",
+      "Prometheus",
+      "Kubernetes",
+      "TypeScript",
+      "React",
+    ];
+
     keywords.forEach((kw) => {
       if (text.toLowerCase().includes(kw.toLowerCase())) {
         extractedSkills.add(kw);
       }
     });
 
-    setProfile({
-      ...profile,
+    setProfile((prev) => ({
+      ...prev,
       resumeText: text,
       skills: Array.from(extractedSkills),
       updatedAt: new Date().toISOString(),
-    });
+    }));
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = (event.target?.result as string) || "";
+      handleTextChange(text);
+      setProfile((prev) => ({
+        ...prev,
+        fileName: file.name,
+      }));
+    };
+    reader.readAsText(file);
   };
 
   const handleAddSkill = () => {
@@ -83,7 +120,7 @@ export function ResumeDropzoneModal({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-hair bg-cream-raised dark:bg-[#0E1117] p-6 shadow-2xl space-y-5"
+          className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar rounded-2xl border border-hair bg-cream-raised dark:bg-[#0E1117] p-6 shadow-2xl space-y-5"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-hair pb-4">
@@ -93,10 +130,10 @@ export function ResumeDropzoneModal({
               </div>
               <div>
                 <h2 className="text-base font-bold text-espresso leading-tight">
-                  Candidate Resume & Match Profile Engine
+                  Candidate Resume & Location Profile
                 </h2>
                 <p className="font-mono text-xs text-coffee">
-                  Paste resume text to extract skill vectors & auto-calculate 0–100% job match scores.
+                  Upload your updated resume & set target City, State, and Remote preferences for real-time web scans.
                 </p>
               </div>
             </div>
@@ -109,50 +146,102 @@ export function ResumeDropzoneModal({
             </button>
           </div>
 
-          {/* Target Criteria Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
-            <div className="p-3 rounded-xl border border-hair bg-cream-base dark:bg-[#12151E]">
-              <div className="text-[10px] uppercase font-bold text-coffee">Candidate</div>
-              <div className="text-sm font-bold text-espresso mt-0.5 truncate">{profile.name}</div>
-              <div className="text-[10px] text-coffee opacity-80 mt-0.5">{profile.yearsExperience} Yrs Exp</div>
+          {/* Location Selector Row */}
+          <div className="space-y-2 font-mono text-xs border-b border-hair pb-4">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-500 uppercase">
+              <MapPin size={15} />
+              <span>Target Search Location & Remote Preference</span>
             </div>
 
-            <div className="p-3 rounded-xl border border-hair bg-cream-base dark:bg-[#12151E]">
-              <div className="text-[10px] uppercase font-bold text-coffee">Target Roles</div>
-              <div className="text-sm font-bold text-amber-500 mt-0.5 truncate">AI Backend Engineer</div>
-              <div className="text-[10px] text-coffee opacity-80 mt-0.5">Django · RAG · Systems</div>
-            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="text-[10px] text-coffee uppercase font-bold block mb-1">Target City</label>
+                <input
+                  type="text"
+                  value={profile.city}
+                  onChange={(e) =>
+                    setProfile({ ...profile, city: e.target.value, location: `${e.target.value}, ${profile.state}` })
+                  }
+                  placeholder="e.g. Ahmedabad, Bengaluru"
+                  className="w-full rounded-xl border border-hair bg-cream-base dark:bg-[#12151E] px-3 py-2 text-xs font-mono text-espresso placeholder-coffee focus:border-amber-500 focus:outline-none"
+                />
+              </div>
 
-            <div className="p-3 rounded-xl border border-hair bg-cream-base dark:bg-[#12151E]">
-              <div className="text-[10px] uppercase font-bold text-coffee">Target Salary</div>
-              <div className="text-sm font-bold text-emerald-500 mt-0.5 truncate">₹15–20 LPA / $55–70k</div>
-              <div className="text-[10px] text-coffee opacity-80 mt-0.5">India / Global Remote</div>
+              <div>
+                <label className="text-[10px] text-coffee uppercase font-bold block mb-1">Target State</label>
+                <input
+                  type="text"
+                  value={profile.state}
+                  onChange={(e) =>
+                    setProfile({ ...profile, state: e.target.value, location: `${profile.city}, ${e.target.value}` })
+                  }
+                  placeholder="e.g. Gujarat, Karnataka"
+                  className="w-full rounded-xl border border-hair bg-cream-base dark:bg-[#12151E] px-3 py-2 text-xs font-mono text-espresso placeholder-coffee focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex flex-col justify-end">
+                <label className="flex items-center gap-2 p-2 rounded-xl border border-hair bg-cream-base dark:bg-[#12151E] cursor-pointer hover:border-amber-500/40">
+                  <input
+                    type="checkbox"
+                    checked={profile.isRemote}
+                    onChange={(e) => setProfile({ ...profile, isRemote: e.target.checked })}
+                    className="accent-amber-500"
+                  />
+                  <Globe size={16} className="text-amber-500" />
+                  <span className="font-bold text-espresso text-[11px]">Include Remote Opportunities</span>
+                </label>
+              </div>
             </div>
           </div>
 
-          {/* Resume Text Input Dropzone */}
+          {/* Resume Drag-and-Drop File Upload Box */}
           <div className="space-y-2 font-mono text-xs">
-            <label className="text-[11px] font-bold text-espresso uppercase flex items-center gap-1.5">
-              <Upload size={14} className="text-amber-500" />
-              <span>Paste Resume Text / CV Brief</span>
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-bold text-espresso uppercase flex items-center gap-1.5">
+                <Upload size={14} className="text-amber-500" />
+                <span>Upload Updated Resume File / Paste CV Text</span>
+              </label>
+              {profile.fileName && (
+                <span className="text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                  File: {profile.fileName}
+                </span>
+              )}
+            </div>
+
+            {/* File Input Box */}
+            <div className="relative rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 p-4 text-center hover:bg-amber-500/10 transition-colors cursor-pointer">
+              <input
+                type="file"
+                accept=".pdf,.txt,.md,.doc,.docx"
+                onChange={handleFileUpload}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              />
+              <Upload size={24} className="mx-auto text-amber-500 mb-1" />
+              <div className="font-bold text-espresso text-xs">
+                Click or Drop Updated Resume File (.pdf, .txt, .md)
+              </div>
+              <div className="text-[10px] text-coffee mt-0.5">
+                Auto-extracts skill keywords and updates live job search queries.
+              </div>
+            </div>
+
+            {/* Resume Text Textarea */}
             <textarea
               value={profile.resumeText}
               onChange={(e) => handleTextChange(e.target.value)}
               placeholder="Paste candidate resume text or CV summary here..."
-              rows={5}
+              rows={4}
               className="w-full rounded-xl border border-hair bg-cream-base dark:bg-[#12151E] p-3 text-xs font-mono text-espresso placeholder-coffee focus:border-amber-500 focus:outline-none"
             />
           </div>
 
           {/* Extracted Skill Tags */}
           <div className="space-y-2 font-mono text-xs">
-            <div className="flex items-center justify-between">
-              <label className="text-[11px] font-bold text-coffee uppercase flex items-center gap-1">
-                <Tag size={13} className="text-amber-500" />
-                <span>Extracted Skill Vector ({profile.skills.length} Skills)</span>
-              </label>
-            </div>
+            <label className="text-[11px] font-bold text-coffee uppercase flex items-center gap-1">
+              <Tag size={13} className="text-amber-500" />
+              <span>Extracted Skill Vector ({profile.skills.length} Skills)</span>
+            </label>
 
             <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar p-2 rounded-xl border border-hair bg-cream-base dark:bg-[#12151E]">
               {profile.skills.map((skill) => (
@@ -161,10 +250,7 @@ export function ResumeDropzoneModal({
                   className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 text-[10px] font-bold text-amber-500"
                 >
                   <span>{skill}</span>
-                  <button
-                    onClick={() => handleRemoveSkill(skill)}
-                    className="hover:text-espresso"
-                  >
+                  <button onClick={() => handleRemoveSkill(skill)} className="hover:text-espresso">
                     ×
                   </button>
                 </span>
@@ -197,7 +283,7 @@ export function ResumeDropzoneModal({
               className="flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 font-mono text-xs font-bold text-black hover:bg-amber-400 shadow-md transition-all active:scale-95"
             >
               {saved ? <Check size={16} /> : <Sparkle size={16} weight="fill" />}
-              <span>{saved ? "Match Profile Saved!" : "Save Profile & Update Job Match Scores"}</span>
+              <span>{saved ? "Match Profile Saved!" : "Save Profile & Update Live Web Scan"}</span>
             </button>
           </div>
         </motion.div>
