@@ -1,0 +1,72 @@
+[
+  {
+    "type": "good_fit",
+    "company": "Sarvam AI",
+    "title": "Senior AI Backend Engineer",
+    "location": "Remote / Bengaluru",
+    "description": "We are seeking a Backend Engineer with experience in Python, Django, Celery, Redis, and Qdrant RAG vector search to scale our LLM inference infrastructure."
+  },
+  {
+    "type": "good_fit",
+    "company": "Observe.ai",
+    "title": "High-Throughput Ingestion Systems Engineer",
+    "location": "Ahmedabad / Hybrid",
+    "description": "Scaling 50,000 tags/sec telemetry queues using Celery, Redis, PostgreSQL, and Prometheus latency monitoring."
+  },
+  {
+    "type": "good_fit",
+    "company": "Modal Labs",
+    "title": "Robotics & Async Backend Developer",
+    "location": "Remote",
+    "description": "Optimizing low-latency async Python backends, ROS2 microservice communication, and distributed idempotency ledgers."
+  },
+  {
+    "type": "good_fit",
+    "company": "Qdrant",
+    "title": "Vector Search Backend Developer",
+    "location": "Remote",
+    "description": "Building high-performance vector retrieval APIs, HNSW indexing, and cross-encoder re-ranking pipelines."
+  },
+  {
+    "type": "good_fit",
+    "company": "Krutrim AI",
+    "title": "Distributed Python Infrastructure Engineer",
+    "location": "Bengaluru",
+    "description": "High-concurrency API microservices using FastAPI, Django, Redis, RabbitMQ, and Docker."
+  },
+  {
+    "type": "bad_fit",
+    "company": "Acme Marketing",
+    "title": "Commission-Only Sales Representative",
+    "location": "On-Site",
+    "description": "100% commission sales rep for door-to-door retail promotions. No engineering or coding required. Unlimited earning potential MLM model."
+  },
+  {
+    "type": "bad_fit",
+    "company": "Legacy Systems Corp",
+    "title": "COBOL / Mainframe System Administrator",
+    "location": "On-Site Ohio",
+    "description": "30+ years experience required in IBM Z/OS assembly language and COBOL mainframe maintenance."
+  },
+  {
+    "type": "bad_fit",
+    "company": "FrontEnd Agency",
+    "title": "Senior iOS Swift UI Developer",
+    "location": "On-Site NY",
+    "description": "Native iOS mobile developer with 8 years Objective-C and Swift UI experience."
+  },
+  {
+    "type": "bad_fit",
+    "company": "Hardware Fab",
+    "title": "ASIC Silicon Design Verification Engineer",
+    "location": "On-Site Austin",
+    "description": "Verilog and SystemVerilog semiconductor chip design verification engineer."
+  },
+  {
+    "type": "bad_fit",
+    "company": "Health Clinic",
+    "title": "Dental Assistant & Receptionist",
+    "location": "On-Site Clinic",
+    "description": "Patient check-in, dental insurance billing, and office administrative assistant."
+  }
+]

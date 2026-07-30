@@ -1,0 +1,10 @@
+# Verified Live Greenhouse ATS Slugs
+greenhouse,scaleai
+greenhouse,anthropic
+greenhouse,togetherai
+greenhouse,stripe
+greenhouse,figma
+greenhouse,vercel
+greenhouse,datadog
+greenhouse,discord
+greenhouse,cloudflare

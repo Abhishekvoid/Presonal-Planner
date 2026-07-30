@@ -28,6 +28,13 @@ yarn-error.log*
 .env*.local
 .env
 
+# jobhunter security & database artifacts
+*.db
+jobhunter/output/
+jobhunter/resume.md
+jobhunter/jobs.db
+jobhunter/.env
+
 /lib/generated/prisma
 
 # Local Netlify folder
