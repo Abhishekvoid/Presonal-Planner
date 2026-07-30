@@ -54,7 +54,7 @@ export function CodeReviewDrawer() {
           >
             <div className="relative flex h-full w-full flex-col overflow-hidden rounded-[1.75rem] border border-hair bg-cream-raised dark:bg-[#0a0b0e]/95 p-2 shadow-2xl backdrop-blur-2xl">
               {/* Inner Core Container */}
-              <div className="relative flex h-full w-full flex-col overflow-hidden rounded-[calc(1.75rem-0.5rem)] border border-hair bg-cream-base dark:bg-[#101218]/90 p-5 sm:p-6 shadow-sm text-espresso dark:text-cream">
+              <div className="relative flex h-full w-full flex-col overflow-hidden rounded-[calc(1.75rem-0.5rem)] border border-hair bg-cream-base dark:bg-[#101218]/90 p-5 sm:p-6 shadow-sm text-espresso">
                 
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-hair pb-4">
@@ -64,19 +64,19 @@ export function CodeReviewDrawer() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h2 className="text-base font-bold text-espresso dark:text-cream">Code Review Workbench</h2>
+                        <h2 className="text-base font-bold text-espresso">Code Review Workbench</h2>
                         <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 font-mono text-[10px] uppercase font-bold tracking-wider text-amber-600 dark:text-amber-400 border border-amber-500/30">
                           Senior Review
                         </span>
                       </div>
-                      <p className="text-xs text-coffee dark:text-cream/60">
+                      <p className="text-xs text-coffee">
                         Submit snippets for edge-case, memory leak & concurrency analysis
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => toggleCodeDrawer(false)}
-                    className="rounded-xl p-2 text-coffee dark:text-cream/60 hover:bg-black/5 dark:hover:bg-white/10 hover:text-espresso dark:hover:text-cream transition-colors"
+                    className="rounded-xl p-2 text-coffee hover:bg-black/5 dark:hover:bg-white/10 hover:text-espresso transition-colors"
                   >
                     <X size={20} />
                   </button>

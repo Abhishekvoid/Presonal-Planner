@@ -344,7 +344,7 @@ export function MentorView() {
           {/* Header & Topic Title Selector */}
           <div>
             <div className="flex items-center justify-between text-[11px] font-mono font-medium text-coffee">
-              <span className="flex items-center gap-1.5 font-bold text-espresso dark:text-cream">
+              <span className="flex items-center gap-1.5 font-bold text-espresso">
                 <Brain size={16} className="text-amber-500" />
                 <span>AI Senior Mentor</span>
               </span>
@@ -370,7 +370,7 @@ export function MentorView() {
                         </span>
                       )}
                     </div>
-                    <div className="truncate font-sans text-xs font-bold text-espresso dark:text-cream leading-tight mt-0.5">
+                    <div className="truncate font-sans text-xs font-bold text-espresso leading-tight mt-0.5">
                       {currentTopicObj.title}
                     </div>
                   </div>
@@ -456,7 +456,7 @@ export function MentorView() {
                 onClick={() => setSidebarTab(tab.id as any)}
                 className={`flex-1 pb-2 text-center transition-colors relative ${
                   sidebarTab === tab.id
-                    ? "text-espresso dark:text-cream font-bold"
+                    ? "text-espresso font-bold"
                     : "text-coffee hover:text-espresso"
                 }`}
               >
@@ -499,7 +499,7 @@ export function MentorView() {
                             )}
                           </button>
                           <div className="flex-1">
-                            <div className={`font-semibold ${isChecked ? "line-through text-coffee opacity-60" : "text-espresso dark:text-cream"}`}>
+                            <div className={`font-semibold ${isChecked ? "line-through text-coffee opacity-60" : "text-espresso"}`}>
                               {subtopic.title}
                             </div>
                             <p className="text-[11px] text-coffee leading-normal mt-0.5">
@@ -535,7 +535,7 @@ export function MentorView() {
                     {plan8020.dsaProblems.map((prob, idx) => (
                       <div key={idx} className="border-b border-hair/50 pb-2 space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-espresso dark:text-cream">{prob.title}</span>
+                          <span className="font-bold text-espresso">{prob.title}</span>
                           <span className={`font-mono text-[8px] uppercase font-bold px-1.5 py-0.5 rounded border ${
                             prob.difficulty === "easy"
                               ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/30"
@@ -609,7 +609,7 @@ export function MentorView() {
             <div className="space-y-3 font-sans text-xs max-h-64 overflow-y-auto">
               <div className="border-b border-hair pb-2 space-y-1">
                 <div className="font-mono text-[9px] uppercase tracking-wider text-coffee">Evaluated Rank</div>
-                <div className="font-bold text-sm text-espresso dark:text-cream">{currentProgress.rank || "L5 Senior Candidate"}</div>
+                <div className="font-bold text-sm text-espresso">{currentProgress.rank || "L5 Senior Candidate"}</div>
                 <p className="text-coffee text-[11px]">Assessed against Sarvam AI, Krutrim & Observe.AI senior interview benchmarks.</p>
               </div>
 
@@ -632,7 +632,7 @@ export function MentorView() {
 
         {/* Footer Target Brief */}
         <div className="border-t border-hair pt-3 font-mono text-[10px] text-coffee space-y-0.5">
-          <div className="flex items-center gap-1 text-espresso dark:text-cream font-semibold">
+          <div className="flex items-center gap-1 text-espresso font-semibold">
             <Trophy size={13} className="text-amber-500" />
             <span>Target: ₹15–20 LPA / $55–70k</span>
           </div>
@@ -654,7 +654,7 @@ export function MentorView() {
                 onClick={() => setMode(mode)}
                 className={`px-3 py-1 font-mono text-xs font-bold transition-all flex items-center gap-1.5 ${
                   activeMode === mode
-                    ? "text-espresso dark:text-cream border-b-2 border-amber-500"
+                    ? "text-espresso border-b-2 border-amber-500"
                     : "text-coffee hover:text-espresso"
                 }`}
               >
@@ -720,7 +720,7 @@ export function MentorView() {
 
             <button
               onClick={() => toggleCodeDrawer(true)}
-              className="flex items-center gap-1 text-xs font-mono font-bold text-espresso dark:text-cream hover:text-amber-500 transition-colors"
+              className="flex items-center gap-1 text-xs font-mono font-bold text-espresso hover:text-amber-500 transition-colors"
             >
               <Code size={14} />
               <span>Submit Code</span>
@@ -743,11 +743,11 @@ export function MentorView() {
               <div className="rounded-full bg-amber-500/10 p-3 text-amber-500">
                 <Brain size={32} />
               </div>
-              <h2 className="text-xl font-bold text-espresso dark:text-cream tracking-tight">
+              <h2 className="text-xl font-bold text-espresso tracking-tight">
                 AI Senior Mentor Studio
               </h2>
               <p className="max-w-md font-sans text-xs text-coffee leading-relaxed">
-                Locked on <strong className="text-espresso dark:text-cream">{currentTopicObj.title}</strong>. Ready for first-principles Socratic drilling, system architecture trade-offs, and code reviews.
+                Locked on <strong className="text-espresso">{currentTopicObj.title}</strong>. Ready for first-principles Socratic drilling, system architecture trade-offs, and code reviews.
               </p>
               <div className="flex flex-wrap justify-center gap-2 pt-2">
                 {[
@@ -759,7 +759,7 @@ export function MentorView() {
                   <button
                     key={idx}
                     onClick={() => handleSendMessage(preset)}
-                    className="border border-hair bg-cream-raised dark:bg-[#12151E] px-3.5 py-2 font-mono text-xs text-espresso dark:text-cream hover:border-amber-500 transition-colors rounded-xl shadow-xs flex items-center gap-1.5"
+                    className="border border-hair bg-cream-raised dark:bg-[#12151E] px-3.5 py-2 font-mono text-xs text-espresso hover:border-amber-500 transition-colors rounded-xl shadow-xs flex items-center gap-1.5"
                   >
                     <Lightning size={12} className="text-amber-500" />
                     <span>{preset}</span>
@@ -781,7 +781,7 @@ export function MentorView() {
                     <div className="whitespace-pre-wrap">{msg.content}</div>
                   </div>
                 ) : (
-                  <div className="w-full max-w-3xl py-2 text-xs font-sans leading-relaxed text-espresso dark:text-cream">
+                  <div className="w-full max-w-3xl py-2 text-xs font-sans leading-relaxed text-espresso">
                     <RenderMentorMessage content={msg.content} />
                   </div>
                 )}
@@ -805,7 +805,7 @@ export function MentorView() {
               }}
               placeholder={`Ask AI Mentor on ${currentTopicObj.title}... (⌘ + Enter to send)`}
               rows={1}
-              className="flex-1 resize-none bg-transparent font-sans text-xs text-espresso dark:text-cream placeholder-coffee focus:outline-none"
+              className="flex-1 resize-none bg-transparent font-sans text-xs text-espresso placeholder-coffee focus:outline-none"
             />
             <div className="flex items-center gap-2">
               <span className="font-mono text-[10px] text-coffee hidden sm:inline-block">⌘↵</span>
@@ -863,7 +863,7 @@ function RenderMentorMessage({ content }: { content: string }) {
         return (
           <div
             key={idx}
-            className="prose dark:prose-invert prose-xs max-w-none text-espresso dark:text-cream leading-relaxed font-sans"
+            className="prose dark:prose-invert prose-xs max-w-none text-espresso leading-relaxed font-sans"
             dangerouslySetInnerHTML={{ __html: renderMarkdown(part.value) }}
           />
         );

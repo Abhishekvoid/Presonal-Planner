@@ -61,7 +61,7 @@ export function MermaidRenderer({ chart }: MermaidRendererProps) {
     <div className="my-4 overflow-hidden rounded-2xl border border-hair bg-cream-raised dark:bg-[#12151E] shadow-lg transition-all">
       {/* Top Action Bar */}
       <div className="flex items-center justify-between border-b border-hair bg-cream-deep/60 dark:bg-black/40 px-4 py-2 font-mono text-xs">
-        <div className="flex items-center gap-2 text-coffee dark:text-cream/70 font-semibold">
+        <div className="flex items-center gap-2 text-coffee font-semibold">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>Architecture Diagram (Mermaid Vector)</span>
         </div>
@@ -100,7 +100,7 @@ export function MermaidRenderer({ chart }: MermaidRendererProps) {
       {/* Render Area */}
       <div className="p-4 overflow-x-auto min-h-[140px] flex items-center justify-center">
         {showCode ? (
-          <pre className="w-full text-xs font-mono text-espresso dark:text-cream bg-cream-deep/40 dark:bg-black/30 p-3 rounded-xl overflow-x-auto">
+          <pre className="w-full text-xs font-mono text-espresso bg-cream-deep/40 dark:bg-black/30 p-3 rounded-xl overflow-x-auto">
             {chart}
           </pre>
         ) : error ? (
