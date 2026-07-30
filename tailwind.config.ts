@@ -14,6 +14,7 @@ const config: Config = {
       // utilities like `bg-cream-base/85`.
       colors: {
         cream: {
+          DEFAULT: "rgb(var(--cream-raised-rgb) / <alpha-value>)",
           base: "rgb(var(--cream-base-rgb) / <alpha-value>)",
           raised: "rgb(var(--cream-raised-rgb) / <alpha-value>)",
           deep: "rgb(var(--cream-deep-rgb) / <alpha-value>)",

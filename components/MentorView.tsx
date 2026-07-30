@@ -777,7 +777,7 @@ export function MentorView() {
                 className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
               >
                 {msg.role === "user" ? (
-                  <div className="max-w-2xl rounded-2xl bg-espresso text-cream dark:bg-cream dark:text-espresso px-4 py-2.5 text-xs font-sans font-medium shadow-sm">
+                  <div className="max-w-2xl rounded-2xl bg-espresso text-cream-raised dark:bg-cream-raised dark:text-espresso px-4 py-2.5 text-xs font-sans font-medium shadow-sm">
                     <div className="whitespace-pre-wrap">{msg.content}</div>
                   </div>
                 ) : (
@@ -812,7 +812,7 @@ export function MentorView() {
               <button
                 onClick={() => handleSendMessage()}
                 disabled={!input.trim() || isStreaming}
-                className="flex items-center justify-center rounded-xl bg-espresso text-cream dark:bg-cream dark:text-espresso p-2 hover:opacity-90 disabled:opacity-40 transition-all shadow-xs active:scale-95"
+                className="flex items-center justify-center rounded-xl bg-espresso text-cream-raised dark:bg-cream-raised dark:text-espresso p-2 hover:opacity-90 disabled:opacity-40 transition-all shadow-xs active:scale-95"
               >
                 <PaperPlaneTilt size={14} weight="fill" />
               </button>
