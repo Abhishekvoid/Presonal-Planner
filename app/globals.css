@@ -72,23 +72,23 @@
   --cream-raised-rgb: 18 21 30; /* #12151E Deep Navy Charcoal Raised Surface */
   --cream-deep-rgb: 24 28 39; /* #181C27 Recessed Inner Surface */
 
-  --espresso-rgb: 226 232 240;
-  --coffee-rgb: 161 161 170;
-  --coffee-soft-rgb: 113 113 122;
+  --espresso-rgb: 242 238 230; /* #F2EEE6 Warm Editorial Parchment Primary Text */
+  --coffee-rgb: 175 168 158; /* #AFA89E Warm Muted Coffee Secondary Text */
+  --coffee-soft-rgb: 130 122 112; /* #827A70 Soft Muted Text */
 
-  --olive-rgb: 226 232 240;
+  --olive-rgb: 242 238 230;
   --olive-deep-rgb: 250 248 245;
-  --olive-soft-rgb: 161 161 170;
+  --olive-soft-rgb: 175 168 158;
   --clay-rgb: 244 63 94;
   --clay-deep-rgb: 225 29 72;
   --slate-rgb: 148 163 184;
 
-  --hair: rgba(255, 255, 255, 0.12);
+  --hair: rgba(242, 238, 230, 0.12);
   --scrim-rgb: 10 12 16;
   --grain-opacity: 0.05;
   --flow-rgb: 148 163 184;
   --flow: rgb(var(--flow-rgb));
-  --frame-glow: rgba(255, 255, 255, 0.2);
+  --frame-glow: rgba(242, 238, 230, 0.2);
 }
 
 @layer base {

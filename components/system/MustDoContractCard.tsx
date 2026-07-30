@@ -24,7 +24,7 @@ export function MustDoContractCard({ dayId = "day-1" }: Props) {
   };
 
   return (
-    <div className="reveal border border-rose-500/30 bg-cream-raised dark:bg-[#0A0708] p-4 sm:p-5 rounded-lg text-espresso dark:text-slate-200 shadow-[0_0_25px_rgba(244,63,94,0.1)] relative overflow-hidden transition-all">
+    <div className="reveal border border-rose-500/30 bg-cream-raised dark:bg-[#0A0708] p-4 sm:p-5 rounded-lg text-espresso shadow-[0_0_25px_rgba(244,63,94,0.1)] relative overflow-hidden transition-all">
       {/* Red/Amber Hairline Pulse Header - Clickable Banner */}
       <div 
         onClick={() => setIsRevealed(!isRevealed)}
@@ -113,7 +113,7 @@ export function MustDoContractCard({ dayId = "day-1" }: Props) {
             </div>
 
             {/* Problem Statement */}
-            <div className="bg-cream-deep dark:bg-[#050505] text-espresso dark:text-slate-200 leading-relaxed">
+            <div className="bg-cream-deep dark:bg-[#050505] text-espresso leading-relaxed">
               <span className="text-[9px] uppercase font-bold text-rose-400 block mb-1">
                 Problem Statement & Objective:
               </span>
@@ -222,7 +222,7 @@ export function MustDoContractCard({ dayId = "day-1" }: Props) {
             </div>
 
             {/* Statement */}
-            <div className="bg-cream-deep dark:bg-[#050505] text-espresso dark:text-slate-200 leading-relaxed">
+            <div className="bg-cream-deep dark:bg-[#050505] text-espresso leading-relaxed">
               <span className="text-[9px] uppercase font-bold text-emerald-400 block mb-1">
                 Engineering Challenge Objective:
               </span>

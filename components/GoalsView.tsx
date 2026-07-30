@@ -393,17 +393,17 @@ function RPGSkillTree() {
   ];
 
   return (
-    <div className="reveal mt-6 border border-hair bg-cream-raised dark:bg-[#12151E] p-5 rounded-lg text-espresso dark:text-slate-200 shadow-sm">
+    <div className="reveal mt-6 border border-hair bg-cream-raised dark:bg-[#12151E] p-5 rounded-lg text-espresso shadow-sm">
       <div className="flex items-center justify-between border-b border-hair pb-3 mb-4">
         <div>
           <h3 className="font-mono text-xs uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">
             ⚡ AI ENGINEER PATHWAY MAP
           </h3>
-          <p className="font-mono text-[11px] text-coffee dark:text-zinc-400 mt-0.5">
+          <p className="font-mono text-[11px] text-coffee mt-0.5">
             Path node state: LOCKED → BUILDING → PROVEN
           </p>
         </div>
-        <span className="text-[10px] font-mono font-bold text-coffee dark:text-zinc-300 bg-cream-deep dark:bg-white/5 border border-hair px-2 py-0.5 rounded">
+        <span className="text-[10px] font-mono font-bold text-coffee bg-cream-deep dark:bg-white/5 border border-hair px-2 py-0.5 rounded">
           Proven Nodes: {nodes.filter(n => n.status === "PROVEN").length} / {nodes.length}
         </span>
       </div>
@@ -430,9 +430,9 @@ function RPGSkillTree() {
             <div className="space-y-1">
               <div className="flex items-center gap-1.5">
                 <span className={`h-2 w-2 rounded-full shrink-0 ${node.status === "PROVEN" ? "bg-emerald-500 animate-pulse" : node.status === "BUILDING" ? "bg-amber-500" : "bg-zinc-500"}`} />
-                <span className="font-mono text-xs font-bold text-espresso dark:text-slate-200 truncate">{node.name.split(" ")[0]}</span>
+                <span className="font-mono text-xs font-bold text-espresso truncate">{node.name.split(" ")[0]}</span>
               </div>
-              <p className="font-mono text-[10px] leading-snug text-coffee dark:text-zinc-400 line-clamp-2">{node.desc}</p>
+              <p className="font-mono text-[10px] leading-snug text-coffee line-clamp-2">{node.desc}</p>
             </div>
 
             <div className="mt-3 flex items-center justify-between pt-2 border-t border-hair">
@@ -489,12 +489,12 @@ function RPGSkillTree() {
       </div>
 
       {selectedNode && (
-        <div className="mt-4 p-3.5 bg-cream-deep dark:bg-[#181C27] text-espresso dark:text-slate-200 border border-hair rounded font-mono text-[11px] leading-relaxed relative animate-fadeIn">
+        <div className="mt-4 p-3.5 bg-cream-deep dark:bg-[#181C27] text-espresso border border-hair rounded font-mono text-[11px] leading-relaxed relative animate-fadeIn">
           <div className="flex justify-between items-center border-b border-hair pb-1.5 mb-2">
             <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wide">
               {nodes.find(n => n.id === selectedNode)?.name} — AI Engineer Node
             </span>
-            <button onClick={() => setSelectedNode(null)} className="text-coffee dark:text-zinc-400 hover:text-espresso dark:hover:text-slate-200 font-bold text-xs select-none">
+            <button onClick={() => setSelectedNode(null)} className="text-coffee hover:text-espresso font-bold text-xs select-none">
               × Close
             </button>
           </div>

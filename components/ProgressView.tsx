@@ -909,18 +909,18 @@ function RevisionGrillingDeck() {
   };
 
   return (
-    <div className="reveal mt-6 border border-hair bg-cream-raised dark:bg-[#12151E] p-5 rounded-lg text-espresso dark:text-slate-200 shadow-sm">
+    <div className="reveal mt-6 border border-hair bg-cream-raised dark:bg-[#12151E] p-5 rounded-lg text-espresso shadow-sm">
       <div className="flex items-center justify-between border-b border-hair pb-3 mb-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="font-mono text-xs font-bold text-amber-500 uppercase tracking-widest">
               [Pillar 2]
             </span>
-            <h3 className="font-mono text-sm font-semibold text-espresso dark:text-slate-200">
+            <h3 className="font-mono text-sm font-semibold text-espresso">
               Active Recall & Grilling Deck
             </h3>
           </div>
-          <p className="font-mono text-[11px] text-coffee dark:text-zinc-400 mt-0.5">
+          <p className="font-mono text-[11px] text-coffee mt-0.5">
             Locks in finished lessons so skills stick instead of leaking
           </p>
         </div>
@@ -946,12 +946,12 @@ function RevisionGrillingDeck() {
       </div>
 
       <div className="bg-cream-deep dark:bg-[#181C27] border border-hair rounded p-4 space-y-3 font-mono text-xs">
-        <div className="flex justify-between items-center text-coffee dark:text-zinc-400 text-[10px] uppercase">
+        <div className="flex justify-between items-center text-coffee text-[10px] uppercase">
           <span>Topic: {current.topic}</span>
           <span>Card {index + 1} of {drillPool.length}</span>
         </div>
 
-        <p className="text-espresso dark:text-slate-200 text-sm font-medium leading-relaxed">
+        <p className="text-espresso text-sm font-medium leading-relaxed">
           {current.prompt}
         </p>
 

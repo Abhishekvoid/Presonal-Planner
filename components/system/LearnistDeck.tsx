@@ -54,18 +54,18 @@ export function ActivityHeatmap({
   const activeDaysCount = days.filter((d) => d.minutes > 0 || d.count > 0).length;
 
   return (
-    <div className="rounded-lg border border-hair bg-cream-raised dark:bg-[#0A0A0E] p-4 text-espresso dark:text-slate-200 shadow-sm">
+    <div className="rounded-lg border border-hair bg-cream-raised dark:bg-[#0A0A0E] p-4 text-espresso shadow-sm">
       <div className="flex items-center justify-between border-b border-hair pb-3 mb-3">
         <div>
-          <h3 className="font-mono text-xs uppercase tracking-widest text-coffee dark:text-zinc-400">
+          <h3 className="font-mono text-xs uppercase tracking-widest text-coffee">
             Activity Heatmap & Proof Log
           </h3>
-          <p className="font-mono text-[11px] text-coffee dark:text-zinc-300 mt-0.5">
+          <p className="font-mono text-[11px] text-coffee mt-0.5">
             <span className="text-emerald-600 dark:text-emerald-400 font-bold">{activeDaysCount} Days Active</span> •{" "}
             <span className="text-espresso font-bold">{totalMinutes} Mins Logged</span>
           </p>
         </div>
-        <span className="font-mono text-[10px] uppercase text-coffee dark:text-zinc-400 bg-black/5 dark:bg-white/5 border border-hair px-2 py-0.5 rounded">
+        <span className="font-mono text-[10px] uppercase text-coffee bg-black/5 dark:bg-white/5 border border-hair px-2 py-0.5 rounded">
           Proof Stream
         </span>
       </div>
@@ -141,18 +141,18 @@ export function CodeLabValidator() {
   };
 
   return (
-    <div className="rounded-lg border border-hair bg-cream-raised dark:bg-[#0E0E12] p-4 text-espresso dark:text-slate-200 shadow-sm">
+    <div className="rounded-lg border border-hair bg-cream-raised dark:bg-[#0E0E12] p-4 text-espresso shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hair pb-3 mb-3">
         <div>
           <div className="flex items-center gap-2">
             <span className="font-mono text-xs text-rose-500 dark:text-rose-400 font-bold uppercase tracking-wider">
               [Lab #04]
             </span>
-            <h3 className="font-mono text-sm font-semibold text-espresso dark:text-slate-200">
+            <h3 className="font-mono text-sm font-semibold text-espresso">
               Debouncing 3 Ways (Punish Lazy Code)
             </h3>
           </div>
-          <p className="font-mono text-[11px] text-coffee dark:text-zinc-400 mt-0.5">
+          <p className="font-mono text-[11px] text-coffee mt-0.5">
             Write & validate: Naive → Optimized → Advanced (Trailing, Leading, Cancelable)
           </p>
         </div>
@@ -165,8 +165,8 @@ export function CodeLabValidator() {
               onClick={() => handleSelectTier(t)}
               className={`px-2.5 py-0.5 rounded font-mono text-[10px] uppercase transition-all ${
                 tier === t
-                  ? "bg-espresso text-cream-base dark:bg-slate-200 dark:text-black font-bold shadow"
-                  : "text-coffee hover:text-espresso dark:text-zinc-400 dark:hover:text-slate-200"
+                  ? "bg-espresso text-cream-base dark:bg-amber-400 dark:text-black font-bold shadow"
+                  : "text-coffee hover:text-espresso"
               }`}
             >
               {t}
