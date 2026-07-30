@@ -335,11 +335,11 @@ export function MentorView() {
   const progressPct = Math.round(((currentProgress.completedSteps?.length || 1) / 13) * 100);
 
   return (
-    <div className="flex h-[calc(100vh-5.5rem)] w-full overflow-hidden rounded-2xl border border-hair bg-cream-base dark:bg-[#0A0C10] shadow-2xl backdrop-blur-3xl">
+    <div className="flex flex-col lg:flex-row h-auto lg:h-[calc(100dvh-5.5rem)] min-h-[550px] w-full overflow-hidden rounded-2xl border border-hair bg-cream-base dark:bg-[#0A0C10] shadow-2xl backdrop-blur-3xl">
       {/* ==================================================================== */}
       {/* LEFT INSPECTOR SIDEBAR: LINEAR / RAYCAST ANTI-SLOP STYLE             */}
       {/* ==================================================================== */}
-      <div className="flex w-80 flex-col justify-between border-r border-hair bg-cream-raised/50 dark:bg-[#0E1117]/80 p-4 overflow-y-auto">
+      <div className="flex w-full lg:w-80 flex-col justify-between border-b lg:border-b-0 lg:border-r border-hair bg-cream-raised/50 dark:bg-[#0E1117]/80 p-4 overflow-y-auto shrink-0 max-h-[340px] lg:max-h-none">
         <div className="space-y-4">
           {/* Header & Topic Title Selector */}
           <div>
@@ -643,11 +643,11 @@ export function MentorView() {
       {/* ==================================================================== */}
       {/* RIGHT STUDIO WORKSPACE: FULL-BLEED SPACIOUS CHAT & RAYCAST PROMPT BAR */}
       {/* ==================================================================== */}
-      <div className="flex flex-1 flex-col justify-between bg-cream-base dark:bg-[#0A0C10] overflow-hidden">
+      <div className="flex flex-1 flex-col justify-between bg-cream-base dark:bg-[#0A0C10] overflow-hidden min-w-0">
         {/* Studio Top Control Header */}
-        <div className="flex items-center justify-between border-b border-hair px-6 py-3">
+        <div className="flex flex-wrap items-center justify-between border-b border-hair px-4 sm:px-6 py-3 gap-2 min-w-0">
           {/* Mode Switcher */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full">
             {(["grill", "code-review", "mock-interview"] as MentorMode[]).map((mode) => (
               <button
                 key={mode}
@@ -737,7 +737,7 @@ export function MentorView() {
         </div>
 
         {/* Message Stream Container */}
-        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-6 min-w-0">
           {currentMessages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center space-y-4">
               <div className="rounded-full bg-amber-500/10 p-3 text-amber-500">
@@ -777,11 +777,11 @@ export function MentorView() {
                 className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
               >
                 {msg.role === "user" ? (
-                  <div className="max-w-2xl rounded-2xl bg-espresso text-cream-raised dark:bg-cream-raised dark:text-espresso px-4 py-2.5 text-xs font-sans font-medium shadow-sm">
-                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                  <div className="max-w-2xl min-w-0 break-words rounded-2xl bg-espresso text-cream-raised dark:bg-cream-raised dark:text-espresso px-4 py-2.5 text-xs font-sans font-medium shadow-sm">
+                    <div className="whitespace-pre-wrap break-words">{msg.content}</div>
                   </div>
                 ) : (
-                  <div className="w-full max-w-3xl py-2 text-xs font-sans leading-relaxed text-espresso">
+                  <div className="w-full max-w-3xl min-w-0 break-words py-2 text-xs font-sans leading-relaxed text-espresso overflow-x-auto">
                     <RenderMentorMessage content={msg.content} />
                   </div>
                 )}
@@ -792,7 +792,7 @@ export function MentorView() {
         </div>
 
         {/* Raycast-Style Floating Command Prompt Bar */}
-        <div className="p-4 border-t border-hair bg-cream-raised/40 dark:bg-[#0A0C10]/80 backdrop-blur-xl">
+        <div className="p-3 sm:p-4 border-t border-hair bg-cream-raised/40 dark:bg-[#0A0C10]/80 backdrop-blur-xl min-w-0">
           <div className="flex items-center gap-3 rounded-2xl border border-hair bg-cream-raised dark:bg-[#12151E] p-2 px-4 shadow-xl focus-within:border-amber-500 transition-all">
             <textarea
               value={input}

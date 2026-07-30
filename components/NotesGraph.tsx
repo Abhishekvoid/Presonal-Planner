@@ -961,7 +961,7 @@ export function NotesGraph({
             initial={{ opacity: 0, x: 300 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
-            className="absolute top-0 right-0 z-30 h-full w-80 border-l border-hair bg-cream-raised/95 dark:bg-[#12151E]/95 p-6 shadow-2xl backdrop-blur-2xl flex flex-col justify-between"
+            className="absolute top-0 right-0 z-30 h-full w-full sm:w-80 border-l border-hair bg-cream-raised/95 dark:bg-[#12151E]/95 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl flex flex-col justify-between overflow-y-auto min-w-0"
           >
             <div>
               <div className="flex items-center justify-between border-b border-hair pb-3">

@@ -33,16 +33,16 @@ export function CompanyCard({
     >
       <button
         onClick={() => onOpen(company)}
-        className="block w-full px-3 py-2.5 text-left"
+        className="block w-full px-3 py-2.5 text-left min-w-0 break-words overflow-hidden"
       >
-        <div className="flex items-start justify-between gap-2">
-          <span className="font-display text-sm font-bold tracking-tightest text-espresso leading-tight text-balance">
+        <div className="flex items-start justify-between gap-2 min-w-0">
+          <span className="font-display text-sm font-bold tracking-tightest text-espresso leading-tight text-balance min-w-0 break-words truncate max-w-[85%]">
             {company.name}
           </span>
           <PriorityDot p={company.priority} />
         </div>
         {company.role && (
-          <p className="mt-0.5 text-xs text-coffee leading-snug">{company.role}</p>
+          <p className="mt-0.5 text-xs text-coffee leading-snug break-words min-w-0">{company.role}</p>
         )}
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <ChannelTag channel={company.channel} />
