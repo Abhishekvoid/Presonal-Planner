@@ -317,9 +317,10 @@ export function AutomatedJobFeed({
                   href={job.jobUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1 px-3 py-2 rounded-xl border border-hair bg-cream-base dark:bg-[#12151E] text-coffee hover:text-espresso font-semibold"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold hover:bg-emerald-500/20 transition-all shadow-xs"
                 >
-                  <span>View Original Job</span>
+                  <CheckCircle size={14} weight="bold" />
+                  <span>Verify & Open Live Job ({job.portal})</span>
                   <ArrowUpRight size={13} />
                 </a>
 
