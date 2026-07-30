@@ -17,6 +17,10 @@ import { CompanyDetail } from "./CompanyDetail";
 import { TemplateManager } from "./TemplateManager";
 import { JobsBackupPanel } from "./JobsBackupPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { AutomatedJobFeed } from "./AutomatedJobFeed";
+import { ResumeDropzoneModal } from "./ResumeDropzoneModal";
+import { CandidateProfile, DEFAULT_CANDIDATE_PROFILE } from "@/lib/jobs/resumeParser";
+import { Lightning, FileText } from "@phosphor-icons/react";
 
 export function JobsPlanner() {
   const hasHydrated = useJobs((s) => s.hasHydrated);
@@ -32,6 +36,8 @@ export function JobsPlanner() {
   const [form, setForm] = useState<{ open: boolean; company?: Company }>({ open: false });
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
+  const [resumeModalOpen, setResumeModalOpen] = useState(false);
+  const [candidateProfile, setCandidateProfile] = useState<CandidateProfile>(DEFAULT_CANDIDATE_PROFILE);
 
   const buckets = useMemo(() => actionBuckets(companies, new Date()), [companies]);
   const detail = detailId ? companies.find((c) => c.id === detailId) ?? null : null;
@@ -54,18 +60,33 @@ export function JobsPlanner() {
               <OutreachFunnel companies={companies} />
               <ActionStrip buckets={buckets} onOpen={(c) => setDetailId(c.id)} />
 
-              <div className="mb-4 flex items-center gap-3">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <ViewToggle view={view} setView={setView} />
-                <Button
-                  variant="solid"
-                  className="ml-auto"
-                  onClick={() => setForm({ open: true })}
-                >
-                  + Add company
-                </Button>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setResumeModalOpen(true)}
+                    className="flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 font-mono text-xs font-bold text-amber-500 hover:bg-amber-500/20 transition-all shadow-xs"
+                  >
+                    <FileText size={14} />
+                    <span>Resume Profile ({candidateProfile.skills.length} Skills)</span>
+                  </button>
+
+                  <Button
+                    variant="solid"
+                    onClick={() => setForm({ open: true })}
+                  >
+                    + Add company
+                  </Button>
+                </div>
               </div>
 
-              {view === "list" ? (
+              {view === "feed" ? (
+                <AutomatedJobFeed
+                  candidateProfile={candidateProfile}
+                  onOpenResumeModal={() => setResumeModalOpen(true)}
+                />
+              ) : view === "list" ? (
                 <CompanyList companies={companies} onOpen={(c) => setDetailId(c.id)} />
               ) : (
                 <CompanyBoard companies={companies} onOpen={(c) => setDetailId(c.id)} />
@@ -116,6 +137,13 @@ export function JobsPlanner() {
         <Modal open={backupOpen} onClose={() => setBackupOpen(false)} title="Outreach backup & data">
           <JobsBackupPanel onDone={() => setBackupOpen(false)} />
         </Modal>
+
+        {/* Resume Dropzone Profile Modal */}
+        <ResumeDropzoneModal
+          open={resumeModalOpen}
+          onClose={() => setResumeModalOpen(false)}
+          onSaveProfile={(prof) => setCandidateProfile(prof)}
+        />
       </div>
     </MotionConfig>
   );
@@ -175,22 +203,26 @@ function ViewToggle({
   view,
   setView,
 }: {
-  view: "list" | "board";
-  setView: (v: "list" | "board") => void;
+  view: string;
+  setView: (v: "list" | "board" | "feed") => void;
 }) {
   return (
-    <div className="inline-flex border hairline">
-      {(["list", "board"] as const).map((v) => (
+    <div className="inline-flex border hairline rounded-xl overflow-hidden p-0.5 bg-cream-raised dark:bg-[#12151E]">
+      {[
+        { id: "board", label: "Pipeline Board" },
+        { id: "feed", label: "⚡ Auto Feed & Match" },
+        { id: "list", label: "All Leads List" },
+      ].map((v) => (
         <button
-          key={v}
-          onClick={() => setView(v)}
-          className={`px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
-            view === v
-              ? "bg-espresso text-cream-raised"
-              : "text-coffee hover:text-espresso hover:bg-cream-deep/50"
+          key={v.id}
+          onClick={() => setView(v.id as any)}
+          className={`px-3 py-1.5 font-mono text-xs font-bold transition-all rounded-lg ${
+            view === v.id
+              ? "bg-amber-500 text-black shadow-xs"
+              : "text-coffee hover:text-espresso"
           }`}
         >
-          {v}
+          {v.label}
         </button>
       ))}
     </div>
