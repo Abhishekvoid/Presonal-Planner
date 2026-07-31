@@ -710,7 +710,7 @@ export function NotesView() {
                       sendToObsidian({
                         title: activeNote.title || "Untitled Note",
                         content: activeNote.content,
-                        topic: activeNote.folder,
+                        topic: activeNote.folder || undefined,
                       });
                     }}
                     className="flex items-center gap-1 text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-sm"
@@ -724,7 +724,7 @@ export function NotesView() {
                       downloadObsidianMarkdown({
                         title: activeNote.title || "Untitled Note",
                         content: activeNote.content,
-                        topic: activeNote.folder,
+                        topic: activeNote.folder || undefined,
                       });
                     }}
                     className="text-xs font-bold text-coffee hover:text-espresso underline"
