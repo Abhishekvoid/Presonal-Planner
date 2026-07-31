@@ -88,7 +88,7 @@ export const useMentorStore = create<MentorState>()(
       activeMode: "grill",
       customApiKey: "",
       provider: "openrouter",
-      selectedModel: "deepseek/deepseek-v4-flash",
+      selectedModel: "inclusionai/ling-3.0-flash:free",
 
       threads: {
         "day-1-django-orm": [

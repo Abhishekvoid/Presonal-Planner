@@ -113,7 +113,7 @@ export function InterviewSimulatorModal({
                   L6 Staff Architect Timed Interview Simulator
                 </h2>
                 <p className="font-mono text-xs text-coffee">
-                  Benchmark performance against Sarvam AI, Krutrim, & Observe.AI senior interview criteria.
+                  Benchmark performance against YC Startups (Seed, Series A/B) & Global Senior interview criteria.
                 </p>
               </div>
             </div>

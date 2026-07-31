@@ -1,8 +1,21 @@
 @import url('https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .font-handwriting {
+    font-family: 'Caveat', cursive, sans-serif;
+  }
+  .font-reader-serif {
+    font-family: 'Newsreader', Georgia, serif;
+  }
+  .font-reader-sans {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+}
 
 /*
   THEME TOKENS
