@@ -976,10 +976,7 @@ export function MentorView() {
         assistantAnswers={
           currentMessages.filter((m) => m.role === "assistant" && m.content.trim().length > 0).map((m) => m.content)
         }
-        onSendMessage={(query) => {
-          setQueryInput(query);
-          handleSendQuery(query);
-        }}
+        onSendMessage={(query) => handleSendQuery(query)}
         isLoading={isStreaming}
       />
 
