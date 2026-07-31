@@ -44,6 +44,7 @@ import { MermaidRenderer } from "./system/MermaidRenderer";
 import { renderMarkdown } from "@/lib/markdown";
 import { get8020PlanForTopic } from "@/lib/ai/subtopics8020";
 import { sendToObsidian, downloadObsidianMarkdown } from "@/lib/obsidian";
+import { CoReadingWorkspace } from "./system/CoReadingWorkspace";
 
 import Prism from "prismjs";
 import "prismjs/components/prism-python";
@@ -957,319 +958,30 @@ export function MentorView() {
       {/* ==================================================================== */}
       {/* CO-READING SPACE: DISTRACTION-FREE FOCUS READER OVERLAY              */}
       {/* ==================================================================== */}
-      <AnimatePresence>
-        {readerOpen && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.99 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.99 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex flex-col bg-cream-base dark:bg-[#0A0C10] p-3 sm:p-6 overflow-hidden"
-          >
-            {/* Top Reader Toolbar */}
-            <div className="flex flex-wrap items-center justify-between border-b border-hair pb-4 gap-4 max-w-5xl mx-auto w-full">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30">
-                  <BookOpen size={20} weight="bold" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-espresso leading-tight">
-                    Focus Reader Space
-                  </h2>
-                  <p className="font-mono text-[10px] text-coffee">
-                    {currentTopicObj.title}
-                  </p>
-                </div>
-              </div>
-
-              {/* Toolbar Controls */}
-              <div className="flex flex-wrap items-center gap-3">
-                {/* Outline Toggle Button */}
-                <button
-                  onClick={() => setTocOpen(!tocOpen)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 font-mono text-xs font-bold rounded-xl border transition-all ${
-                    tocOpen
-                      ? "border-amber-500 bg-amber-500/10 text-amber-500"
-                      : "border-hair bg-cream-raised dark:bg-[#12151E] text-coffee hover:text-espresso"
-                  }`}
-                  title="Toggle Document Outline (Ctrl+O / ⌘O)"
-                >
-                  <List size={14} />
-                  <span className="hidden sm:inline">Outline</span>
-                  <span className="text-[10px] opacity-60 font-mono hidden sm:inline">(⌘O)</span>
-                </button>
-
-                {/* Answer Nav Pager */}
-                {(() => {
-                  const assistantMsgs = currentMessages.filter((m) => m.role === "assistant" && m.content.trim().length > 0);
-                  if (assistantMsgs.length <= 1) return null;
-
-                  return (
-                    <div className="flex items-center gap-1.5 border border-hair rounded-xl px-2 py-1 bg-cream-raised dark:bg-[#12151E] font-mono text-xs text-espresso">
-                      <button
-                        disabled={readerMsgIndex === 0}
-                        onClick={() => setReaderMsgIndex((prev) => Math.max(0, prev - 1))}
-                        className="p-1 hover:text-amber-500 disabled:opacity-30"
-                        title="Previous Answer"
-                      >
-                        <CaretLeft size={14} />
-                      </button>
-                      <span>
-                        Answer {readerMsgIndex + 1} of {assistantMsgs.length}
-                      </span>
-                      <button
-                        disabled={readerMsgIndex === assistantMsgs.length - 1}
-                        onClick={() => setReaderMsgIndex((prev) => Math.min(assistantMsgs.length - 1, prev + 1))}
-                        className="p-1 hover:text-amber-500 disabled:opacity-30"
-                        title="Next Answer"
-                      >
-                        <CaretRight size={14} />
-                      </button>
-                    </div>
-                  );
-                })()}
-
-                {/* Font Sizer (A- / A+) */}
-                <div className="flex items-center gap-1 border border-hair rounded-xl px-2 py-1 bg-cream-raised dark:bg-[#12151E]">
-                  <TextAa size={14} className="text-coffee" />
-                  <button
-                    onClick={() => {
-                      const sizes: Array<"xs" | "sm" | "base" | "lg" | "xl"> = ["xs", "sm", "base", "lg", "xl"];
-                      const idx = sizes.indexOf(readerFontSize);
-                      if (idx > 0) setReaderFontSize(sizes[idx - 1]);
-                    }}
-                    disabled={readerFontSize === "xs"}
-                    className="px-1.5 py-0.5 text-xs font-mono font-bold text-coffee hover:text-espresso disabled:opacity-30"
-                    title="Decrease Font Size (A-)"
-                  >
-                    A-
-                  </button>
-                  <span className="font-mono text-[10px] text-amber-500 uppercase px-1 font-bold">
-                    {readerFontSize}
-                  </span>
-                  <button
-                    onClick={() => {
-                      const sizes: Array<"xs" | "sm" | "base" | "lg" | "xl"> = ["xs", "sm", "base", "lg", "xl"];
-                      const idx = sizes.indexOf(readerFontSize);
-                      if (idx < sizes.length - 1) setReaderFontSize(sizes[idx + 1]);
-                    }}
-                    disabled={readerFontSize === "xl"}
-                    className="px-1.5 py-0.5 text-xs font-mono font-bold text-coffee hover:text-espresso disabled:opacity-30"
-                    title="Increase Font Size (A+)"
-                  >
-                    A+
-                  </button>
-                </div>
-
-                {/* Typography Font Switcher */}
-                <div className="flex items-center gap-1 border border-hair rounded-xl p-1 bg-cream-raised dark:bg-[#12151E] text-xs font-mono font-bold">
-                  {(["sans", "serif", "handwriting"] as const).map((fontStyle) => (
-                    <button
-                      key={fontStyle}
-                      onClick={() => setReaderFontFamily(fontStyle)}
-                      className={`px-2.5 py-1 rounded-lg transition-all capitalize ${
-                        readerFontFamily === fontStyle
-                          ? "bg-amber-500 text-cream-raised font-bold shadow-xs"
-                          : "text-coffee hover:text-espresso"
-                      }`}
-                    >
-                      {fontStyle === "handwriting" ? "✍️ Note" : fontStyle}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Copy Button */}
-                {(() => {
-                  const assistantMsgs = currentMessages.filter((m) => m.role === "assistant" && m.content.trim().length > 0);
-                  const activeMsg = assistantMsgs[readerMsgIndex] || assistantMsgs[assistantMsgs.length - 1];
-
-                  if (!activeMsg) return null;
-
-                  return (
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(activeMsg.content);
-                          setCopiedReaderText(true);
-                          setTimeout(() => setCopiedReaderText(false), 2000);
-                        }}
-                        className="p-2 border border-hair rounded-xl bg-cream-raised dark:bg-[#12151E] text-coffee hover:text-espresso"
-                        title="Copy Answer Text"
-                      >
-                        {copiedReaderText ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          sendToObsidian({
-                            title: `${currentTopicObj.title} - Day ${currentTopicObj.day}`,
-                            content: activeMsg.content,
-                            topic: currentTopicObj.title,
-                            day: currentTopicObj.day,
-                          });
-                        }}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 border border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-300 hover:bg-purple-500/20 rounded-xl font-mono text-xs font-bold transition-all"
-                        title="Open & Save directly to Obsidian app (obsidian://new)"
-                      >
-                        <span className="text-[13px]">💎</span>
-                        <span className="hidden sm:inline">Save to Obsidian</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          downloadObsidianMarkdown({
-                            title: `${currentTopicObj.title} - Day ${currentTopicObj.day}`,
-                            content: activeMsg.content,
-                            topic: currentTopicObj.title,
-                            day: currentTopicObj.day,
-                          });
-                        }}
-                        className="p-2 border border-hair rounded-xl bg-cream-raised dark:bg-[#12151E] text-coffee hover:text-espresso"
-                        title="Download .md file formatted for Obsidian Vault"
-                      >
-                        <DownloadSimple size={16} />
-                      </button>
-                    </div>
-                  );
-                })()}
-
-                <button
-                  onClick={() => setReaderOpen(false)}
-                  className="p-2 rounded-xl border border-hair bg-cream-raised dark:bg-[#12151E] text-coffee hover:text-espresso"
-                  title="Close Focus Reader (Esc)"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-
-            {/* Main Dual-Pane Reader Workspace */}
-            <div className="flex-1 flex overflow-hidden min-h-0 pt-4">
-              {/* Left Dynamic Outline Sidebar (Notion/Obsidian style) */}
-              <AnimatePresence initial={false}>
-                {tocOpen && (
-                  <motion.div
-                    initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: "16rem", opacity: 1 }}
-                    exit={{ width: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="hidden lg:flex flex-col border-r border-hair p-4 space-y-3 overflow-y-auto shrink-0 bg-cream-raised/40 dark:bg-[#0E1117]/50 overflow-hidden"
-                  >
-                    <div className="font-mono text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider flex items-center gap-1.5 border-b border-hair pb-2">
-                      <List size={14} />
-                      <span>Document Outline</span>
-                    </div>
-
-                    {(() => {
-                      const assistantMsgs = currentMessages.filter((m) => m.role === "assistant" && m.content.trim().length > 0);
-                      const activeMsg = assistantMsgs[readerMsgIndex] || assistantMsgs[assistantMsgs.length - 1];
-                      const tocItems = activeMsg ? extractHeadingToc(activeMsg.content) : [];
-
-                      if (tocItems.length === 0) {
-                        return (
-                          <div className="font-mono text-[11px] text-coffee opacity-60 italic pt-2">
-                            No headings detected.
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div className="space-y-1 font-sans text-xs">
-                          {tocItems.map((item, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => {
-                                const targetEl = document.getElementById(item.id);
-                                if (targetEl) {
-                                  targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
-                                }
-                              }}
-                              className={`w-full text-left py-1 px-2 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5 truncate ${
-                                item.level === 1
-                                  ? "font-bold text-espresso"
-                                  : item.level === 2
-                                  ? "pl-3 font-semibold text-espresso/90"
-                                  : "pl-5 text-coffee text-[11px]"
-                              }`}
-                              title={item.title}
-                            >
-                              <span className="truncate">{item.title}</span>
-                            </button>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Center Reading Document Canvas */}
-              <div className="flex-1 overflow-y-auto py-6 px-4 sm:px-8 space-y-6 min-h-0">
-                <div className="max-w-4xl mx-auto space-y-6">
-                  {(() => {
-                    const assistantMsgs = currentMessages.filter((m) => m.role === "assistant" && m.content.trim().length > 0);
-                    const activeMsg = assistantMsgs[readerMsgIndex] || assistantMsgs[assistantMsgs.length - 1];
-
-                    if (!activeMsg) {
-                      return (
-                        <div className="flex flex-col items-center justify-center h-64 text-center space-y-3">
-                          <BookOpen size={40} className="text-amber-500 opacity-60" />
-                          <p className="font-mono text-sm text-coffee">No mentor answer available yet to read.</p>
-                        </div>
-                      );
-                    }
-
-                    const wordCount = activeMsg.content.trim().split(/\s+/).length;
-                    const readTimeMin = Math.max(1, Math.ceil(wordCount / 200));
-
-                    return (
-                      <div className="space-y-4">
-                        {/* Notion/Obsidian Document Meta Header */}
-                        <div className="border-b border-hair pb-4 space-y-1">
-                          <div className="flex items-center gap-2 font-mono text-[10px] text-coffee">
-                            <span className="bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded font-bold uppercase">
-                              Sprint Day {currentTopicObj.day}
-                            </span>
-                            <span>·</span>
-                            <span>⏱️ ~{readTimeMin} min read</span>
-                            <span>·</span>
-                            <span>{wordCount} words</span>
-                          </div>
-                        </div>
-
-                        <motion.div
-                          key={activeMsg.id || readerMsgIndex}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`rounded-2xl border border-hair bg-cream-raised dark:bg-[#0E1117] p-6 sm:p-12 shadow-2xl transition-all ${
-                            readerFontFamily === "handwriting"
-                              ? "font-handwriting text-amber-950 dark:text-amber-100 bg-[#FFFDF7] dark:bg-[#14120D]"
-                              : readerFontFamily === "serif"
-                              ? "font-reader-serif text-espresso"
-                              : "font-reader-sans text-espresso"
-                          } ${
-                            readerFontSize === "xs"
-                              ? "text-xs md:text-sm leading-relaxed"
-                              : readerFontSize === "sm"
-                              ? "text-sm md:text-base leading-relaxed"
-                              : readerFontSize === "base"
-                              ? "text-base md:text-lg leading-relaxed"
-                              : readerFontSize === "lg"
-                              ? "text-lg md:text-xl leading-relaxed"
-                              : "text-xl md:text-2xl leading-relaxed"
-                          }`}
-                        >
-                          <RenderMentorMessage content={activeMsg.content} />
-                        </motion.div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ==================================================================== */}
+      {/* CO-READING SPACE: SPLIT SCREEN & TEXT SELECTION WORKSPACE            */}
+      {/* ==================================================================== */}
+      <CoReadingWorkspace
+        open={readerOpen}
+        onClose={() => setReaderOpen(false)}
+        topicTitle={currentTopicObj.title}
+        sprintDay={currentTopicObj.day}
+        content={
+          (() => {
+            const assistantMsgs = currentMessages.filter((m) => m.role === "assistant" && m.content.trim().length > 0);
+            const activeMsg = assistantMsgs[readerMsgIndex] || assistantMsgs[assistantMsgs.length - 1];
+            return activeMsg?.content || "No study content available yet for this module. Ask a question to generate revision material.";
+          })()
+        }
+        assistantAnswers={
+          currentMessages.filter((m) => m.role === "assistant" && m.content.trim().length > 0).map((m) => m.content)
+        }
+        onSendMessage={(query) => {
+          setQueryInput(query);
+          handleSendQuery(query);
+        }}
+        isLoading={isStreaming}
+      />
 
       {/* Code Review Slide-Over Drawer */}
       <CodeReviewDrawer />
