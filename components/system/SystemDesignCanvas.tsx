@@ -12,6 +12,7 @@ import {
   Check,
   Sparkle,
   ShareNetwork,
+  Diamond,
 } from "@phosphor-icons/react";
 import { MermaidRenderer } from "./MermaidRenderer";
 import { PRESET_SYSTEM_DESIGNS, SystemArchitectureTemplate } from "@/lib/systemDesign";
@@ -107,7 +108,7 @@ ${selectedDesign.seniorCriteria.map((c) => `- [ ] ${c}`).join("\n")}
               className="flex items-center gap-1.5 px-3 py-1.5 border border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-300 hover:bg-purple-500/20 rounded-xl font-mono text-xs font-bold transition-all"
               title="Save System Design to Obsidian Vault"
             >
-              <span>💎</span>
+              <Diamond size={14} />
               <span className="hidden sm:inline">Export Design to Obsidian</span>
             </button>
 
@@ -155,21 +156,22 @@ ${selectedDesign.seniorCriteria.map((c) => `- [ ] ${c}`).join("\n")}
             {/* Tabs Bar */}
             <div className="flex border-b border-hair text-xs font-mono font-bold mb-4">
               {[
-                { id: "diagram", label: "🗺 Architecture Diagram", icon: TreeStructure },
-                { id: "tradeoffs", label: "⚖️ Trade-off Matrix", icon: Sliders },
-                { id: "failures", label: "⚠️ Failure Modes", icon: WarningOctagon },
-                { id: "criteria", label: "🎯 L6 Evaluation Criteria", icon: CheckCircle },
+                { id: "diagram", label: "Architecture Diagram", Icon: TreeStructure },
+                { id: "tradeoffs", label: "Trade-off Matrix", Icon: Sliders },
+                { id: "failures", label: "Failure Modes", Icon: WarningOctagon },
+                { id: "criteria", label: "L6 Evaluation Criteria", Icon: CheckCircle },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-4 py-2 border-b-2 transition-colors ${
+                  className={`px-4 py-2 border-b-2 transition-colors flex items-center gap-1.5 ${
                     activeTab === tab.id
                       ? "border-amber-500 text-espresso font-extrabold"
                       : "border-transparent text-coffee hover:text-espresso"
                   }`}
                 >
-                  {tab.label}
+                  <tab.Icon size={14} className={activeTab === tab.id ? "text-amber-500" : "text-coffee"} />
+                  <span>{tab.label}</span>
                 </button>
               ))}
             </div>

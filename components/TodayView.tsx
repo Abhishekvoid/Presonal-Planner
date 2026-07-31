@@ -28,6 +28,7 @@ import {
 } from "./system/LearnistDeck";
 import { MustDoContractCard } from "./system/MustDoContractCard";
 import { syncDailyLogToObsidian } from "@/lib/obsidian";
+import { Diamond } from "@phosphor-icons/react";
 
 const delay = (i: number) => ({ animationDelay: `${i * 0.06}s` });
 
@@ -692,10 +693,11 @@ export function TodayView() {
                     masteryStepsDone: prog.done,
                   });
                 }}
-                className="flex items-center gap-1 px-2.5 py-1 bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-300 hover:bg-purple-500/20 rounded font-mono text-xs font-bold transition-all"
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-300 hover:bg-purple-500/20 rounded font-mono text-xs font-bold transition-all"
                 title="Sync today's sprint log, completed tasks, and notes directly to Obsidian"
               >
-                <span>💎 Obsidian Log</span>
+                <Diamond size={13} />
+                <span>Obsidian Log</span>
               </button>
 
               <Button variant="ghost" onClick={() => setDayModal(true)}>

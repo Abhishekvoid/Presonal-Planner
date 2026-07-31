@@ -18,6 +18,7 @@ import {
   Brain,
   ChatCircleText,
   SidebarSimple,
+  Diamond,
 } from "@phosphor-icons/react";
 import { renderMarkdown } from "@/lib/markdown";
 import { sendToObsidian, downloadObsidianMarkdown } from "@/lib/obsidian";
@@ -207,7 +208,7 @@ export function CoReadingWorkspace({
                       : "text-coffee dark:text-zinc-400 hover:text-espresso dark:hover:text-white"
                   }`}
                 >
-                  {style === "handwriting" ? "✍️ Note" : style}
+                  {style === "handwriting" ? "Script" : style}
                 </button>
               ))}
             </div>
@@ -220,7 +221,7 @@ export function CoReadingWorkspace({
                 title="Open AI Reading Mentor Side Panel"
               >
                 <Brain size={15} />
-                <span>💬 Open AI Mentor</span>
+                <span>Open AI Mentor</span>
               </button>
             )}
 
@@ -237,7 +238,7 @@ export function CoReadingWorkspace({
               className="flex items-center gap-1.5 px-2.5 py-1 border border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-300 hover:bg-purple-500/20 rounded-lg font-mono text-xs font-bold transition-all"
               title="Save to Obsidian"
             >
-              <span>💎</span>
+              <Diamond size={13} />
               <span className="hidden sm:inline">Obsidian</span>
             </button>
 
@@ -363,7 +364,7 @@ export function CoReadingWorkspace({
                     onClick={handleSaveSelectionToObsidian}
                     className="flex items-center gap-1 bg-purple-500/20 text-purple-600 dark:text-purple-300 hover:bg-purple-500/30 px-2 py-1 rounded-lg font-bold transition-all"
                   >
-                    <span>💎</span>
+                    <Diamond size={13} className="text-purple-500 dark:text-purple-400" />
                     <span>Note</span>
                   </button>
                 </motion.div>

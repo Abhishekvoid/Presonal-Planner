@@ -1,4 +1,13 @@
 import type { Note } from "./types";
+import Prism from "prismjs";
+import "prismjs/components/prism-python";
+import "prismjs/components/prism-typescript";
+import "prismjs/components/prism-javascript";
+import "prismjs/components/prism-sql";
+import "prismjs/components/prism-json";
+import "prismjs/components/prism-bash";
+import "prismjs/components/prism-jsx";
+import "prismjs/components/prism-tsx";
 
 export interface RenderMarkdownOptions {
   /** code-block theme class suffix, matches NotesView's setting */
@@ -22,8 +31,8 @@ export function renderMarkdown(text: string, opts: RenderMarkdownOptions = {}): 
   const notes = opts.notes ?? [];
 
   // Helper to parse Markdown inline formatting (bold, italic, code, links)
-  const parseInlineStyles = (text: string) => {
-    let html = text;
+  const parseInlineStyles = (str: string) => {
+    let html = str;
     // Bold
     html = html.replace(/\*\*([\s\S]+?)\*\*/g, "<strong>$1</strong>");
     // Italic
@@ -40,17 +49,17 @@ export function renderMarkdown(text: string, opts: RenderMarkdownOptions = {}): 
       if (trimmed === "Hard") {
         return '<code class="bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[11px] px-1.5 py-0.5 rounded-sm font-mono font-bold">Hard</code>';
       }
-      return `<code class="bg-coffee/10 text-espresso text-[11px] px-1 rounded-sm font-mono">${codeText}</code>`;
+      return `<code class="bg-black/5 dark:bg-white/10 text-espresso dark:text-zinc-200 text-[11px] px-1 py-0.5 rounded-sm font-mono">${codeText}</code>`;
     });
     // Standard links
     html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-olive-deep underline font-bold hover:text-olive transition-colors">$1</a>');
-    // Wikilinks
+    // Wikilinks (clean without emoji)
     html = html.replace(/\[\[([\s\S]+?)\]\]/g, (match, title) => {
       const targetNote = notes.find((n) => n.title.toLowerCase() === title.trim().toLowerCase());
       if (targetNote) {
-        return `<span class="underline text-olive-deep font-bold cursor-pointer hover:text-olive transition-colors inline-block" data-note-id="${targetNote.id}">📄 ${title}</span>`;
+        return `<span class="underline text-amber-600 dark:text-amber-400 font-bold cursor-pointer hover:underline transition-colors inline-block" data-note-id="${targetNote.id}">${title}</span>`;
       }
-      return `<span class="text-clay font-mono italic select-none" title="Note does not exist yet. Create it to link.">[[${title} (Broken Link)]]</span>`;
+      return `<span class="text-coffee font-mono italic select-none" title="Note does not exist yet. Create it to link.">[[${title}]]</span>`;
     });
     return html;
   };
@@ -69,21 +78,21 @@ export function renderMarkdown(text: string, opts: RenderMarkdownOptions = {}): 
     const hasDivider = cells[1] && cells[1].every((cell) => cell.startsWith("-"));
     const dataRows = hasDivider ? cells.slice(2) : cells.slice(1);
 
-    let html = '<div class="overflow-x-auto my-3"><table class="w-full text-left text-xs border-collapse border border-coffee/20 rounded-sm">';
+    let html = '<div class="overflow-x-auto my-3"><table class="w-full text-left text-xs border-collapse border border-hair rounded-xl shadow-xs overflow-hidden">';
 
     // Header
-    html += '<thead class="bg-coffee/10 border-b border-coffee/20"><tr>';
+    html += '<thead class="bg-cream-raised dark:bg-[#12151E] border-b border-hair"><tr>';
     headers.forEach((h) => {
-      html += `<th class="p-2 font-mono font-bold text-espresso">${parseInlineStyles(h)}</th>`;
+      html += `<th class="p-2.5 font-mono font-bold text-espresso dark:text-zinc-200">${parseInlineStyles(h)}</th>`;
     });
     html += "</tr></thead>";
 
     // Body
-    html += '<tbody class="divide-y divide-coffee/10 bg-cream-base/30">';
+    html += '<tbody class="divide-y divide-hair bg-cream-base dark:bg-[#0E1117]">';
     dataRows.forEach((row) => {
-      html += "<tr>";
+      html += '<tr className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">';
       row.forEach((cell) => {
-        html += `<td class="p-2 text-espresso font-mono">${parseInlineStyles(cell)}</td>`;
+        html += `<td class="p-2.5 text-espresso dark:text-zinc-300 font-mono">${parseInlineStyles(cell)}</td>`;
       });
       html += "</tr>";
     });
@@ -95,6 +104,8 @@ export function renderMarkdown(text: string, opts: RenderMarkdownOptions = {}): 
 
   const lines = text.split("\n");
   let inCode = false;
+  let currentLang = "";
+  let rawCodeLines: string[] = [];
   let inTable = false;
   let tableRows: string[] = [];
   const parsedLines: string[] = [];
@@ -107,19 +118,34 @@ export function renderMarkdown(text: string, opts: RenderMarkdownOptions = {}): 
 
     // Code blocks: ```code```
     if (line.trim().startsWith("```")) {
-      inCode = !inCode;
-      if (inCode) {
+      if (!inCode) {
+        inCode = true;
         const langMatch = line.trim().match(/^```(\w+)/);
-        const lang = langMatch ? langMatch[1] : "";
-        parsedLines.push(`<div class="code-block-container code-theme-${codeTheme} my-4"><div class="code-block-header"><span class="code-block-lang">${lang || "code"}</span><span class="copy-code-btn">Copy</span></div><pre class="overflow-x-auto"><code class="language-${lang || "none"}">`);
+        currentLang = langMatch ? langMatch[1].toLowerCase() : "python";
+        rawCodeLines = [];
       } else {
-        parsedLines.push("</code></pre></div>");
+        inCode = false;
+        const rawCode = rawCodeLines.join("\n");
+        let highlighted = rawCode;
+
+        try {
+          const grammar = Prism.languages[currentLang] || Prism.languages.python || Prism.languages.javascript;
+          if (grammar) {
+            highlighted = Prism.highlight(rawCode, grammar, currentLang);
+          }
+        } catch {
+          // Fallback to unhighlighted if Prism fails
+        }
+
+        parsedLines.push(
+          `<div class="code-block-container code-theme-${codeTheme} my-4 rounded-xl border border-hair overflow-hidden shadow-sm"><div class="code-block-header flex items-center justify-between px-3 py-1.5 font-mono text-[10px] uppercase font-bold tracking-wider border-b border-hair"><span class="code-block-lang text-amber-600 dark:text-amber-400">${currentLang || "code"}</span><span class="copy-code-btn cursor-pointer hover:opacity-100 opacity-60">Copy</span></div><pre class="overflow-x-auto p-3 font-mono text-xs leading-relaxed"><code class="language-${currentLang}">${highlighted}</code></pre></div>`
+        );
       }
       continue;
     }
 
     if (inCode) {
-      parsedLines.push(line);
+      rawCodeLines.push(line);
       continue;
     }
 
