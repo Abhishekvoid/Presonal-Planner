@@ -24,6 +24,8 @@ import { useGlobalShortcuts } from "@/lib/useGlobalShortcuts";
 import { playTurn } from "@/lib/sound";
 import { useMentorStore } from "@/lib/mentorStore";
 
+import { CheckSquare, Brain, BookOpen, Users, MagnifyingGlass, Diamond } from "@phosphor-icons/react";
+
 type View = "today" | "goals" | "progress" | "focus" | "notes" | "spatial" | "mentor";
 
 const ORDER: View[] = ["today", "goals", "progress", "focus", "notes", "spatial", "mentor"];
@@ -111,9 +113,10 @@ export function Planner({ replayIntro }: { replayIntro?: () => void } = {}) {
     <CelebrationProvider>
     <div className="min-h-screen">
       <Header
+        view={view}
+        setView={changeView}
         onBackup={() => setBackupOpen(true)}
         onCommand={() => setPaletteOpen(true)}
-        replayIntro={replayIntro}
       />
 
       <main
@@ -197,50 +200,72 @@ export function Planner({ replayIntro }: { replayIntro?: () => void } = {}) {
 }
 
 function Header({
+  view,
+  setView,
   onBackup,
   onCommand,
-  replayIntro,
 }: {
+  view: View;
+  setView: (v: View) => void;
   onBackup: () => void;
   onCommand: () => void;
-  replayIntro?: () => void;
 }) {
+  const tabs = [
+    { id: "today" as View, label: "Today Execution", Icon: CheckSquare },
+    { id: "mentor" as View, label: "AI Senior Mentor", Icon: Brain },
+    { id: "notes" as View, label: "Knowledge & Notes", Icon: BookOpen },
+  ];
+
   return (
-    <header className="sticky top-0 z-30 border-b border-hair bg-cream-base/90 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-6xl items-center gap-2 md:gap-4 px-4 sm:px-8 py-3">
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded">
+    <header className="sticky top-0 z-30 border-b border-hair bg-cream-base/90 backdrop-blur-xl transition-colors">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 md:gap-4 px-4 sm:px-8 py-2.5">
+        {/* Brand & Active Status Badge */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-1 rounded-lg">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>LEARNIST // ACTIVE</span>
           </div>
-          <span className="font-mono text-xs font-semibold tracking-wider text-espresso hidden sm:inline-block">
-            CODEX_ENGINEER
+          <span className="font-mono text-xs font-bold tracking-wider text-espresso hidden lg:inline-block">
+            STUDIO PLANNER
           </span>
         </div>
 
-        <div className="ml-auto flex items-center gap-2 sm:gap-3">
+        {/* Core Studio Top View Navigation Tabs */}
+        <div className="flex items-center gap-1 bg-cream-raised dark:bg-[#161920] border border-hair p-1 rounded-xl shadow-xs">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setView(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all ${
+                view === tab.id
+                  ? "bg-amber-500/10 dark:bg-emerald-500/10 text-amber-600 dark:text-emerald-400 border border-amber-500/30 dark:border-emerald-500/30 shadow-xs"
+                  : "text-coffee hover:text-espresso hover:bg-black/5 dark:hover:bg-white/5"
+              }`}
+            >
+              <tab.Icon size={14} className={view === tab.id ? "text-amber-500 dark:text-emerald-400" : "text-coffee"} />
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Right Action Controls */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={onCommand}
             aria-label="Open command palette"
-            className="group flex items-center gap-2 rounded border border-hair bg-cream-raised px-2.5 py-1 text-espresso transition-all hover:border-olive/30 shadow-sm"
+            className="group flex items-center gap-2 rounded-xl border border-hair bg-cream-raised dark:bg-[#161920] px-2.5 py-1 text-espresso transition-all hover:border-amber-500/40 shadow-xs"
           >
-            <span className="text-[11px] font-mono text-coffee group-hover:text-espresso">Search Deck</span>
-            <kbd className="rounded border border-hair bg-cream-deep px-1.5 py-[1px] font-mono text-[10px] text-coffee">⌘K</kbd>
+            <MagnifyingGlass size={13} className="text-coffee group-hover:text-espresso" />
+            <span className="text-[11px] font-mono text-coffee group-hover:text-espresso hidden sm:inline">Search</span>
+            <kbd className="rounded border border-hair bg-cream-deep dark:bg-white/5 px-1.5 py-[1px] font-mono text-[10px] text-coffee">⌘K</kbd>
           </button>
+
           <button
             onClick={onBackup}
             className="font-mono text-[11px] text-coffee hover:text-espresso transition-colors hidden md:inline-block px-2 py-1 rounded hover:bg-black/5 dark:hover:bg-white/5"
           >
-            [Backup]
+            Backup
           </button>
-          {replayIntro && (
-            <button
-              onClick={replayIntro}
-              className="font-mono text-[11px] text-zinc-400 hover:text-slate-200 transition-colors hidden md:inline-block px-2 py-1 rounded hover:bg-white/5"
-            >
-              [Replay]
-            </button>
-          )}
           <ThemeToggle />
         </div>
       </div>

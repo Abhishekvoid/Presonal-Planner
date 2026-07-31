@@ -37,29 +37,29 @@
 
   --font-display: 'Satoshi', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Surfaces — Warm Editorial Light Palette */
-  --cream-base-rgb: 248 246 242; /* #F8F6F2 Warm paper background */
-  --cream-raised-rgb: 250 248 245; /* #FAF8F5 Warm Silk Off-White card surface */
-  --cream-deep-rgb: 238 234 226; /* #EEEAE2 Recessed inner surface */
+  /* Surfaces — Warm Botanical Paper Light Palette */
+  --cream-base-rgb: 247 245 240; /* #F7F5F0 Warm silk paper background */
+  --cream-raised-rgb: 255 255 255; /* #FFFFFF Pristine card surface */
+  --cream-deep-rgb: 239 236 230; /* #EFECE6 Warm sand recessed surface */
 
   /* Typography — Dark Espresso & Muted Coffee */
-  --espresso-rgb: 28 25 23; /* #1C1917 High-contrast dark primary text */
-  --coffee-rgb: 87 83 78; /* #57534E Coffee secondary text */
-  --coffee-soft-rgb: 120 113 108; /* #78716C Muted text */
+  --espresso-rgb: 26 23 21; /* #1A1715 High-contrast dark espresso text */
+  --coffee-rgb: 96 88 80; /* #605850 Warm coffee secondary text */
+  --coffee-soft-rgb: 138 128 118; /* #8A8076 Muted soft text */
 
-  /* Accents — Olive, Clay, Slate */
-  --olive-rgb: 87 101 74; /* Warm olive */
-  --olive-deep-rgb: 43 51 37;
-  --olive-soft-rgb: 120 135 106;
-  --clay-rgb: 217 83 79;
-  --clay-deep-rgb: 180 50 40;
+  /* Accents — Forest Olive, Terracotta Brick, Warm Amber */
+  --olive-rgb: 61 90 69; /* #3D5A45 Warm forest olive */
+  --olive-deep-rgb: 36 53 41;
+  --olive-soft-rgb: 92 125 102;
+  --clay-rgb: 200 90 50; /* #C85A32 Warm terracotta brick */
+  --clay-deep-rgb: 160 65 32;
   --slate-rgb: 100 116 139;
 
   /* Hairline rule + modal scrim */
-  --hair: rgba(28, 25, 23, 0.08);
-  --scrim-rgb: 28 25 23;
-  --grain-opacity: 0.03;
-  --frame-glow: rgba(0, 0, 0, 0.06);
+  --hair: rgba(26, 23, 21, 0.08);
+  --scrim-rgb: 26 23 21;
+  --grain-opacity: 0.025;
+  --frame-glow: rgba(0, 0, 0, 0.04);
 
   /* Derived full-color vars */
   --cream-base: rgb(var(--cream-base-rgb));
@@ -81,27 +81,27 @@
 .dark {
   color-scheme: dark;
 
-  --cream-base-rgb: 10 12 16; /* #0A0C10 Rich Off-Black Charcoal Base */
-  --cream-raised-rgb: 18 21 30; /* #12151E Deep Navy Charcoal Raised Surface */
-  --cream-deep-rgb: 24 28 39; /* #181C27 Recessed Inner Surface */
+  --cream-base-rgb: 15 17 21; /* #0F1115 Deep Charcoal Warm Base */
+  --cream-raised-rgb: 22 25 32; /* #161920 Velvet Charcoal Card Surface */
+  --cream-deep-rgb: 27 30 39; /* #1B1E27 Recessed Inner Slate */
 
-  --espresso-rgb: 242 238 230; /* #F2EEE6 Warm Editorial Parchment Primary Text */
-  --coffee-rgb: 175 168 158; /* #AFA89E Warm Muted Coffee Secondary Text */
-  --coffee-soft-rgb: 130 122 112; /* #827A70 Soft Muted Text */
+  --espresso-rgb: 237 232 223; /* #EDE8DF Warm Parchment Primary Text */
+  --coffee-rgb: 154 147 136; /* #9A9388 Muted Coffee Secondary Text */
+  --coffee-soft-rgb: 118 112 102; /* #767066 Muted Soft Text */
 
-  --olive-rgb: 242 238 230;
-  --olive-deep-rgb: 250 248 245;
-  --olive-soft-rgb: 175 168 158;
-  --clay-rgb: 244 63 94;
-  --clay-deep-rgb: 225 29 72;
+  --olive-rgb: 78 201 176;
+  --olive-deep-rgb: 237 232 223;
+  --olive-soft-rgb: 154 147 136;
+  --clay-rgb: 245 158 11;
+  --clay-deep-rgb: 217 119 6;
   --slate-rgb: 148 163 184;
 
-  --hair: rgba(242, 238, 230, 0.12);
-  --scrim-rgb: 10 12 16;
-  --grain-opacity: 0.05;
+  --hair: rgba(237, 232, 223, 0.08);
+  --scrim-rgb: 15 17 21;
+  --grain-opacity: 0.04;
   --flow-rgb: 148 163 184;
   --flow: rgb(var(--flow-rgb));
-  --frame-glow: rgba(242, 238, 230, 0.2);
+  --frame-glow: rgba(237, 232, 223, 0.15);
 }
 
 @layer base {

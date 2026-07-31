@@ -541,7 +541,7 @@ export function TodayView() {
         {track.id === "track-interview" && (
           <div className="border-t hairline pt-3 px-4 pb-3 bg-olive/[0.02] space-y-2 mt-2">
             <div className="label text-[9px] text-olive-deep font-bold uppercase tracking-wider">
-              💡 Startup Pitch &amp; STAR Helper
+              Startup Pitch &amp; STAR Helper
             </div>
             <div className="space-y-1.5">
               <label className="flex items-start gap-2 cursor-pointer select-none text-[11px] leading-snug">
@@ -552,7 +552,7 @@ export function TodayView() {
                   className="mt-0.5 h-3 w-3 rounded-sm border border-coffee/30 text-olive focus:ring-0 focus:outline-none accent-olive"
                 />
                 <span className={pitchChecked.pitch ? "line-through opacity-50 text-coffee-soft" : "text-espresso font-medium"}>
-                  30s Elevator Pitch: "Software Developer from Nexus Automech..."
+                  30s Elevator Pitch: "Software Developer..."
                 </span>
               </label>
               <label className="flex items-start gap-2 cursor-pointer select-none text-[11px] leading-snug">
@@ -599,7 +599,7 @@ export function TodayView() {
               onClick={() => setQueryModal(true)}
               className="w-full text-center text-[11px] py-1 font-semibold"
             >
-              🔍 Open Query Performance Simulator
+              Open Query Performance Simulator
             </Button>
           </div>
         )}
@@ -622,7 +622,7 @@ export function TodayView() {
       {showGlitch && (
         <div className="fixed inset-0 pointer-events-none border-[12px] border-clay z-[9999] bg-clay/[0.04] animate-[pulse_0.2s_infinite] flex items-center justify-center">
           <div className="bg-espresso text-clay font-mono font-bold text-xs px-3.5 py-2 rounded-sm border border-clay shadow-lg animate-bounce uppercase tracking-wide">
-            ⚠ DISTRACTION ALERT: -$100 MOCK CAPITAL / RIVAL EDGE +3%
+            DISTRACTION ALERT: -$100 MOCK CAPITAL / RIVAL EDGE +3%
           </div>
         </div>
       )}
@@ -646,14 +646,14 @@ export function TodayView() {
                     : "bg-cream-raised text-coffee border-coffee/20 hover:border-coffee"
                 }`}
               >
-                {sp.id === "library" ? "📜 Library" : sp.id === "cyberpunk" ? "⚡ Terminal" : "🚀 NASA"}
+                {sp.id === "library" ? "Library" : sp.id === "cyberpunk" ? "Terminal" : "NASA"}
               </button>
             ))}
           </div>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-mono font-bold text-coffee bg-cream-deep/40 px-2 py-1.5 rounded-sm">
-            🚨 Interrupted: {pausesCount} | Distraction Cost: -${pausesCount * 100}
+            Interrupted: {pausesCount} | Distraction Cost: -${pausesCount * 100}
           </span>
         </div>
       </div>
