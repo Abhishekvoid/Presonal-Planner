@@ -49,6 +49,7 @@ import { sendToObsidian, downloadObsidianMarkdown } from "@/lib/obsidian";
 import { CoReadingWorkspace } from "./system/CoReadingWorkspace";
 import { SystemDesignCanvas } from "./system/SystemDesignCanvas";
 import { CodeAuditorDrawer } from "./system/CodeAuditorDrawer";
+import { SprintCurriculumModal } from "./system/SprintCurriculumModal";
 
 import Prism from "prismjs";
 import "prismjs/components/prism-python";
@@ -151,9 +152,10 @@ export function MentorView() {
   const [copiedReaderText, setCopiedReaderText] = useState(false);
   const [tocOpen, setTocOpen] = useState(true);
 
-  // System Design Canvas & Code Auditor Drawer State
+  // System Design Canvas & Code Auditor & Curriculum Modal State
   const [designCanvasOpen, setDesignCanvasOpen] = useState(false);
   const [codeAuditorOpen, setCodeAuditorOpen] = useState(false);
+  const [curriculumModalOpen, setCurriculumModalOpen] = useState(false);
 
   // Keyboard shortcuts: Ctrl+B (sidebar), Ctrl+R (reader mode), Ctrl+O (reader TOC), Escape (close reader)
   useEffect(() => {
@@ -442,73 +444,38 @@ export function MentorView() {
                   </div>
                 </div>
 
-              {/* Seamless Topic Dropdown Selector */}
-              <div className="relative mt-2.5">
-                <button
-                  onClick={() => setTopicDropdownOpen(!topicDropdownOpen)}
-                  className="w-full flex items-center justify-between gap-2 border-b border-hair pb-2 text-left transition-colors hover:border-amber-500"
-                >
-                  <div className="truncate">
-                    <div className="flex items-center justify-between font-mono text-[9px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider">
-                      <span>Sprint Day {currentTopicObj.day}</span>
-                      {((currentProgress.completedSteps?.length || 0) >= 13 || currentProgress.completedSteps?.includes(13)) && (
-                        <span className="text-emerald-500 flex items-center gap-1 font-bold text-[8px] bg-emerald-500/10 px-1 py-0.2 rounded border border-emerald-500/30">
-                          <CheckCircle size={10} />
-                          <span>COMPLETED</span>
-                        </span>
-                      )}
-                    </div>
-                    <div className="truncate font-sans text-xs font-bold text-espresso leading-tight mt-0.5">
-                      {currentTopicObj.title}
-                    </div>
-                  </div>
-                  <CaretDown size={14} className="text-coffee flex-shrink-0" />
-                </button>
-
-                {/* Dropdown Options */}
-                <AnimatePresence>
-                  {topicDropdownOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -4 }}
-                      className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-xl border border-hair bg-cream-raised dark:bg-[#161922] p-1 shadow-2xl backdrop-blur-2xl divide-y divide-hair"
-                    >
-                      {PRESET_TOPICS.map((topic) => {
-                        const topicProg = topicProgress[topic.id];
-                        const isDone = (topicProg?.completedSteps?.length || 0) >= 13 || topicProg?.completedSteps?.includes(13);
-
-                        return (
-                          <button
-                            key={topic.id}
-                            onClick={() => {
-                              setActiveTopic(topic.id, {
-                                id: topic.id,
-                                title: topic.title,
-                                sprintDay: topic.day,
-                                isDayCompleted: isDone,
-                              });
-                              setTopicDropdownOpen(false);
-                            }}
-                            className={`w-full px-3 py-2 text-left transition-colors flex items-center justify-between ${
-                              activeTopicId === topic.id
-                                ? "bg-amber-500/10 font-bold text-amber-600 dark:text-amber-400"
-                                : "text-coffee hover:text-espresso hover:bg-black/5 dark:hover:bg-white/5"
-                            }`}
-                          >
-                            <div className="truncate">
-                              <div className="font-mono text-[9px] uppercase">Day {topic.day}</div>
-                              <div className="truncate text-xs">{topic.title}</div>
-                            </div>
-                            {isDone && (
-                              <CheckCircle size={14} className="text-emerald-500 flex-shrink-0 ml-1" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </motion.div>
+              {/* Executive Staff Module Card */}
+              <div className="mt-3 p-3.5 rounded-xl border border-hair bg-cream-raised dark:bg-[#12151E] space-y-2.5 shadow-xs">
+                <div className="flex items-center justify-between font-mono text-[9px] uppercase font-bold tracking-wider">
+                  <span className="text-amber-600 dark:text-emerald-400">
+                    Day 0{currentTopicObj.day} of 09 · Sprint Syllabus
+                  </span>
+                  {((currentProgress.completedSteps?.length || 0) >= 13 || currentProgress.completedSteps?.includes(13)) ? (
+                    <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-bold text-[8px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                      <CheckCircle size={10} />
+                      <span>MASTERED</span>
+                    </span>
+                  ) : (
+                    <span className="text-amber-600 dark:text-amber-400 font-bold text-[8px] bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30">
+                      IN PROGRESS
+                    </span>
                   )}
-                </AnimatePresence>
+                </div>
+
+                <div className="font-bold text-xs text-espresso dark:text-white leading-tight">
+                  {currentTopicObj.title}
+                </div>
+
+                <button
+                  onClick={() => setCurriculumModalOpen(true)}
+                  className="w-full flex items-center justify-between gap-1.5 py-1.5 px-2.5 rounded-lg border border-hair bg-black/5 dark:bg-white/5 hover:border-amber-500 font-mono text-[11px] font-bold text-espresso dark:text-zinc-200 transition-all group"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <TreeStructure size={13} className="text-amber-500" />
+                    <span>Change Sprint Module</span>
+                  </span>
+                  <CaretRight size={12} className="text-coffee group-hover:translate-x-0.5 transition-transform" />
+                </button>
               </div>
           </div>
 
@@ -1029,6 +996,21 @@ export function MentorView() {
 
       {/* Static Code Complexity & Query Auditor */}
       <CodeAuditorDrawer open={codeAuditorOpen} onClose={() => setCodeAuditorOpen(false)} />
+
+      {/* Executive Sprint Curriculum Syllabus Deck Modal */}
+      <SprintCurriculumModal
+        open={curriculumModalOpen}
+        onClose={() => setCurriculumModalOpen(false)}
+        activeTopicId={activeTopicId}
+        topicProgress={topicProgress}
+        onSelectTopic={(topicId, title, day) => {
+          setActiveTopic(topicId, {
+            id: topicId,
+            title,
+            sprintDay: day,
+          });
+        }}
+      />
     </div>
   );
 }
