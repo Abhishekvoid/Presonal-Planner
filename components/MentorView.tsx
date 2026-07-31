@@ -34,6 +34,7 @@ import {
   Eye,
   List,
   DownloadSimple,
+  Cpu,
 } from "@phosphor-icons/react";
 import { useMentorStore, ChatMessageItem } from "@/lib/mentorStore";
 import { lockTopicAndOpenMentor } from "@/lib/topicLocker";
@@ -84,8 +85,12 @@ const PRESET_TOPICS = [
 ];
 
 const AVAILABLE_MODELS = [
-  { id: "inclusionai/ling-3.0-flash:free", name: "Ling 3.0 Flash", desc: "Socratic Reasoning (124B MoE)" },
-  { id: "nvidia/nemotron-3-ultra-550b-a55b:free", name: "Nemotron 3 550B", desc: "Code Intelligence" },
+  { id: "inclusionai/ling-3.0-flash:free", name: "⚡ Ling 3.0 Flash (Free)", desc: "124B MoE Socratic Reasoning & Grilling" },
+  { id: "nvidia/nemotron-3-ultra-550b-a55b:free", name: "🚀 Nemotron 3 Ultra (Free)", desc: "550B NVIDIA Code & System Architecture" },
+  { id: "qwen/qwen-2.5-coder-32b-instruct:free", name: "💻 Qwen 2.5 Coder (Free)", desc: "32B Deep Code Refactoring & Syntax Review" },
+  { id: "deepseek/deepseek-r1:free", name: "🧠 DeepSeek R1 (Free)", desc: "Deep Mathematical & Logic Reasoning" },
+  { id: "google/gemini-2.0-flash-lite-preview-02-05:free", name: "✨ Gemini 2.0 Flash (Free)", desc: "Ultra-Fast Multi-Turn Technical Synthesis" },
+  { id: "meta-llama/llama-3.3-70b-instruct:free", name: "🦙 Llama 3.3 70B (Free)", desc: "Meta High-Legibility Technical Explanations" },
 ];
 
 export function MentorView() {
@@ -227,7 +232,7 @@ export function MentorView() {
 
     if (!textToSend) setInput("");
 
-    // Auto-detect query intent and switch mode & model automatically!
+    // Auto-detect query intent and switch mode automatically!
     let targetMode = activeMode;
     let targetModel = selectedModel;
 
@@ -240,9 +245,7 @@ export function MentorView() {
       lowerQuery.includes("syntax")
     ) {
       targetMode = "code-review";
-      targetModel = "nvidia/nemotron-3-ultra-550b-a55b:free";
       setMode("code-review");
-      setSelectedModel("nvidia/nemotron-3-ultra-550b-a55b:free");
     } else if (
       lowerQuery.includes("mock interview") ||
       lowerQuery.includes("l6") ||
@@ -250,9 +253,7 @@ export function MentorView() {
       lowerQuery.includes("scorecard")
     ) {
       targetMode = "mock-interview";
-      targetModel = "inclusionai/ling-3.0-flash:free";
       setMode("mock-interview");
-      setSelectedModel("inclusionai/ling-3.0-flash:free");
     } else if (
       lowerQuery.includes("first principles") ||
       lowerQuery.includes("grill") ||
@@ -802,14 +803,16 @@ export function MentorView() {
               <Trophy size={14} weight="bold" />
               <span className="hidden sm:inline">Timed L6 Simulator</span>
             </button>
-            {/* Integrated Model Picker */}
+            {/* Integrated Model Selector Button */}
             <div className="relative">
               <button
                 onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-                className="flex items-center gap-1.5 font-mono text-xs font-semibold text-coffee hover:text-espresso transition-colors"
+                className="flex items-center gap-1.5 rounded-lg border border-hair bg-cream-raised dark:bg-[#12151E] px-2.5 py-1 font-mono text-xs font-bold text-espresso hover:border-amber-500 transition-all shadow-xs"
+                title="Switch AI Reasoning Model"
               >
-                <span>{AVAILABLE_MODELS.find((m) => m.id === selectedModel)?.name}</span>
-                <CaretDown size={12} />
+                <Cpu size={14} className="text-emerald-500" />
+                <span>{AVAILABLE_MODELS.find((m) => m.id === selectedModel)?.name || "Select Model"}</span>
+                <CaretDown size={12} className="text-coffee" />
               </button>
 
               <AnimatePresence>
@@ -818,21 +821,29 @@ export function MentorView() {
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
-                    className="absolute right-0 top-full z-30 mt-1 w-64 rounded-xl border border-hair bg-cream-raised dark:bg-[#161922] p-1 shadow-2xl backdrop-blur-2xl divide-y divide-hair"
+                    className="absolute right-0 top-full z-40 mt-1 w-72 rounded-xl border border-hair bg-cream-raised dark:bg-[#161922] p-1.5 shadow-2xl backdrop-blur-2xl space-y-1"
                   >
-                    {AVAILABLE_MODELS.map((model) => (
+                    <div className="font-mono text-[9px] uppercase font-bold text-amber-500 px-2.5 py-1 border-b border-hair">
+                      Available Reasoning Models (100% Free)
+                    </div>
+                    {AVAILABLE_MODELS.map((m) => (
                       <button
-                        key={model.id}
+                        key={m.id}
                         onClick={() => {
-                          setSelectedModel(model.id);
+                          setSelectedModel(m.id);
                           setModelDropdownOpen(false);
                         }}
-                        className={`w-full p-2.5 text-left transition-colors ${
-                          selectedModel === model.id ? "bg-amber-500/10 font-bold text-amber-600 dark:text-amber-400" : "text-coffee hover:text-espresso"
+                        className={`w-full p-2 text-left rounded-lg transition-colors flex flex-col ${
+                          selectedModel === m.id
+                            ? "bg-amber-500/10 font-bold text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                            : "text-coffee hover:text-espresso hover:bg-black/5 dark:hover:bg-white/5"
                         }`}
                       >
-                        <div className="font-mono text-xs">{model.name}</div>
-                        <div className="font-sans text-[10px] text-coffee opacity-80">{model.desc}</div>
+                        <div className="font-mono text-xs flex items-center justify-between">
+                          <span>{m.name}</span>
+                          {selectedModel === m.id && <Check size={12} className="text-amber-500" />}
+                        </div>
+                        <div className="font-sans text-[10px] text-coffee opacity-80">{m.desc}</div>
                       </button>
                     ))}
                   </motion.div>

@@ -63,15 +63,17 @@ export async function POST(req: NextRequest) {
 
     const ALLOWED_MODELS = [
       "inclusionai/ling-3.0-flash:free",
+      "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "qwen/qwen-2.5-coder-32b-instruct:free",
+      "deepseek/deepseek-r1:free",
+      "google/gemini-2.0-flash-lite-preview-02-05:free",
+      "meta-llama/llama-3.3-70b-instruct:free",
       "deepseek/deepseek-v4-flash",
       "deepseek/deepseek-v4-flash:free",
-      "nvidia/nemotron-3-ultra-550b-a55b:free",
-      "deepseek/deepseek-r1:free",
-      "meta-llama/llama-3.3-70b-instruct:free",
     ];
 
     let selectedModel =
-      !model || model === "auto" || !ALLOWED_MODELS.includes(model)
+      !model || model === "auto"
         ? defaultForMode
         : (model === "deepseek/deepseek-v4-flash:free" ? "inclusionai/ling-3.0-flash:free" : model);
 
@@ -99,15 +101,39 @@ export async function POST(req: NextRequest) {
       stream: true,
     };
 
-    const response = await fetch(endpoint, {
+    let response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
-        "HTTP-Referer": "http://localhost:3000",
+        "HTTP-Referer": "https://personal-planner.local",
+        "X-Title": "Personal Planner AI Mentor",
       },
       body: JSON.stringify(payload),
     });
+
+    // Automatic Fallback if target model returns 402/429/error
+    if (!response.ok && selectedModel !== "inclusionai/ling-3.0-flash:free") {
+      console.warn(`Model ${selectedModel} returned status ${response.status}. Attempting fallback to inclusionai/ling-3.0-flash:free...`);
+      const fallbackPayload = {
+        ...payload,
+        model: "inclusionai/ling-3.0-flash:free",
+      };
+      const fallbackRes = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+          "HTTP-Referer": "https://personal-planner.local",
+          "X-Title": "Personal Planner AI Mentor",
+        },
+        body: JSON.stringify(fallbackPayload),
+      });
+
+      if (fallbackRes.ok) {
+        response = fallbackRes;
+      }
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
