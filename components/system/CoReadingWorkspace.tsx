@@ -17,6 +17,7 @@ import {
   PaperPlaneRight,
   Brain,
   ChatCircleText,
+  SidebarSimple,
 } from "@phosphor-icons/react";
 import { renderMarkdown } from "@/lib/markdown";
 import { sendToObsidian, downloadObsidianMarkdown } from "@/lib/obsidian";
@@ -55,9 +56,8 @@ export function CoReadingWorkspace({
   const [readerFontSize, setReaderFontSize] = useState<"sm" | "base" | "lg">("base");
   const [readerFontFamily, setReaderFontFamily] = useState<"sans" | "serif" | "handwriting">("sans");
   const [queryInput, setQueryInput] = useState("");
-  const [tocOpen, setTocOpen] = useState(false);
-  const [copiedText, setCopiedText] = useState(false);
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
+  const [aiMentorCollapsed, setAiMentorCollapsed] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
@@ -93,6 +93,7 @@ export function CoReadingWorkspace({
   const handleAskAIAboutSelection = () => {
     if (!selectedText) return;
     const prompt = `Can you explain this specific concept in detail?\n\n"${selectedText}"`;
+    if (aiMentorCollapsed) setAiMentorCollapsed(false);
     onSendMessage(prompt);
     setPopoverCoords(null);
   };
@@ -139,12 +140,12 @@ export function CoReadingWorkspace({
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.99 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-50 flex flex-col bg-[#0B0D12] text-[#F3F4F6] overflow-hidden"
+        className="fixed inset-0 z-50 flex flex-col bg-cream-base dark:bg-[#07090E] text-espresso dark:text-[#F3F4F6] overflow-hidden"
       >
         {/* Top Header Bar */}
-        <header className="flex flex-wrap items-center justify-between border-b border-white/10 px-4 py-3 bg-[#0A0C10] shrink-0 gap-3">
+        <header className="flex flex-wrap items-center justify-between border-b border-hair px-4 py-3 bg-cream-raised dark:bg-[#0A0C10] shrink-0 gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-emerald-400 border border-amber-500/30 dark:border-emerald-500/30">
               <BookOpen size={18} weight="bold" />
             </div>
             <div>
@@ -152,26 +153,26 @@ export function CoReadingWorkspace({
                 <span className="font-mono text-xs font-bold text-espresso dark:text-emerald-400">
                   {topicTitle}
                 </span>
-                <span className="font-mono text-[10px] text-zinc-400 bg-white/5 px-2 py-0.5 rounded">
+                <span className="font-mono text-[10px] text-coffee dark:text-zinc-400 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded">
                   Day {sprintDay}
                 </span>
               </div>
-              <p className="font-mono text-[10px] text-zinc-400 flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <p className="font-mono text-[10px] text-coffee dark:text-zinc-400 flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                 Reading alongside you · answers cite the text
               </p>
             </div>
           </div>
 
-          {/* Controls: Font sizer, font family, Obsidian, Close */}
-          <div className="flex items-center gap-2">
+          {/* Controls: Font sizer, font family, AI Mentor Toggle, Obsidian, Close */}
+          <div className="flex flex-wrap items-center gap-2">
             {/* Font sizer */}
-            <div className="flex items-center gap-1 border border-white/10 rounded-lg px-2 py-1 bg-white/5">
-              <TextAa size={14} className="text-zinc-400" />
+            <div className="flex items-center gap-1 border border-hair rounded-lg px-2 py-1 bg-cream-base dark:bg-white/5">
+              <TextAa size={14} className="text-coffee dark:text-zinc-400" />
               <button
                 onClick={() => setReaderFontSize("sm")}
                 className={`px-1.5 text-xs font-mono font-bold ${
-                  readerFontSize === "sm" ? "text-emerald-400" : "text-zinc-400 hover:text-white"
+                  readerFontSize === "sm" ? "text-amber-600 dark:text-emerald-400 font-extrabold" : "text-coffee dark:text-zinc-400 hover:text-espresso dark:hover:text-white"
                 }`}
               >
                 A-
@@ -179,7 +180,7 @@ export function CoReadingWorkspace({
               <button
                 onClick={() => setReaderFontSize("base")}
                 className={`px-1.5 text-xs font-mono font-bold ${
-                  readerFontSize === "base" ? "text-emerald-400" : "text-zinc-400 hover:text-white"
+                  readerFontSize === "base" ? "text-amber-600 dark:text-emerald-400 font-extrabold" : "text-coffee dark:text-zinc-400 hover:text-espresso dark:hover:text-white"
                 }`}
               >
                 BASE
@@ -187,7 +188,7 @@ export function CoReadingWorkspace({
               <button
                 onClick={() => setReaderFontSize("lg")}
                 className={`px-1.5 text-xs font-mono font-bold ${
-                  readerFontSize === "lg" ? "text-emerald-400" : "text-zinc-400 hover:text-white"
+                  readerFontSize === "lg" ? "text-amber-600 dark:text-emerald-400 font-extrabold" : "text-coffee dark:text-zinc-400 hover:text-espresso dark:hover:text-white"
                 }`}
               >
                 A+
@@ -195,21 +196,33 @@ export function CoReadingWorkspace({
             </div>
 
             {/* Typography switch */}
-            <div className="flex items-center gap-1 border border-white/10 rounded-lg p-1 bg-white/5 text-xs font-mono">
+            <div className="flex items-center gap-1 border border-hair rounded-lg p-1 bg-cream-base dark:bg-white/5 text-xs font-mono">
               {(["sans", "serif", "handwriting"] as const).map((style) => (
                 <button
                   key={style}
                   onClick={() => setReaderFontFamily(style)}
-                  className={`px-2 py-0.5 rounded capitalize ${
+                  className={`px-2 py-0.5 rounded capitalize transition-colors ${
                     readerFontFamily === style
-                      ? "bg-emerald-500 text-black font-bold"
-                      : "text-zinc-400 hover:text-white"
+                      ? "bg-amber-500 dark:bg-emerald-500 text-black font-bold"
+                      : "text-coffee dark:text-zinc-400 hover:text-espresso dark:hover:text-white"
                   }`}
                 >
                   {style === "handwriting" ? "✍️ Note" : style}
                 </button>
               ))}
             </div>
+
+            {/* AI Reading Mentor Toggle Button */}
+            {aiMentorCollapsed && (
+              <button
+                onClick={() => setAiMentorCollapsed(false)}
+                className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 rounded-lg font-mono text-xs font-bold transition-all shadow-xs"
+                title="Open AI Reading Mentor Side Panel"
+              >
+                <Brain size={15} />
+                <span>💬 Open AI Mentor</span>
+              </button>
+            )}
 
             {/* Obsidian Save */}
             <button
@@ -221,7 +234,7 @@ export function CoReadingWorkspace({
                   day: sprintDay,
                 });
               }}
-              className="flex items-center gap-1.5 px-2.5 py-1 border border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 rounded-lg font-mono text-xs font-bold"
+              className="flex items-center gap-1.5 px-2.5 py-1 border border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-300 hover:bg-purple-500/20 rounded-lg font-mono text-xs font-bold transition-all"
               title="Save to Obsidian"
             >
               <span>💎</span>
@@ -230,7 +243,7 @@ export function CoReadingWorkspace({
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg border border-white/10 bg-white/5 text-zinc-400 hover:text-white"
+              className="p-1.5 rounded-lg border border-hair bg-cream-base dark:bg-white/5 text-coffee dark:text-zinc-400 hover:text-espresso dark:hover:text-white transition-all"
               title="Close Workspace (Esc)"
             >
               <X size={18} />
@@ -241,28 +254,43 @@ export function CoReadingWorkspace({
         {/* Main Split-Screen Layout */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0 relative">
           {/* ================================================================ */}
-          {/* LEFT PANE: DOCUMENT READING CANVAS (55% Width)                   */}
+          {/* LEFT PANE: DOCUMENT READING CANVAS                               */}
           {/* ================================================================ */}
           <div
             ref={canvasRef}
             onMouseUp={handleMouseUp}
-            className="flex-1 md:w-7/12 border-b md:border-b-0 md:border-r border-white/10 overflow-y-auto p-6 sm:p-10 select-text relative"
+            className={`flex-1 border-b md:border-b-0 border-hair overflow-y-auto p-6 sm:p-10 select-text relative transition-all duration-300 ${
+              aiMentorCollapsed ? "w-full max-w-5xl mx-auto border-r-0" : "md:w-7/12 md:border-r"
+            }`}
           >
             <div className="max-w-3xl mx-auto space-y-6">
               {/* Document Title Banner */}
-              <div className="border-b border-white/10 pb-4">
-                <div className="font-mono text-xs text-emerald-400 font-bold uppercase tracking-widest mb-1">
-                  CORE MODULE // REVISION CANAL
+              <div className="border-b border-hair pb-4 flex items-center justify-between">
+                <div>
+                  <div className="font-mono text-xs text-amber-600 dark:text-emerald-400 font-bold uppercase tracking-widest mb-1">
+                    CORE MODULE // REVISION CANAL
+                  </div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-espresso dark:text-white tracking-tight">
+                    {topicTitle}
+                  </h1>
                 </div>
-                <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                  {topicTitle}
-                </h1>
+
+                {/* Collapsed Badge Indicator */}
+                {aiMentorCollapsed && (
+                  <button
+                    onClick={() => setAiMentorCollapsed(false)}
+                    className="font-mono text-xs text-coffee dark:text-zinc-400 hover:text-amber-500 flex items-center gap-1 bg-black/5 dark:bg-white/5 px-2.5 py-1 rounded-lg border border-hair"
+                  >
+                    <span>Full Reading Width</span>
+                    <SidebarSimple size={14} />
+                  </button>
+                )}
               </div>
 
               {/* Luminous Highlights Panel if highlights exist */}
               {highlights.length > 0 && (
-                <div className="space-y-2 bg-emerald-500/5 border border-emerald-500/20 p-4 rounded-xl">
-                  <div className="font-mono text-[10px] uppercase font-bold text-emerald-400 flex items-center gap-1">
+                <div className="space-y-2 bg-amber-500/10 dark:bg-emerald-500/5 border border-amber-500/20 dark:border-emerald-500/20 p-4 rounded-xl">
+                  <div className="font-mono text-[10px] uppercase font-bold text-amber-600 dark:text-emerald-400 flex items-center gap-1">
                     <Highlighter size={12} />
                     <span>Saved Focus Highlights ({highlights.length})</span>
                   </div>
@@ -271,10 +299,10 @@ export function CoReadingWorkspace({
                       <div
                         key={hl.id}
                         onClick={() => setActiveHighlightId(hl.id)}
-                        className="flex items-start justify-between gap-3 text-xs bg-black/40 p-2.5 rounded-lg border border-white/5 cursor-pointer hover:border-emerald-500/40 transition-colors"
+                        className="flex items-start justify-between gap-3 text-xs bg-cream-raised dark:bg-black/40 p-2.5 rounded-lg border border-hair hover:border-amber-500 dark:hover:border-emerald-500/40 transition-colors cursor-pointer"
                       >
-                        <p className="text-zinc-200 font-sans italic">"{hl.text}"</p>
-                        <span className="font-mono text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold shrink-0">
+                        <p className="text-espresso dark:text-zinc-200 font-sans italic">"{hl.text}"</p>
+                        <span className="font-mono text-[10px] bg-amber-500/20 dark:bg-emerald-500/20 text-amber-700 dark:text-emerald-300 px-2 py-0.5 rounded font-bold shrink-0">
                           {hl.badge}
                         </span>
                       </div>
@@ -287,10 +315,10 @@ export function CoReadingWorkspace({
               <div
                 className={`transition-all ${
                   readerFontFamily === "handwriting"
-                    ? "font-handwriting text-amber-100 bg-[#14120D] p-6 rounded-2xl border border-amber-500/20"
+                    ? "font-handwriting text-amber-900 dark:text-amber-100 bg-[#FDFBF7] dark:bg-[#14120D] p-6 rounded-2xl border border-amber-500/20"
                     : readerFontFamily === "serif"
-                    ? "font-reader-serif text-zinc-100"
-                    : "font-reader-sans text-zinc-100"
+                    ? "font-reader-serif text-espresso dark:text-zinc-100"
+                    : "font-reader-sans text-espresso dark:text-zinc-100"
                 } ${
                   readerFontSize === "sm"
                     ? "text-sm leading-relaxed"
@@ -315,25 +343,25 @@ export function CoReadingWorkspace({
                     top: popoverCoords.y,
                     left: popoverCoords.x,
                   }}
-                  className="z-50 flex items-center gap-1.5 bg-[#181C24] border border-emerald-500/40 shadow-2xl p-1.5 rounded-xl text-xs font-mono"
+                  className="z-50 flex items-center gap-1.5 bg-cream-raised dark:bg-[#181C24] border border-amber-500/40 dark:border-emerald-500/40 shadow-2xl p-1.5 rounded-xl text-xs font-mono"
                 >
                   <button
                     onClick={handleAskAIAboutSelection}
-                    className="flex items-center gap-1 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 px-2.5 py-1 rounded-lg font-bold transition-all"
+                    className="flex items-center gap-1 bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/30 px-2.5 py-1 rounded-lg font-bold transition-all"
                   >
-                    <Sparkle size={14} className="text-emerald-400" />
+                    <Sparkle size={14} className="text-emerald-500 dark:text-emerald-400" />
                     <span>Ask AI</span>
                   </button>
                   <button
                     onClick={handleAddHighlight}
-                    className="flex items-center gap-1 bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 px-2 py-1 rounded-lg font-bold transition-all"
+                    className="flex items-center gap-1 bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500/30 px-2 py-1 rounded-lg font-bold transition-all"
                   >
-                    <Highlighter size={14} className="text-amber-400" />
+                    <Highlighter size={14} className="text-amber-500 dark:text-amber-400" />
                     <span>Highlight</span>
                   </button>
                   <button
                     onClick={handleSaveSelectionToObsidian}
-                    className="flex items-center gap-1 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 px-2 py-1 rounded-lg font-bold transition-all"
+                    className="flex items-center gap-1 bg-purple-500/20 text-purple-600 dark:text-purple-300 hover:bg-purple-500/30 px-2 py-1 rounded-lg font-bold transition-all"
                   >
                     <span>💎</span>
                     <span>Note</span>
@@ -344,90 +372,108 @@ export function CoReadingWorkspace({
           </div>
 
           {/* ================================================================ */}
-          {/* RIGHT PANE: LIVE AI COMPANION CHAT (45% Width)                  */}
+          {/* RIGHT PANE: LIVE AI COMPANION CHAT                               */}
           {/* ================================================================ */}
-          <div className="flex-1 md:w-5/12 flex flex-col bg-[#0E1117] overflow-hidden min-h-0">
-            {/* Chat Stream Header */}
-            <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between bg-black/20">
-              <div className="flex items-center gap-2 font-mono text-xs font-bold text-zinc-300">
-                <Brain size={16} className="text-emerald-400" />
-                <span>AI READING MENTOR</span>
-              </div>
-              <span className="font-mono text-[10px] text-zinc-500">
-                Ling 3.0 Flash 124B MoE
-              </span>
-            </div>
-
-            {/* Chat Stream Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {assistantAnswers.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-64 text-center space-y-3 text-zinc-500 p-6 border border-dashed border-white/10 rounded-2xl my-auto">
-                  <ChatCircleText size={36} className="text-emerald-400 opacity-60" />
-                  <p className="font-mono text-xs text-zinc-300 font-bold">
-                    Select any sentence or concept on the left to ask AI or generate revision notes!
-                  </p>
-                  <p className="font-mono text-[11px] text-zinc-500">
-                    Answers cite exact text passages with clickable green citation badges.
-                  </p>
-                </div>
-              ) : (
-                assistantAnswers.map((ans, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-[#141822] border border-white/10 p-4 rounded-xl space-y-2 text-xs font-sans text-zinc-200 leading-relaxed shadow-lg"
-                  >
-                    <div className="flex items-center justify-between font-mono text-[10px] text-zinc-400 border-b border-white/5 pb-1.5">
-                      <span className="text-emerald-400 font-bold">Answer #{idx + 1}</span>
-                      <span className="bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-mono">
-                        ↖ cited
-                      </span>
-                    </div>
-                    <RenderMarkdownContent text={ans} />
-                  </motion.div>
-                ))
-              )}
-
-              {isLoading && (
-                <div className="flex items-center gap-2 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-xs font-mono text-emerald-400">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span>Synthesizing citation & deep analysis...</span>
-                </div>
-              )}
-              <div ref={chatBottomRef} />
-            </div>
-
-            {/* Prompt Input Form */}
-            <form
-              onSubmit={handleSendChat}
-              className="p-3 border-t border-white/10 bg-[#0A0C10] flex items-center gap-2"
+          {!aiMentorCollapsed && (
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 50 }}
+              transition={{ duration: 0.2 }}
+              className="flex-1 md:w-5/12 flex flex-col bg-cream-raised dark:bg-[#0E1117] overflow-hidden min-h-0 border-l border-hair"
             >
-              <input
-                type="text"
-                value={queryInput}
-                onChange={(e) => setQueryInput(e.target.value)}
-                placeholder="Ask AI about this topic or selected concept..."
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 font-sans"
-              />
-              <button
-                type="submit"
-                disabled={!queryInput.trim() || isLoading}
-                className="p-2 bg-emerald-500 text-black font-bold rounded-xl hover:bg-emerald-400 disabled:opacity-30 transition-all"
-                title="Send Prompt (Enter)"
+              {/* Chat Stream Header with Collapse X Button */}
+              <div className="px-4 py-3 border-b border-hair flex items-center justify-between bg-black/5 dark:bg-black/20">
+                <div className="flex items-center gap-2 font-mono text-xs font-bold text-espresso dark:text-zinc-300">
+                  <Brain size={16} className="text-amber-500 dark:text-emerald-400" />
+                  <span>AI READING MENTOR</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[10px] text-coffee dark:text-zinc-500 hidden sm:inline">
+                    Ling 3.0 Flash 124B MoE
+                  </span>
+                  <button
+                    onClick={() => setAiMentorCollapsed(true)}
+                    className="p-1 rounded text-coffee hover:text-espresso dark:hover:text-white transition-colors"
+                    title="Collapse AI Reading Mentor Panel"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Chat Stream Messages */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {assistantAnswers.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-64 text-center space-y-3 text-coffee dark:text-zinc-500 p-6 border border-dashed border-hair rounded-2xl my-auto">
+                    <ChatCircleText size={36} className="text-amber-500 dark:text-emerald-400 opacity-60" />
+                    <p className="font-mono text-xs text-espresso dark:text-zinc-300 font-bold">
+                      Select any sentence or concept on the left to ask AI or generate revision notes!
+                    </p>
+                    <p className="font-mono text-[11px] text-coffee dark:text-zinc-500">
+                      Answers cite exact text passages with clickable green citation badges.
+                    </p>
+                  </div>
+                ) : (
+                  assistantAnswers.map((ans, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-cream-base dark:bg-[#141822] border border-hair p-4 rounded-xl space-y-2 text-xs font-sans text-espresso dark:text-zinc-200 leading-relaxed shadow-sm"
+                    >
+                      <div className="flex items-center justify-between font-mono text-[10px] text-coffee dark:text-zinc-400 border-b border-hair pb-1.5">
+                        <span className="text-amber-600 dark:text-emerald-400 font-bold">Answer #{idx + 1}</span>
+                        <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded font-mono">
+                          ↖ cited
+                        </span>
+                      </div>
+                      <RenderMarkdownContent text={ans} />
+                    </motion.div>
+                  ))
+                )}
+
+                {isLoading && (
+                  <div className="flex items-center gap-2 p-3 bg-amber-500/5 dark:bg-emerald-500/5 border border-amber-500/20 dark:border-emerald-500/20 rounded-xl text-xs font-mono text-amber-600 dark:text-emerald-400">
+                    <span className="h-2 w-2 rounded-full bg-amber-500 dark:bg-emerald-400 animate-ping" />
+                    <span>Synthesizing citation & deep analysis...</span>
+                  </div>
+                )}
+                <div ref={chatBottomRef} />
+              </div>
+
+              {/* Prompt Input Form */}
+              <form
+                onSubmit={handleSendChat}
+                className="p-3 border-t border-hair bg-cream-base dark:bg-[#0A0C10] flex items-center gap-2"
               >
-                <PaperPlaneRight size={16} weight="bold" />
-              </button>
-            </form>
-          </div>
+                <input
+                  type="text"
+                  value={queryInput}
+                  onChange={(e) => setQueryInput(e.target.value)}
+                  placeholder="Ask AI about this topic or selected concept..."
+                  className="flex-1 bg-cream-raised dark:bg-white/5 border border-hair rounded-xl px-3 py-2 text-xs text-espresso dark:text-white placeholder-coffee dark:placeholder-zinc-500 focus:outline-none focus:border-amber-500 dark:focus:border-emerald-500/50 font-sans"
+                />
+                <button
+                  type="submit"
+                  disabled={!queryInput.trim() || isLoading}
+                  className="p-2 bg-espresso text-cream-raised dark:bg-emerald-500 dark:text-black font-bold rounded-xl hover:opacity-90 dark:hover:bg-emerald-400 disabled:opacity-30 transition-all active:scale-95"
+                  title="Send Prompt (Enter)"
+                >
+                  <PaperPlaneRight size={16} weight="bold" />
+                </button>
+              </form>
+            </motion.div>
+          )}
         </div>
 
         {/* Bottom Floating Control Dock */}
-        <div className="py-2 bg-[#0A0C10] border-t border-white/10 flex items-center justify-center">
-          <div className="flex items-center gap-3 font-mono text-xs bg-[#141822] border border-white/10 px-4 py-1.5 rounded-full shadow-2xl">
-            <span className="text-emerald-400 font-bold">B — Co-reading workspace</span>
-            <span className="text-zinc-600">|</span>
-            <span className="text-zinc-400 text-[11px]">1-4 / ← →</span>
+        <div className="py-2 bg-cream-raised dark:bg-[#0A0C10] border-t border-hair flex items-center justify-center">
+          <div className="flex items-center gap-3 font-mono text-xs bg-cream-base dark:bg-[#141822] border border-hair px-4 py-1.5 rounded-full shadow-sm">
+            <span className="text-amber-600 dark:text-emerald-400 font-bold">B — Co-reading workspace</span>
+            <span className="text-hair">|</span>
+            <span className="text-coffee dark:text-zinc-400 text-[11px]">1-4 / ← →</span>
           </div>
         </div>
       </motion.div>

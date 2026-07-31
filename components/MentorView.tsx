@@ -35,6 +35,7 @@ import {
   List,
   DownloadSimple,
   Cpu,
+  TreeStructure,
 } from "@phosphor-icons/react";
 import { useMentorStore, ChatMessageItem } from "@/lib/mentorStore";
 import { lockTopicAndOpenMentor } from "@/lib/topicLocker";
@@ -46,6 +47,8 @@ import { renderMarkdown } from "@/lib/markdown";
 import { get8020PlanForTopic } from "@/lib/ai/subtopics8020";
 import { sendToObsidian, downloadObsidianMarkdown } from "@/lib/obsidian";
 import { CoReadingWorkspace } from "./system/CoReadingWorkspace";
+import { SystemDesignCanvas } from "./system/SystemDesignCanvas";
+import { CodeAuditorDrawer } from "./system/CodeAuditorDrawer";
 
 import Prism from "prismjs";
 import "prismjs/components/prism-python";
@@ -147,6 +150,10 @@ export function MentorView() {
   const [readerMsgIndex, setReaderMsgIndex] = useState<number>(0);
   const [copiedReaderText, setCopiedReaderText] = useState(false);
   const [tocOpen, setTocOpen] = useState(true);
+
+  // System Design Canvas & Code Auditor Drawer State
+  const [designCanvasOpen, setDesignCanvasOpen] = useState(false);
+  const [codeAuditorOpen, setCodeAuditorOpen] = useState(false);
 
   // Keyboard shortcuts: Ctrl+B (sidebar), Ctrl+R (reader mode), Ctrl+O (reader TOC), Escape (close reader)
   useEffect(() => {
@@ -803,6 +810,26 @@ export function MentorView() {
               <Trophy size={14} weight="bold" />
               <span className="hidden sm:inline">Timed L6 Simulator</span>
             </button>
+
+            {/* System Design Canvas Button */}
+            <button
+              onClick={() => setDesignCanvasOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-hair bg-cream-raised dark:bg-[#12151E] px-2.5 py-1 font-mono text-xs font-bold text-espresso hover:border-amber-500 transition-all shadow-xs"
+              title="Open Interactive System Architecture Canvas"
+            >
+              <TreeStructure size={14} className="text-emerald-500" />
+              <span className="hidden sm:inline">System Design</span>
+            </button>
+
+            {/* Code Auditor Button */}
+            <button
+              onClick={() => setCodeAuditorOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-hair bg-cream-raised dark:bg-[#12151E] px-2.5 py-1 font-mono text-xs font-bold text-espresso hover:border-amber-500 transition-all shadow-xs"
+              title="Open Complexity & N+1 Query Auditor"
+            >
+              <Code size={14} className="text-amber-500" />
+              <span className="hidden sm:inline">Code Audit</span>
+            </button>
             {/* Integrated Model Selector Button */}
             <div className="relative">
               <button
@@ -996,6 +1023,12 @@ export function MentorView() {
 
       {/* L6 Staff Timed Interview Simulator Modal */}
       <InterviewSimulatorModal open={simulatorOpen} onClose={() => setSimulatorOpen(false)} />
+
+      {/* Interactive System Design Architecture Canvas */}
+      <SystemDesignCanvas open={designCanvasOpen} onClose={() => setDesignCanvasOpen(false)} />
+
+      {/* Static Code Complexity & Query Auditor */}
+      <CodeAuditorDrawer open={codeAuditorOpen} onClose={() => setCodeAuditorOpen(false)} />
     </div>
   );
 }

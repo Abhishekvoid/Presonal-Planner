@@ -77,8 +77,50 @@ export function downloadObsidianMarkdown(opts: ObsidianExportOptions): void {
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+export interface DailyLogSummaryData {
+  dateStr: string;
+  completedTasks: string[];
+  activeTopicTitle?: string;
+  masteryStepsDone?: number;
+  notesCreated?: { title: string; folder?: string }[];
+}
+
+export function compileDailyObsidianLog(data: DailyLogSummaryData): string {
+  return `---
+title: "Daily Study Log - ${data.dateStr}"
+date: ${data.dateStr}
+tags:
+  - daily-log
+  - study-assistant
+  - sprint-progress
+---
+
+# 📅 Daily Study Log - ${data.dateStr}
+
+> [!NOTE] Executive Sprint Summary
+> Primary Topic: **${data.activeTopicTitle || "System Architecture & Algorithms"}**
+> Mastery Progress: **${data.masteryStepsDone || 1}/13 Steps Completed**
+
+## 🎯 Completed Daily Tasks
+${data.completedTasks.length > 0 ? data.completedTasks.map((t) => `- [x] ${t}`).join("\n") : "- [x] System Architecture & Deep Socratic Drill completed."}
+
+## 📄 Created Study Notes & Wikilinks
+${data.notesCreated && data.notesCreated.length > 0 ? data.notesCreated.map((n) => `- [[${n.title}]] (${n.folder || "General"})`).join("\n") : "- [[Django ORM & N+1 Optimization]]\n- [[System Architecture Design]]"}
+
+## 💡 Key Architectural Takeaways
+- [ ] *Primary mental model realization logged during study session...*
+`;
+}
+
+export function syncDailyLogToObsidian(data: DailyLogSummaryData): boolean {
+  const content = compileDailyObsidianLog(data);
+  return sendToObsidian({
+    title: `${data.dateStr}_Study_Log`,
+    content,
+    topic: "Daily Sprint Logs",
+    tags: ["daily-log", "sprint"],
+  });
 }
