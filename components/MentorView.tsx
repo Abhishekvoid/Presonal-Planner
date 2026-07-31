@@ -395,7 +395,7 @@ export function MentorView() {
   const progressPct = Math.round(((currentProgress.completedSteps?.length || 1) / 13) * 100);
 
   return (
-    <div className="relative flex flex-col lg:flex-row h-[calc(100dvh-10rem)] min-h-[500px] w-full overflow-hidden rounded-2xl border border-hair bg-cream-base dark:bg-[#0A0C10] shadow-2xl backdrop-blur-3xl">
+    <div className="relative flex flex-col lg:flex-row h-[calc(100dvh-5.5rem)] min-h-[500px] w-full overflow-hidden rounded-2xl border border-hair bg-cream-base dark:bg-[#0A0C10] shadow-2xl backdrop-blur-3xl">
       {/* ==================================================================== */}
       {/* LEFT INSPECTOR SIDEBAR: LINEAR / RAYCAST ANTI-SLOP STYLE             */}
       {/* ==================================================================== */}
@@ -958,11 +958,11 @@ export function MentorView() {
       <AnimatePresence>
         {readerOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
+            initial={{ opacity: 0, scale: 0.99 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
+            exit={{ opacity: 0, scale: 0.99 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 z-40 flex flex-col bg-cream-base dark:bg-[#0A0C10] p-4 sm:p-6 overflow-hidden rounded-2xl border border-hair shadow-2xl"
+            className="fixed inset-0 z-50 flex flex-col bg-cream-base dark:bg-[#0A0C10] p-3 sm:p-6 overflow-hidden"
           >
             {/* Top Reader Toolbar */}
             <div className="flex flex-wrap items-center justify-between border-b border-hair pb-4 gap-4 max-w-5xl mx-auto w-full">
@@ -1170,7 +1170,7 @@ export function MentorView() {
 
               {/* Center Reading Document Canvas */}
               <div className="flex-1 overflow-y-auto py-6 px-4 sm:px-8 space-y-6 min-h-0">
-                <div className="max-w-3xl mx-auto space-y-6">
+                <div className="max-w-4xl mx-auto space-y-6">
                   {(() => {
                     const assistantMsgs = currentMessages.filter((m) => m.role === "assistant" && m.content.trim().length > 0);
                     const activeMsg = assistantMsgs[readerMsgIndex] || assistantMsgs[assistantMsgs.length - 1];
@@ -1206,7 +1206,7 @@ export function MentorView() {
                           key={activeMsg.id || readerMsgIndex}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className={`rounded-2xl border border-hair bg-cream-raised dark:bg-[#0E1117] p-6 sm:p-10 shadow-2xl transition-all ${
+                          className={`rounded-2xl border border-hair bg-cream-raised dark:bg-[#0E1117] p-6 sm:p-12 shadow-2xl transition-all ${
                             readerFontFamily === "handwriting"
                               ? "font-handwriting text-amber-950 dark:text-amber-100 bg-[#FFFDF7] dark:bg-[#14120D]"
                               : readerFontFamily === "serif"
@@ -1214,14 +1214,14 @@ export function MentorView() {
                               : "font-reader-sans text-espresso"
                           } ${
                             readerFontSize === "xs"
-                              ? "text-xs leading-relaxed"
+                              ? "text-xs md:text-sm leading-relaxed"
                               : readerFontSize === "sm"
-                              ? "text-sm leading-relaxed"
+                              ? "text-sm md:text-base leading-relaxed"
                               : readerFontSize === "base"
-                              ? "text-base leading-relaxed md:text-lg"
+                              ? "text-base md:text-lg leading-relaxed"
                               : readerFontSize === "lg"
-                              ? "text-lg leading-relaxed md:text-xl"
-                              : "text-xl leading-relaxed md:text-2xl"
+                              ? "text-lg md:text-xl leading-relaxed"
+                              : "text-xl md:text-2xl leading-relaxed"
                           }`}
                         >
                           <RenderMentorMessage content={activeMsg.content} />

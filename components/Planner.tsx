@@ -119,7 +119,11 @@ export function Planner({ replayIntro }: { replayIntro?: () => void } = {}) {
       <main
         ref={mainRef}
         tabIndex={-1}
-        className="mx-auto w-full max-w-6xl px-4 pb-24 pt-6 sm:px-6 focus:outline-none"
+        className={`mx-auto w-full focus:outline-none transition-all ${
+          view === "mentor"
+            ? "max-w-[1600px] px-2 sm:px-4 pt-2 pb-16"
+            : "max-w-6xl px-4 pb-24 pt-6 sm:px-6"
+        }`}
       >
         {!ready ? (
           <Skeleton />
