@@ -178,25 +178,33 @@ export function renderMarkdown(text: string, opts: RenderMarkdownOptions = {}): 
 
     // Header 1: # Title
     if (line.trim().startsWith("# ")) {
-      parsedLines.push(`<h1 class="font-display text-lg sm:text-xl font-extrabold text-espresso mt-5 mb-2 border-b border-coffee/15 pb-1">${line.trim().substring(2)}</h1>`);
+      const title = line.trim().substring(2);
+      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      parsedLines.push(`<h1 id="${slug || `h1-${i}`}" class="font-display text-lg sm:text-xl font-extrabold text-espresso mt-5 mb-2 border-b border-coffee/15 pb-1">${title}</h1>`);
       continue;
     }
 
     // Header 2: ## Subtitle
     if (line.trim().startsWith("## ")) {
-      parsedLines.push(`<h2 class="font-display text-sm sm:text-base font-bold text-espresso mt-4 mb-1.5">${line.trim().substring(3)}</h2>`);
+      const title = line.trim().substring(3);
+      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      parsedLines.push(`<h2 id="${slug || `h2-${i}`}" class="font-display text-sm sm:text-base font-bold text-espresso mt-4 mb-1.5">${title}</h2>`);
       continue;
     }
 
     // Header 3: ### Subtitle
     if (line.trim().startsWith("### ")) {
-      parsedLines.push(`<h3 class="font-display text-xs sm:text-sm font-bold text-espresso mt-3.5 mb-1">${line.trim().substring(4)}</h3>`);
+      const title = line.trim().substring(4);
+      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      parsedLines.push(`<h3 id="${slug || `h3-${i}`}" class="font-display text-xs sm:text-sm font-bold text-espresso mt-3.5 mb-1">${title}</h3>`);
       continue;
     }
 
     // Header 4: #### Subtitle
     if (line.trim().startsWith("#### ")) {
-      parsedLines.push(`<h4 class="font-display text-[11.5px] sm:text-xs font-bold text-espresso mt-3 mb-1 uppercase tracking-wider">${line.trim().substring(5)}</h4>`);
+      const title = line.trim().substring(5);
+      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      parsedLines.push(`<h4 id="${slug || `h4-${i}`}" class="font-display text-[11.5px] sm:text-xs font-bold text-espresso mt-3 mb-1 uppercase tracking-wider">${title}</h4>`);
       continue;
     }
 

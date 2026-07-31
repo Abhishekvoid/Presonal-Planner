@@ -32,6 +32,7 @@ import {
   Copy,
   PencilLine,
   Eye,
+  List,
 } from "@phosphor-icons/react";
 import { useMentorStore, ChatMessageItem } from "@/lib/mentorStore";
 import { lockTopicAndOpenMentor } from "@/lib/topicLocker";
@@ -137,8 +138,9 @@ export function MentorView() {
   const [readerFontFamily, setReaderFontFamily] = useState<"sans" | "serif" | "handwriting">("sans");
   const [readerMsgIndex, setReaderMsgIndex] = useState<number>(0);
   const [copiedReaderText, setCopiedReaderText] = useState(false);
+  const [tocOpen, setTocOpen] = useState(true);
 
-  // Keyboard shortcuts: Ctrl+B (sidebar), Ctrl+R (reader mode), Escape (close reader)
+  // Keyboard shortcuts: Ctrl+B (sidebar), Ctrl+R (reader mode), Ctrl+O (reader TOC), Escape (close reader)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && (e.key === "b" || e.key === "B")) {
@@ -148,6 +150,10 @@ export function MentorView() {
       if ((e.ctrlKey || e.metaKey) && (e.key === "r" || e.key === "R")) {
         e.preventDefault();
         setReaderOpen((prev) => !prev);
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === "o" || e.key === "O")) {
+        e.preventDefault();
+        setTocOpen((prev) => !prev);
       }
       if (e.key === "Escape" && readerOpen) {
         setReaderOpen(false);
@@ -976,6 +982,21 @@ export function MentorView() {
 
               {/* Toolbar Controls */}
               <div className="flex flex-wrap items-center gap-3">
+                {/* Outline Toggle Button */}
+                <button
+                  onClick={() => setTocOpen(!tocOpen)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 font-mono text-xs font-bold rounded-xl border transition-all ${
+                    tocOpen
+                      ? "border-amber-500 bg-amber-500/10 text-amber-500"
+                      : "border-hair bg-cream-raised dark:bg-[#12151E] text-coffee hover:text-espresso"
+                  }`}
+                  title="Toggle Document Outline (Ctrl+O / ⌘O)"
+                >
+                  <List size={14} />
+                  <span className="hidden sm:inline">Outline</span>
+                  <span className="text-[10px] opacity-60 font-mono hidden sm:inline">(⌘O)</span>
+                </button>
+
                 {/* Answer Nav Pager */}
                 {(() => {
                   const assistantMsgs = currentMessages.filter((m) => m.role === "assistant" && m.content.trim().length > 0);
@@ -1087,49 +1108,128 @@ export function MentorView() {
               </div>
             </div>
 
-            {/* Reading Document Canvas */}
-            <div className="flex-1 overflow-y-auto py-8 px-4 sm:px-6">
-              <div className="max-w-4xl mx-auto space-y-6">
-                {(() => {
-                  const assistantMsgs = currentMessages.filter((m) => m.role === "assistant" && m.content.trim().length > 0);
-                  const activeMsg = assistantMsgs[readerMsgIndex] || assistantMsgs[assistantMsgs.length - 1];
+            {/* Main Dual-Pane Reader Workspace */}
+            <div className="flex-1 flex overflow-hidden min-h-0 pt-4">
+              {/* Left Dynamic Outline Sidebar (Notion/Obsidian style) */}
+              <AnimatePresence initial={false}>
+                {tocOpen && (
+                  <motion.div
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: "16rem", opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="hidden lg:flex flex-col border-r border-hair p-4 space-y-3 overflow-y-auto shrink-0 bg-cream-raised/40 dark:bg-[#0E1117]/50 overflow-hidden"
+                  >
+                    <div className="font-mono text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider flex items-center gap-1.5 border-b border-hair pb-2">
+                      <List size={14} />
+                      <span>Document Outline</span>
+                    </div>
 
-                  if (!activeMsg) {
+                    {(() => {
+                      const assistantMsgs = currentMessages.filter((m) => m.role === "assistant" && m.content.trim().length > 0);
+                      const activeMsg = assistantMsgs[readerMsgIndex] || assistantMsgs[assistantMsgs.length - 1];
+                      const tocItems = activeMsg ? extractHeadingToc(activeMsg.content) : [];
+
+                      if (tocItems.length === 0) {
+                        return (
+                          <div className="font-mono text-[11px] text-coffee opacity-60 italic pt-2">
+                            No headings detected.
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-1 font-sans text-xs">
+                          {tocItems.map((item, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                const targetEl = document.getElementById(item.id);
+                                if (targetEl) {
+                                  targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+                                }
+                              }}
+                              className={`w-full text-left py-1 px-2 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5 truncate ${
+                                item.level === 1
+                                  ? "font-bold text-espresso"
+                                  : item.level === 2
+                                  ? "pl-3 font-semibold text-espresso/90"
+                                  : "pl-5 text-coffee text-[11px]"
+                              }`}
+                              title={item.title}
+                            >
+                              <span className="truncate">{item.title}</span>
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Center Reading Document Canvas */}
+              <div className="flex-1 overflow-y-auto py-6 px-4 sm:px-8 space-y-6 min-h-0">
+                <div className="max-w-3xl mx-auto space-y-6">
+                  {(() => {
+                    const assistantMsgs = currentMessages.filter((m) => m.role === "assistant" && m.content.trim().length > 0);
+                    const activeMsg = assistantMsgs[readerMsgIndex] || assistantMsgs[assistantMsgs.length - 1];
+
+                    if (!activeMsg) {
+                      return (
+                        <div className="flex flex-col items-center justify-center h-64 text-center space-y-3">
+                          <BookOpen size={40} className="text-amber-500 opacity-60" />
+                          <p className="font-mono text-sm text-coffee">No mentor answer available yet to read.</p>
+                        </div>
+                      );
+                    }
+
+                    const wordCount = activeMsg.content.trim().split(/\s+/).length;
+                    const readTimeMin = Math.max(1, Math.ceil(wordCount / 200));
+
                     return (
-                      <div className="flex flex-col items-center justify-center h-64 text-center space-y-3">
-                        <BookOpen size={40} className="text-amber-500 opacity-60" />
-                        <p className="font-mono text-sm text-coffee">No mentor answer available yet to read.</p>
+                      <div className="space-y-4">
+                        {/* Notion/Obsidian Document Meta Header */}
+                        <div className="border-b border-hair pb-4 space-y-1">
+                          <div className="flex items-center gap-2 font-mono text-[10px] text-coffee">
+                            <span className="bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded font-bold uppercase">
+                              Sprint Day {currentTopicObj.day}
+                            </span>
+                            <span>·</span>
+                            <span>⏱️ ~{readTimeMin} min read</span>
+                            <span>·</span>
+                            <span>{wordCount} words</span>
+                          </div>
+                        </div>
+
+                        <motion.div
+                          key={activeMsg.id || readerMsgIndex}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`rounded-2xl border border-hair bg-cream-raised dark:bg-[#0E1117] p-6 sm:p-10 shadow-2xl transition-all ${
+                            readerFontFamily === "handwriting"
+                              ? "font-handwriting text-amber-950 dark:text-amber-100 bg-[#FFFDF7] dark:bg-[#14120D]"
+                              : readerFontFamily === "serif"
+                              ? "font-reader-serif text-espresso"
+                              : "font-reader-sans text-espresso"
+                          } ${
+                            readerFontSize === "xs"
+                              ? "text-xs leading-relaxed"
+                              : readerFontSize === "sm"
+                              ? "text-sm leading-relaxed"
+                              : readerFontSize === "base"
+                              ? "text-base leading-relaxed md:text-lg"
+                              : readerFontSize === "lg"
+                              ? "text-lg leading-relaxed md:text-xl"
+                              : "text-xl leading-relaxed md:text-2xl"
+                          }`}
+                        >
+                          <RenderMentorMessage content={activeMsg.content} />
+                        </motion.div>
                       </div>
                     );
-                  }
-
-                  return (
-                    <motion.div
-                      key={activeMsg.id || readerMsgIndex}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`rounded-2xl border border-hair bg-cream-raised dark:bg-[#0E1117] p-6 sm:p-10 shadow-2xl transition-all ${
-                        readerFontFamily === "handwriting"
-                          ? "font-handwriting text-amber-950 dark:text-amber-100 bg-[#FFFDF7] dark:bg-[#14120D]"
-                          : readerFontFamily === "serif"
-                          ? "font-reader-serif text-espresso"
-                          : "font-reader-sans text-espresso"
-                      } ${
-                        readerFontSize === "xs"
-                          ? "text-xs leading-relaxed"
-                          : readerFontSize === "sm"
-                          ? "text-sm leading-relaxed"
-                          : readerFontSize === "base"
-                          ? "text-base leading-relaxed md:text-lg"
-                          : readerFontSize === "lg"
-                          ? "text-lg leading-relaxed md:text-xl"
-                          : "text-xl leading-relaxed md:text-2xl"
-                      }`}
-                    >
-                      <RenderMentorMessage content={activeMsg.content} />
-                    </motion.div>
-                  );
-                })()}
+                  })()}
+                </div>
               </div>
             </div>
           </motion.div>
@@ -1188,4 +1288,49 @@ function RenderMentorMessage({ content }: { content: string }) {
       })}
     </div>
   );
+}
+
+export interface ReaderTocItem {
+  id: string;
+  title: string;
+  level: number;
+}
+
+export function extractHeadingToc(text: string): ReaderTocItem[] {
+  if (!text) return [];
+  const clean = text.replace(/<!--META:[\s\S]*?-->/g, "");
+  const lines = clean.split("\n");
+  const toc: ReaderTocItem[] = [];
+
+  lines.forEach((line, i) => {
+    const trimmed = line.trim();
+    let level = 0;
+    let title = "";
+
+    if (trimmed.startsWith("# ")) {
+      level = 1;
+      title = trimmed.substring(2);
+    } else if (trimmed.startsWith("## ")) {
+      level = 2;
+      title = trimmed.substring(3);
+    } else if (trimmed.startsWith("### ")) {
+      level = 3;
+      title = trimmed.substring(4);
+    } else if (trimmed.startsWith("#### ")) {
+      level = 4;
+      title = trimmed.substring(5);
+    }
+
+    if (level > 0 && title) {
+      const cleanTitle = title.replace(/[\*_~`]/g, "").trim();
+      const slug = cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      toc.push({
+        id: slug || `h${level}-${i}`,
+        title: cleanTitle,
+        level,
+      });
+    }
+  });
+
+  return toc;
 }
