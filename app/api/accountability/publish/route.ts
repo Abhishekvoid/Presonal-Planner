@@ -25,7 +25,17 @@ function getPusherInstance(appId: string, key: string, secret: string, cluster: 
 
 export async function POST(req: NextRequest) {
   try {
-    const payload = await req.json();
+    let payload: any = {};
+    try {
+      const text = await req.text();
+      payload = text ? JSON.parse(text) : {};
+    } catch (parseErr) {
+      return NextResponse.json(
+        { error: "Invalid JSON request payload." },
+        { status: 400 }
+      );
+    }
+
     const { roomCode, event, sender, data, customCredentials } = payload;
 
     if (!roomCode || !event || !sender) {
