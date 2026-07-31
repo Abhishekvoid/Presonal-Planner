@@ -33,6 +33,7 @@ import {
   PencilLine,
   Eye,
   List,
+  DownloadSimple,
 } from "@phosphor-icons/react";
 import { useMentorStore, ChatMessageItem } from "@/lib/mentorStore";
 import { lockTopicAndOpenMentor } from "@/lib/topicLocker";
@@ -42,6 +43,7 @@ import { CodeReviewDrawer } from "./system/CodeReviewDrawer";
 import { MermaidRenderer } from "./system/MermaidRenderer";
 import { renderMarkdown } from "@/lib/markdown";
 import { get8020PlanForTopic } from "@/lib/ai/subtopics8020";
+import { sendToObsidian, downloadObsidianMarkdown } from "@/lib/obsidian";
 
 import Prism from "prismjs";
 import "prismjs/components/prism-python";
@@ -1084,17 +1086,50 @@ export function MentorView() {
                   if (!activeMsg) return null;
 
                   return (
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(activeMsg.content);
-                        setCopiedReaderText(true);
-                        setTimeout(() => setCopiedReaderText(false), 2000);
-                      }}
-                      className="p-2 border border-hair rounded-xl bg-cream-raised dark:bg-[#12151E] text-coffee hover:text-espresso"
-                      title="Copy Answer Text"
-                    >
-                      {copiedReaderText ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(activeMsg.content);
+                          setCopiedReaderText(true);
+                          setTimeout(() => setCopiedReaderText(false), 2000);
+                        }}
+                        className="p-2 border border-hair rounded-xl bg-cream-raised dark:bg-[#12151E] text-coffee hover:text-espresso"
+                        title="Copy Answer Text"
+                      >
+                        {copiedReaderText ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          sendToObsidian({
+                            title: `${currentTopicObj.title} - Day ${currentTopicObj.day}`,
+                            content: activeMsg.content,
+                            topic: currentTopicObj.title,
+                            day: currentTopicObj.day,
+                          });
+                        }}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 border border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-300 hover:bg-purple-500/20 rounded-xl font-mono text-xs font-bold transition-all"
+                        title="Open & Save directly to Obsidian app (obsidian://new)"
+                      >
+                        <span className="text-[13px]">💎</span>
+                        <span className="hidden sm:inline">Save to Obsidian</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          downloadObsidianMarkdown({
+                            title: `${currentTopicObj.title} - Day ${currentTopicObj.day}`,
+                            content: activeMsg.content,
+                            topic: currentTopicObj.title,
+                            day: currentTopicObj.day,
+                          });
+                        }}
+                        className="p-2 border border-hair rounded-xl bg-cream-raised dark:bg-[#12151E] text-coffee hover:text-espresso"
+                        title="Download .md file formatted for Obsidian Vault"
+                      >
+                        <DownloadSimple size={16} />
+                      </button>
+                    </div>
                   );
                 })()}
 

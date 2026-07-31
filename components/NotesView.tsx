@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePlanner } from "@/lib/store";
 import { Note } from "@/lib/types";
 import { renderMarkdown } from "@/lib/markdown";
+import { sendToObsidian, downloadObsidianMarkdown } from "@/lib/obsidian";
 import { Button, Field, inputClass } from "./primitives";
 import { NotesGraph } from "./NotesGraph";
 
@@ -699,10 +700,39 @@ export function NotesView() {
                   placeholder="Note Title"
                   className="font-display text-xl font-extrabold tracking-tightest text-espresso bg-transparent border-b border-transparent hover:border-coffee/15 focus:border-coffee focus:outline-none w-full sm:w-2/3 pb-0.5 transition-colors"
                 />
-                <div className="flex items-center gap-3 shrink-0 select-none">
+                <div className="flex items-center gap-2.5 shrink-0 select-none">
                   <span className="text-[10px] font-mono text-coffee-soft transition-opacity duration-200">
                     {saveStatus === "saving" ? "● Saving..." : "✓ Saved"}
                   </span>
+                  
+                  <button
+                    onClick={() => {
+                      sendToObsidian({
+                        title: activeNote.title || "Untitled Note",
+                        content: activeNote.content,
+                        topic: activeNote.folder,
+                      });
+                    }}
+                    className="flex items-center gap-1 text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-sm"
+                    title="Open & Save note to Obsidian (obsidian://new)"
+                  >
+                    <span>💎 Obsidian</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      downloadObsidianMarkdown({
+                        title: activeNote.title || "Untitled Note",
+                        content: activeNote.content,
+                        topic: activeNote.folder,
+                      });
+                    }}
+                    className="text-xs font-bold text-coffee hover:text-espresso underline"
+                    title="Export .md file"
+                  >
+                    Export .md
+                  </button>
+
                   <button
                     onClick={() => {
                       deleteNote(activeNote.id);
@@ -710,7 +740,7 @@ export function NotesView() {
                     }}
                     className="text-xs font-bold text-clay-deep hover:underline"
                   >
-                    🗑 Delete Page
+                    🗑 Delete
                   </button>
                 </div>
               </div>
