@@ -389,7 +389,7 @@ export function MentorView() {
   const progressPct = Math.round(((currentProgress.completedSteps?.length || 1) / 13) * 100);
 
   return (
-    <div className="flex flex-col lg:flex-row h-auto lg:h-[calc(100dvh-5.5rem)] min-h-[550px] w-full overflow-hidden rounded-2xl border border-hair bg-cream-base dark:bg-[#0A0C10] shadow-2xl backdrop-blur-3xl">
+    <div className="relative flex flex-col lg:flex-row h-[calc(100dvh-10rem)] min-h-[500px] w-full overflow-hidden rounded-2xl border border-hair bg-cream-base dark:bg-[#0A0C10] shadow-2xl backdrop-blur-3xl">
       {/* ==================================================================== */}
       {/* LEFT INSPECTOR SIDEBAR: LINEAR / RAYCAST ANTI-SLOP STYLE             */}
       {/* ==================================================================== */}
@@ -956,7 +956,7 @@ export function MentorView() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex flex-col bg-cream-base dark:bg-[#0A0C10] p-4 sm:p-8 overflow-hidden"
+            className="absolute inset-0 z-40 flex flex-col bg-cream-base dark:bg-[#0A0C10] p-4 sm:p-6 overflow-hidden rounded-2xl border border-hair shadow-2xl"
           >
             {/* Top Reader Toolbar */}
             <div className="flex flex-wrap items-center justify-between border-b border-hair pb-4 gap-4 max-w-5xl mx-auto w-full">
@@ -1181,7 +1181,7 @@ function RenderMentorMessage({ content }: { content: string }) {
         return (
           <div
             key={idx}
-            className="prose dark:prose-invert prose-xs max-w-none text-espresso leading-relaxed font-sans"
+            className="prose dark:prose-invert prose-xs max-w-none text-espresso leading-relaxed font-sans break-words overflow-x-auto"
             dangerouslySetInnerHTML={{ __html: renderMarkdown(part.value) }}
           />
         );
